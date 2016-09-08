@@ -60,7 +60,7 @@ The generated pages use lots of Javascript:
       - dwr.js: Main script
       - dwr_body.js: Script for formating the pages appearance
       - dwr_svg.js: Script for building the SVG graph
-      - dwr_stats.js: Script for building the statistics charts
+      - dwr_stats.js: Script for building the statistics charts (Experimental, disabled)
       - dwr_styles.less: Used to build CSS stylesheet. See the Makefile.
 
 During the pages generation, the template files are copied into the destination directory.
@@ -88,7 +88,7 @@ Classes:
 #TODO: export change times (get_change_time) for events (or other referenced objects ?) into person or family pages
 #TODO: Export tags
 #TODO: LDS stuff
-#TODO: Statistic charts
+#TODO: Statistic charts (protype develpped, but disabled due to poor performances)
 #TODO: Calendar page (see web calendar and calendar report)
 #TODO: approximate search, which includes all the fields (names, attributes, notes, etc.) and not only titles and names
 #TODO: pages for events and notes
@@ -414,6 +414,12 @@ INCLUDE_LIVING_VALUE = 99 #: Arbitrary number
     REFERENCE_MEDIA,
 ) = range (3)
 
+(
+    INDEX_TYPE_LIST,
+    INDEX_TYPE_TABLE,
+    INDEX_TYPE_NONE,
+) = range (3)
+
 # Indexes in the L{DynamicWebReport.obj_dict} and L{DynamicWebReport.bkref_dict} elements
 OBJDICT_NAME = 0
 OBJDICT_GID = 1
@@ -615,7 +621,7 @@ class DynamicWebReport(Report):
             yearsafterdeath = self.options['years_past_death']
             if livinginfo != INCLUDE_LIVING_VALUE:
                 self.database = LivingProxyDb(self.database, livinginfo, None, yearsafterdeath)
-            
+
         filters_option = menu.get_option_by_name('filter')
         self.filter = filters_option.get_filter()
 
@@ -627,14 +633,13 @@ class DynamicWebReport(Report):
             self.author = self.author.replace(',,,', '')
 
         # The following data are local copies of the options. Refer to the L{DynamicWebOptions} class for more details.
-        # self.inc_events = self.options['inc_events']
-        self.inc_events = False
+        self.inc_events = self.options['inc_events']
         self.inc_places = self.options['inc_places']
         self.inc_families = self.options['inc_families']
-        self.inc_families_index = self.options['inc_families_index']
         self.inc_gallery = self.options['inc_gallery']
         self.copy_media = int(self.options['copy_media'])
         self.inc_notes = self.options['inc_notes']
+        self.inc_notes_pages = self.options['inc_notes_pages']
         self.print_notes_type = self.options['print_notes_type']
         self.inc_sources = self.options['inc_sources']
         self.inc_repositories = self.options['inc_repositories']
@@ -650,6 +655,16 @@ class DynamicWebReport(Report):
         self.template = self.options['template']
         self.inc_pageconf = self.options['inc_pageconf']
         self.pages_number = self.options['pages_number']
+        # Indexes:
+        self.index_surnames_type = int(self.options['index_surnames_type'])
+        self.index_persons_type = int(self.options['index_persons_type'])
+        self.index_families_type = int(self.options['index_families_type'])
+        self.index_sources_type = int(self.options['index_sources_type'])
+        self.index_medias_type = int(self.options['index_medias_type'])
+        self.index_places_type = int(self.options['index_places_type'])
+        self.index_events_type = int(self.options['index_events_type'])
+        self.index_repositories_type = int(self.options['index_repositories_type'])
+        self.index_addresses_type = int(self.options['index_addresses_type'])
         # Validate pages number in proper range
         self.pages_number = max(1, min(NB_TOTAL_PAGES_MAX, self.pages_number))
         self.page_content = [
@@ -745,7 +760,7 @@ class DynamicWebReport(Report):
         #################################################
         # Pass 2 Generate the web pages
 
-        with self.user.progress(_("Dynamic Web Site Report"), _("Exporting family tree data ..."), 11) as step:
+        with self.user.progress(_("Dynamic Web Site Report"), _("Exporting family tree data ..."), 13) as step:
             self.created_files = []
             # Create directories
             for dirname in ["thumb"] + (["image"] if (self.copy_media in [COPY_MEDIA_RENAME, COPY_MEDIA_UNCHANGED]) else []):
@@ -766,6 +781,10 @@ class DynamicWebReport(Report):
             self._export_places()
             step()
             self._export_media()
+            step()
+            self._export_events()
+            step()
+            self._export_notes()
             step()
             self._export_surnames()
             step()
@@ -804,20 +823,9 @@ class DynamicWebReport(Report):
           - death_place: The death place
           - death_age: The death age
           - events: A list of events, with for each event:
-              - gid: The event GID
-              - type: The event name
-              - date: The event date
-              - date_sdn: The event serial date number
-              - place: The event place index (in table 'P'), -1 if none
-              - descr: The event description
-              - text: The event text and notes (including event reference notes)
-              - media: A list of the event media index, in the form:
-                  - m_idx: media index (in table 'M')
-                  - thumb: media thumbnail path
-                  - rect: [x1, y1, x2, y2] of the media reference
-                  - note: notes of the media reference
-                  - cita: list of the media reference source citations index (in table 'C')
-              - cita: A list of the event source citations index (in table 'C')
+              - event: Event index in table 'E'
+              - text: event reference notes
+              - cita: A list of the event reference source citations index (in table 'C')
           - addrs: A list of addresses, with for each address:
               - date: The address date
               - date_sdn: The address serial date number
@@ -874,7 +882,7 @@ class DynamicWebReport(Report):
             # Age at death
             jdata['death_age'] = self.get_death_age(person)
             # Events
-            jdata['events'] = self._data_events(person)
+            jdata['events'] = self._data_event_reference_index(person)
             # Addresses
             jdata['addrs'] = self._data_addresses(person)
             # Get individual notes
@@ -1000,22 +1008,11 @@ class DynamicWebReport(Report):
           - type: The family union type
           - marr_date: The marriage year in the form '1700', '?' (unknown), or '' (not married)
           - marr_sdn: The marriage serial date number (0 if not known)
-          - marr_place: The marriage pla
+          - marr_place: The marriage place
           - events: A list of events, with for each event:
-              - gid: The event GID
-              - type: The event name
-              - date: The event date
-              - date_sdn: The event serial date number
-              - place: The event place index (in table 'P'), -1 if none
-              - descr: The event description
-              - text: The event text and notes (including event reference notes)
-              - media: A list of the event media index, in the form:
-                  - m_idx: media index (in table 'M')
-                  - thumb: media thumbnail path
-                  - rect: [x1, y1, x2, y2] of the media reference
-                  - note: notes of the media reference
-                  - cita: list of the media reference source citations index (in table 'C')
-              - cita: A list of the event source citations index (in table 'C')
+              - event: Event index in table 'E'
+              - text: event reference notes
+              - cita: A list of the event reference source citations index (in table 'C')
           - note: The family notes
           - media: A list of the family media references, in the form:
               - m_idx: media index (in table 'M')
@@ -1047,7 +1044,7 @@ class DynamicWebReport(Report):
             jdata['marr_sdn'] = self.get_marriage_sdn(family)
             jdata['marr_place'] = self.get_marriage_place(family)
             # Events
-            jdata['events'] = self._data_events(family)
+            jdata['events'] = self._data_event_reference_index(family)
             # Get family notes
             jdata['note'] = self.get_notes_text(family)
             # Get family media
@@ -1065,88 +1062,6 @@ class DynamicWebReport(Report):
             #
             jdatas.append(jdata)
         self.update_db_file("F", jdatas)
-
-
-    def _data_events(self, object):
-        '''
-        Build events data related to L{object} in a string representing a Javascript Array
-        L{object} could be: a person or a family
-        @return: events as a string representing a Javascript Array
-        '''
-        # Builds an event list that gives for each event:
-        #  - gid: Gramps ID\n"
-        #  - type: The event name
-        #  - date: The event date
-        #  - date_sdn: The event serial date number
-        #  - place: The event place index (in table 'P'), -1 if none
-        #  - descr: The event description
-        #  - text: The event text and notes (including event reference notes)
-        #  - media: A list of the event media index, in the form:
-        #      - m_idx: media index (in table 'M')
-        #      - thumb: media thumbnail path
-        #      - rect: [x1, y1, x2, y2] of the media reference
-        #      - note: notes of the media reference
-        #      - cita: list of the media reference source citations index (in table 'C')\n"
-        #  - cita: A list of the event source citations index (in table 'C')
-        #  - part_person: Participants to the event (persons)
-        #  - part_family: Participants to the event (families)
-        event_ref_list = object.get_event_ref_list()
-        if not event_ref_list: return([])
-        jdatas = []
-        for event_ref in event_ref_list:
-            if (event_ref.ref not in self.obj_dict[Event]): continue
-            event = self.database.get_event_from_handle(event_ref.ref)
-            if (not event): continue
-            jdata = {}
-            evt_type = str(event.get_type())
-            event_role = event_ref.get_role()
-            if (event_role != EventRoleType.PRIMARY and event_role != EventRoleType.FAMILY):
-                evt_type += " (%s)" % event_role
-            place_index = -1
-            place_handle = event.get_place_handle()
-            if (place_handle and (place_handle in self.obj_dict[Place])):
-                place_index = self.obj_dict[Place][place_handle][OBJDICT_INDEX]
-            evt_desc = event.get_description()
-            jdata['gid'] = self.obj_dict[Event][event_ref.ref][OBJDICT_GID]
-            jdata['type'] = html_escape(evt_type)
-            evt_date = format_date(event.get_date_object())
-            jdata['date'] = html_escape(evt_date)
-            jdata['date_sdn'] = event.get_date_object().get_sort_value()
-            jdata['place'] = place_index
-            if (evt_desc is None): evt_desc = ""
-            jdata['descr'] = html_escape(evt_desc)
-            # Get event notes
-            notelist = event.get_note_list()
-            notelist.extend(event_ref.get_note_list())
-            attrlist = event.get_attribute_list()
-            attrlist.extend(event_ref.get_attribute_list())
-            jdata['text'] = self.get_notes_attributes_text(notelist, attrlist)
-            # Get event media
-            jdata['media'] = self._data_media_reference_index(event)
-            # Get event sources
-            citationlist = event.get_citation_list()
-            citationlist.extend(event_ref.get_citation_list())
-            for attr in attrlist: citationlist.extend(attr.get_citation_list())
-            jdata['cita'] = self._data_source_citation_index_from_list(citationlist)
-            # Get event participants
-            result_list = list(self.database.find_backlink_handles(event.handle, include_classes=['Person', 'Family']))
-            persons = set([x[1] for x in result_list if x[0] == 'Person'])
-            part_person = []
-            for personhandle in persons:
-                if (personhandle not in self.obj_dict[Person]): continue
-                part_person.append(self.obj_dict[Person][personhandle][OBJDICT_INDEX])
-            part_person.sort()
-            jdata['part_person'] = part_person
-            families = set([x[1] for x in result_list if x[0] == 'Family'])
-            part_family = []
-            for familyhandle in persons:
-                if (familyhandle not in self.obj_dict[Family]): continue
-                part_family.append(self.obj_dict[Family][familyhandle][OBJDICT_INDEX])
-            part_family.sort()
-            jdata['part_family'] = part_family
-            #
-            jdatas.append(jdata)
-        return(jdatas)
 
 
     def _data_addresses(self, object):
@@ -1607,6 +1522,98 @@ class DynamicWebReport(Report):
         self.update_db_file("P", jdatas)
 
 
+    def _export_events(self):
+        '''
+        Export events data in Javascript file
+        The event data is stored in the Javascript Array "E"
+        'E' is sorted by event
+        'E' gives for each event:
+          - gid: The event GID
+          - type: The event name
+          - date: The event date
+          - date_sdn: The event serial date number
+          - place: The event place index (in table 'P'), -1 if none
+          - descr: The event description
+          - text: The event text and notes (including event reference notes)
+          - media: A list of the event media index, in the form:
+              - m_idx: media index (in table 'M')
+              - thumb: media thumbnail path
+              - rect: [x1, y1, x2, y2] of the media reference
+              - note: notes of the media reference
+              - cita: list of the media reference source citations index (in table 'C')
+          - cita: A list of the event source citations index (in table 'C')
+          - bki: A list of the person index (in table 'I') participating to this event, in the form:
+              - bk_idx: person index (in table 'I')
+              - text: event reference notes
+              - cita: list of the event reference source citations index (in table 'C')
+          - bkf: A list of the family index (in table 'F') participating to this event, in the form:
+              - bk_idx: family index (in table 'F')
+              - text: event reference notes
+              - cita: list of the event reference source citations index (in table 'C')
+        '''
+        jdatas = []
+        event_list = list(self.obj_dict[Event])
+        event_list.sort(key = lambda x: self.obj_dict[Event][x][OBJDICT_INDEX])
+        for event_handle in event_list:
+            event = self.database.get_event_from_handle(event_handle)
+            jdata = {}
+            evt_type = str(event.get_type())
+            place_index = -1
+            place_handle = event.get_place_handle()
+            if (place_handle and (place_handle in self.obj_dict[Place])):
+                place_index = self.obj_dict[Place][place_handle][OBJDICT_INDEX]
+            evt_desc = event.get_description()
+            jdata['gid'] = self.obj_dict[Event][event_handle][OBJDICT_GID]
+            jdata['type'] = html_escape(evt_type)
+            evt_date = format_date(event.get_date_object())
+            jdata['date'] = html_escape(evt_date)
+            jdata['date_sdn'] = event.get_date_object().get_sort_value()
+            jdata['place'] = place_index
+            if (evt_desc is None): evt_desc = ""
+            jdata['descr'] = html_escape(evt_desc)
+            # Get event notes
+            notelist = event.get_note_list()
+            attrlist = event.get_attribute_list()
+            jdata['text'] = self.get_notes_attributes_text(notelist, attrlist)
+            # Get event media
+            jdata['media'] = self._data_media_reference_index(event)
+            # Get event sources
+            citationlist = event.get_citation_list()
+            for attr in attrlist: citationlist.extend(attr.get_citation_list())
+            jdata['cita'] = self._data_source_citation_index_from_list(citationlist)
+            # Get back references
+            jdata['bki'] = self._data_event_backref_index(event_handle, Person)
+            jdata['bkf'] = self._data_event_backref_index(event_handle, Family)
+            # Last change date
+            jdata['change_time'] = format_time(event.get_change_time())
+            #
+            jdatas.append(jdata)
+        self.update_db_file("E", jdatas)
+
+
+    def _export_notes(self):
+        '''
+        Export notes data in Javascript file
+        The notes data is stored in the Javascript Array "T"
+        'T' is sorted by note text
+        'T' gives for note:
+          - change_time: last record modification date
+        '''
+        return
+        jdatas = []
+        note_list = list(self.obj_dict[Note].keys())
+        note_list.sort(key = lambda x: self.obj_dict[Person][x][OBJDICT_INDEX])
+        for note_handle in note_list:
+            jdata = {}
+            note = self.database.get_note_from_handle(note_handle)
+            jdata['gid'] = self.obj_dict[Note][note_handle][OBJDICT_GID]
+            # Last change date
+            jdata['change_time'] = format_time(note.get_change_time())
+            #
+            jdatas.append(jdata)
+        self.update_db_file("T", jdatas)
+
+
     def get_notes_text(self, object):
         if (not self.inc_notes): return("")
         notelist = object.get_note_list()
@@ -1720,6 +1727,39 @@ class DynamicWebReport(Report):
                 linelist = ["&nbsp;"]
                 htmllist.extend(Html('p') + linelist)
         return(htmllist)
+
+
+    def _data_event_reference_index(self, object):
+        '''
+        Build a list of the event references index, in the form given by L{_data_event_ref}
+        '''
+        event_ref_list = object.get_event_ref_list()
+        if (not event_ref_list): return([])
+        jdatas = []
+        for event_ref in event_ref_list:
+            if (event_ref.ref not in self.obj_dict[Event]): continue
+            jdatas.append(self._data_event_ref(event_ref, self.obj_dict[Event][event_ref.ref][OBJDICT_INDEX]))
+        jdatas.sort(key = lambda x: x['event'])
+        return(jdatas)
+        
+    def _data_event_ref(self, ref, index):
+        '''
+        Build an event reference, in the form:
+          - event: Event index in table 'E'
+          - text: event reference notes
+          - cita: A list of the event reference source citations index (in table 'C')
+        '''
+        jdata = {}
+        jdata['event'] = index
+        # Get event reference notes
+        notelist = ref.get_note_list()
+        attrlist = ref.get_attribute_list()
+        jdata['text'] = self.get_notes_attributes_text(notelist, attrlist)
+        # Get event reference sources
+        citationlist = ref.get_citation_list()
+        for attr in attrlist: citationlist.extend(attr.get_citation_list())
+        jdata['cita'] = self._data_source_citation_index_from_list(citationlist)
+        return(jdata)
 
 
     def _data_source_citation_index(self, object):
@@ -2200,6 +2240,7 @@ class DynamicWebReport(Report):
             ("media.html", _("Media"), self.inc_gallery, True, "Dwr.Main(Dwr.PAGE_MEDIA);"),
             ("place.html", _("Place"), self.inc_places, True, "Dwr.Main(Dwr.PAGE_PLACE);"),
             ("repository.html", _("Repository"), self.inc_repositories, True, "Dwr.Main(Dwr.PAGE_REPO);"),
+            ("event.html", _("Event"), self.inc_events, True, "Dwr.Main(Dwr.PAGE_EVENT);"),
             ("search.html", _("Search results"), True, True, "Dwr.Main(Dwr.PAGE_SEARCH);"),
             ("tree_svg_full.html", _("Tree"), PAGE_SVG_TREE in self.page_content, False, "Dwr.Main(Dwr.PAGE_SVG_TREE_FULL);"),
             ("tree_svg_conf.html", _("Tree"), PAGE_SVG_TREE in self.page_content, True, "Dwr.Main(Dwr.PAGE_SVG_TREE_CONF);"),
@@ -2218,8 +2259,9 @@ class DynamicWebReport(Report):
             ("sources.html", _("Sources"), False, True, "Dwr.Main(Dwr.PAGE_SOURCES_INDEX);"),
             ("medias.html", _("Media"), False, True, "Dwr.Main(Dwr.PAGE_MEDIA_INDEX);"),
             ("places.html", _("Places"), False, True, "Dwr.Main(Dwr.PAGE_PLACES_INDEX);"),
-            ("address.html", _("Addresses"), False, True, "Dwr.Main(Dwr.PAGE_ADDRESSES_INDEX);"),
+            ("events.html", _("Events"), False, True, "Dwr.Main(Dwr.PAGE_EVENTS_INDEX);"),
             ("repositories.html", _("Repositories"), False, True, "Dwr.Main(Dwr.PAGE_REPOS_INDEX);"),
+            ("addresses.html", _("Addresses"), False, True, "Dwr.Main(Dwr.PAGE_ADDRESSES_INDEX);"),
         ]
 
         # Build the list of index pages
@@ -2230,16 +2272,20 @@ class DynamicWebReport(Report):
             "sources.html",
             "medias.html",
             "places.html",
+            "events.html",
             "repositories.html",
-            "address.html",
+            "addresses.html",
         ]
         self.index_pages = [p for p in  self.index_pages if (
-            (p != "families.html" or (self.inc_families and self.inc_families_index)) and
-            (p != "sources.html" or self.inc_sources) and
-            (p != "medias.html" or self.inc_gallery) and
-            (p != "places.html" or self.inc_places) and
-            (p != "repositories.html" or self.inc_repositories) and
-            (p != "address.html" or self.inc_addresses)
+            (p != "surnames.html" or (self.index_surnames_type != INDEX_TYPE_NONE)) and
+            (p != "persons.html" or (self.index_persons_type != INDEX_TYPE_NONE)) and
+            (p != "families.html" or (self.inc_families and self.index_families_type != INDEX_TYPE_NONE)) and
+            (p != "sources.html" or (self.inc_sources and self.index_sources_type != INDEX_TYPE_NONE)) and
+            (p != "medias.html" or (self.inc_gallery and self.index_medias_type != INDEX_TYPE_NONE)) and
+            (p != "places.html" or (self.inc_places and self.index_places_type != INDEX_TYPE_NONE)) and
+            (p != "events.html" or (self.inc_events and self.index_events_type != INDEX_TYPE_NONE)) and
+            (p != "repositories.html" or (self.inc_repositories and self.index_repositories_type != INDEX_TYPE_NONE)) and
+            (p != "addresses.html" or (self.inc_addresses and self.index_addresses_type != INDEX_TYPE_NONE))
         )]
 
         self.map_pages = []
@@ -2401,11 +2447,15 @@ class DynamicWebReport(Report):
         sw.write("HEADER=\"" + script_escape(self.get_header_footer_notes("headernote")) + "\";\n")
         sw.write("BRAND_TITLE=\"" + script_escape(self.get_header_footer_notes("brandnote")) + "\";\n")
         sw.write("COPYRIGHT=\"" + script_escape(self.get_copyright_license()) + "\";\n")
-        sw.write("INDEX_SURNAMES_TYPE=" + ("true" if (int(self.options['index_surnames_type'])) else "false") + ";\n")
-        sw.write("INDEX_PERSONS_TYPE=" + ("true" if (int(self.options['index_persons_type'])) else "false") + ";\n")
-        sw.write("INDEX_FAMILIES_TYPE=" + ("true" if (int(self.options['index_families_type'])) else "false") + ";\n")
-        sw.write("INDEX_SOURCES_TYPE=" + ("true" if (int(self.options['index_sources_type'])) else "false") + ";\n")
-        sw.write("INDEX_PLACES_TYPE=" + ("true" if (int(self.options['index_places_type'])) else "false") + ";\n")
+        sw.write("INDEX_SURNAMES_TYPE=" + ("true" if (self.index_surnames_type == INDEX_TYPE_TABLE) else "false") + ";\n")
+        sw.write("INDEX_PERSONS_TYPE=" + ("true" if (self.index_persons_type == INDEX_TYPE_TABLE) else "false") + ";\n")
+        sw.write("INDEX_FAMILIES_TYPE=" + ("true" if (self.index_families_type == INDEX_TYPE_TABLE) else "false") + ";\n")
+        sw.write("INDEX_SOURCES_TYPE=" + ("true" if (self.index_sources_type == INDEX_TYPE_TABLE) else "false") + ";\n")
+        sw.write("INDEX_MEDIAS_TYPE=" + ("true" if (self.index_medias_type == INDEX_TYPE_TABLE) else "false") + ";\n")
+        sw.write("INDEX_PLACES_TYPE=" + ("true" if (self.index_places_type == INDEX_TYPE_TABLE) else "false") + ";\n")
+        sw.write("INDEX_EVENTS_TYPE=" + ("true" if (self.index_events_type == INDEX_TYPE_TABLE) else "false") + ";\n")
+        sw.write("INDEX_REPOSITORIES_TYPE=" + ("true" if (self.index_repositories_type == INDEX_TYPE_TABLE) else "false") + ";\n")
+        sw.write("INDEX_ADDRESSES_TYPE=" + ("true" if (self.index_addresses_type == INDEX_TYPE_TABLE) else "false") + ";\n")
         sw.write("INDEX_SHOW_DATES=" + ("true" if (self.options['showdates']) else "false") + ";\n")
         sw.write("INDEX_SHOW_PARTNER=" + ("true" if (self.options['showpartner']) else "false") + ";\n")
         sw.write("INDEX_SHOW_PARENTS=" + ("true" if (self.options['showparents']) else "false") + ";\n")
@@ -2851,7 +2901,7 @@ class DynamicWebReport(Report):
                 sw.write("\n"
                     "Dwr.ScriptLoaded('dwr_db_%s_%s_%i.js');\n" % (name, k, i))
                 self.update_file("dwr_db_%s_%s_%i.js" % (name, k, i), sw.getvalue())
-        if name in ["I", "F", "S", "M", "P", "R",]:
+        if name in ["I", "F", "S", "M", "P", "R", "E"]:
             self.update_gid_xref_file(name, jdatas)
 
     def update_gid_xref_file(self, name, jdatas):
@@ -3158,7 +3208,6 @@ class DynamicWebReport(Report):
          - note: notes of the repository reference
         @param repo: Referenced repository
         @param ref_class: Class of the refencing objects
-        @return: String representing the Javascript Array of the references to L{repo}
         '''
         repo_handle = repo.get_handle()
         if (repo_handle not in self.obj_dict[Repository]): return([])
@@ -3184,9 +3233,8 @@ class DynamicWebReport(Report):
          - rect: [x1, y1, x2, y2] of the media reference
          - note: notes of the media reference
          - cita: list of the media reference source citations index (in table 'C')
-        @param media: Referenced repository
+        @param media: Referenced media
         @param ref_class: Class of the refencing objects
-        @return: String representing the Javascript Array of the references to L{media}
         '''
         media_handle = media.get_handle()
         if (media_handle not in self.obj_dict[_Media]): return([])
@@ -3200,6 +3248,30 @@ class DynamicWebReport(Report):
             jdata = self._data_media_ref(media_ref, i)
             jdata['bk_idx'] = jdata['m_idx']
             del jdata['m_idx']
+            jdatas.append(jdata)
+        jdatas.sort(key = lambda x: x['bk_idx'])
+        return(jdatas)
+
+    def _data_event_backref_index(self, event_handle, ref_class):
+        '''
+        Build a list of participants referencing a given event, in the form:
+         - bk_idx: object index (in table 'I', 'F')
+         - text: event reference notes
+         - cita: list of the event reference source citations index (in table 'C')
+        @param event: Referenced event
+        @param ref_class: Class of the refencing objects
+        '''
+        if (event_handle not in self.obj_dict[Event]): return([])
+        bkref_list = self.bkref_dict[Event][event_handle]
+        if (not bkref_list): return ([])
+        jdatas = []
+        for (bkref_class, bkref_handle, event_ref) in bkref_list:
+            if (ref_class != bkref_class): continue
+            i = self.obj_dict[ref_class][bkref_handle][OBJDICT_INDEX]
+            object = self.get_from_handle(bkref_class, bkref_handle)
+            jdata = self._data_event_ref(event_ref, i)
+            jdata['bk_idx'] = jdata['event']
+            del jdata['event']
             jdatas.append(jdata)
         jdatas.sort(key = lambda x: x['bk_idx'])
         return(jdatas)
@@ -3755,7 +3827,7 @@ class DynamicWebReport(Report):
             self.obj_dict[Family][x][OBJDICT_INDEX] = i
 
         # Sort others
-        for cls in (Citation, Source, Repository, _Media, Place):
+        for cls in (Citation, Source, Repository, _Media, Place, Event):
             objs = list(self.obj_dict[cls].keys())
             sortkeys = {}
             for handle in objs:
@@ -3963,7 +4035,7 @@ class DynamicWebOptions(MenuReportOptions):
         if DWR_VERSION_500:
             stdoptions.add_living_people_option(menu, category_name)
             stdoptions.add_private_data_option(menu, category_name, default=False)
-            
+
         else:
             incl_private = BooleanOption(_("Include records marked private"), False)
             incl_private.set_help(_("Whether to include private objects"))
@@ -4073,13 +4145,15 @@ class DynamicWebOptions(MenuReportOptions):
 
         self.__inc_families = BooleanOption(_("Include family pages"), False)
         self.__inc_families.set_help(_("Whether or not to include family pages"))
-        self.__inc_families.connect("value-changed", self.__inc_families_changed)
         addopt("inc_families", self.__inc_families)
 
-        # inc_events = BooleanOption(_('Include event pages'), False)
-        # inc_events.set_help(_('Add a complete events list and relevant pages or not'))
-        # addopt("inc_events", inc_events)
-        # inc_events.set_available(False)
+        inc_events = BooleanOption(_('Include event pages'), False)
+        inc_events.set_help(_('Add a complete events list and relevant pages or not'))
+        addopt("inc_events", inc_events)
+
+        inc_notes_pages = BooleanOption(_('Include note pages'), False)
+        inc_notes_pages.set_help(_('Add a complete notes list and relevant pages or not'))
+        addopt("inc_notes_pages", inc_notes_pages)
 
         showallsiblings = BooleanOption(_("Include half and/ or step-siblings on the individual pages"), False)
         showallsiblings.set_help(_( "Whether to include half and/ or step-siblings with the parents and siblings"))
@@ -4117,13 +4191,18 @@ class DynamicWebOptions(MenuReportOptions):
         index_types = [
             _("List"),
             _("Table"),
+            _("None"),
         ]
         for (index, default, option_text, option_help) in [
             ["surnames", 0, _("Default format for the surnames index"), _("The default format for the surnames index")],
             ["persons", 1, _("Default format for the persons index"), _("The default format for the persons index")],
-            ["families", 1, _("Default format for the families index"), _("The default format for the families index")],
+            ["families", 2, _("Default format for the families index"), _("The default format for the families index")],
             ["sources", 1, _("Default format for the sources index"), _("The default format for the sources index")],
+            ["medias", 1, _("Default format for the media index"), _("The default format for the media index")],
             ["places", 1, _("Default format for the places index"), _("The default format for the places index")],
+            ["events", 2, _("Default format for the events index"), _("The default format for the events index")],
+            ["repositories", 2, _("Default format for the repositories index"), _("The default format for the repositories index")],
+            ["addresses", 2, _("Default format for the addresses index"), _("The default format for the addresses index")],
         ]:
             index_type = EnumeratedListOption(option_text, default)
             for (i, eopt) in enumerate(index_types):
@@ -4142,10 +4221,6 @@ class DynamicWebOptions(MenuReportOptions):
         showparents = BooleanOption(_("Include a column for parents on the index pages"), False)
         showparents.set_help(_('Whether to include a parents column'))
         addopt("showparents", showparents)
-
-        self.__inc_families_index = BooleanOption(_("Generate a families index page"), False)
-        self.__inc_families_index.set_help(_('Whether to generate an index page for families'))
-        addopt("inc_families_index", self.__inc_families_index)
 
         showpath = BooleanOption(_("Include a column for media path on the index pages"), False)
         showpath.set_help(_('Whether to include a column showing the media path'))
@@ -4365,10 +4440,6 @@ class DynamicWebOptions(MenuReportOptions):
             self.__familymappages.set_available(False)
             self.__mapservice.set_available(False)
             # self.__googleopts.set_available(False)
-
-    def __inc_families_changed(self):
-        enable = self.__inc_families.get_value()
-        self.__inc_families_index.set_available(enable)
 
     def __svg_tree_dup_changed(self):
         '''

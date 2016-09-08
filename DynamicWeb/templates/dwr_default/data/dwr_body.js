@@ -155,6 +155,7 @@ DwrClass.prototype.search = {
 	//Sdx; // Index of the current source (in table "S")
 	//Pdx; // Index of the current place (in table "P")
 	//Rdx; // Index of the current repository (in table "R")
+	//Edx; // Index of the current repository (in table "E")
 	//Ndx; // Index of the current surname (in table "N")
 	//Igid; // Gramps ID of the current person
 	//Fgid; // Gramps ID of the current family
@@ -199,6 +200,7 @@ DwrClass.prototype.search = {
 	//IndexTypeF;
 	//IndexTypeS;
 	//IndexTypeP;
+	//IndexTypeE;
 	//=========================================== Chart
 	//ChartTable; // Data table for the statistics chart
 	//ChartType; // Type of statistics chart
@@ -243,6 +245,7 @@ DwrClass.prototype.defaultSearchString = {
 	Sdx: -1,
 	Pdx: -1,
 	Rdx: -1,
+	Edx: -1,
 	Ndx: -1,
 	Igid: '',
 	Fgid: '',
@@ -288,6 +291,7 @@ DwrClass.prototype.defaultSearchString = {
 	IndexTypeF: INDEX_FAMILIES_TYPE,
 	IndexTypeS: INDEX_SOURCES_TYPE,
 	IndexTypeP: INDEX_PLACES_TYPE,
+	IndexTypeE: INDEX_EVENTS_TYPE,
 
 	ChartTable: 0,
 	ChartType: 0,
@@ -329,6 +333,7 @@ DwrClass.prototype.ParseSearchString = function()
 	Dwr.search.Sdx = GetURLParameter('sdx', -1);
 	Dwr.search.Pdx = GetURLParameter('pdx', -1);
 	Dwr.search.Rdx = GetURLParameter('rdx', -1);
+	Dwr.search.Edx = GetURLParameter('edx', -1);
 	Dwr.search.Ndx = GetURLParameter('ndx', -1);
 	Dwr.search.Igid = GetURLParameter('igid', '');
 	Dwr.search.Fgid = GetURLParameter('fgid', '');
@@ -375,6 +380,7 @@ DwrClass.prototype.ParseSearchString = function()
 	Dwr.search.IndexTypeF = GetURLParameter('citf', INDEX_FAMILIES_TYPE);
 	Dwr.search.IndexTypeS = GetURLParameter('cits', INDEX_SOURCES_TYPE);
 	Dwr.search.IndexTypeP = GetURLParameter('citp', INDEX_PLACES_TYPE);
+	Dwr.search.IndexTypeE = GetURLParameter('cite', INDEX_EVENTS_TYPE);
 
 	Dwr.search.ChartTable = GetURLParameter('charttable', 0);
 	Dwr.search.ChartType = GetURLParameter('charttype', 0);
@@ -453,6 +459,7 @@ DwrClass.prototype.BuildSearchString = function(params)
 	s = SetURLParameter(s, 'sdx', params.Sdx, Dwr.search.Sdx, -1);
 	s = SetURLParameter(s, 'pdx', params.Pdx, Dwr.search.Pdx, -1);
 	s = SetURLParameter(s, 'rdx', params.Rdx, Dwr.search.Rdx, -1);
+	s = SetURLParameter(s, 'edx', params.Edx, Dwr.search.Edx, -1);
 	s = SetURLParameter(s, 'ndx', params.Ndx, Dwr.search.Ndx, -1);
 	s = SetURLParameter(s, 'igid', params.Igid, Dwr.search.Igid, '');
 	s = SetURLParameter(s, 'fgid', params.Fgid, Dwr.search.Fgid, '');
@@ -498,6 +505,7 @@ DwrClass.prototype.BuildSearchString = function(params)
 	s = SetURLParameter(s, 'citf', Dwr.search.IndexTypeF, Dwr.search.IndexTypeF, INDEX_FAMILIES_TYPE);
 	s = SetURLParameter(s, 'cits', Dwr.search.IndexTypeS, Dwr.search.IndexTypeS, INDEX_SOURCES_TYPE);
 	s = SetURLParameter(s, 'citp', Dwr.search.IndexTypeP, Dwr.search.IndexTypeP, INDEX_PLACES_TYPE);
+	s = SetURLParameter(s, 'cite', Dwr.search.IndexTypeE, Dwr.search.IndexTypeE, INDEX_EVENTS_TYPE);
 
 	s = SetURLParameter(s, 'charttable', params.ChartTable, Dwr.search.ChartTable, 0);
 	s = SetURLParameter(s, 'charttype', params.ChartType, Dwr.search.ChartType, 0);
@@ -596,6 +604,7 @@ function FsearchExec(n)
 	Dwr.search.Sdx = -1;
 	Dwr.search.Pdx = -1;
 	Dwr.search.Rdx = -1;
+	Dwr.search.Edx = -1;
 	// Redirect to the search page
 	window.location.href = Dwr.searchHref();
 	return(false);

@@ -35,6 +35,7 @@ function C(x, field) {return GetDb("C", x, field)}
 function R(x, field) {return GetDb("R", x, field)}
 function M(x, field) {return GetDb("M", x, field)}
 function P(x, field) {return GetDb("P", x, field)}
+function E(x, field) {return GetDb("E", x, field)}
 function N(x, field) {return GetDb("N", x, field)}
 
 DwrClass.prototype.I = I;
@@ -44,6 +45,7 @@ DwrClass.prototype.C = C;
 DwrClass.prototype.R = R;
 DwrClass.prototype.M = M;
 DwrClass.prototype.P = P;
+DwrClass.prototype.E = E;
 DwrClass.prototype.N = N;
 
 // Exception for abort and wait for script loading
@@ -201,6 +203,7 @@ DwrClass.prototype.PAGE_SOURCE = i++;
 DwrClass.prototype.PAGE_MEDIA = i++;
 DwrClass.prototype.PAGE_PLACE = i++;
 DwrClass.prototype.PAGE_REPO = i++;
+DwrClass.prototype.PAGE_EVENT = i++;
 DwrClass.prototype.PAGE_SEARCH = i++;
 DwrClass.prototype.PAGE_CONF = i++;
 DwrClass.prototype.PAGE_SVG_TREE = i++;
@@ -217,6 +220,7 @@ DwrClass.prototype.PAGE_MEDIA_INDEX = i++;
 DwrClass.prototype.PAGE_PLACES_INDEX = i++;
 DwrClass.prototype.PAGE_ADDRESSES_INDEX = i++;
 DwrClass.prototype.PAGE_REPOS_INDEX = i++;
+DwrClass.prototype.PAGE_EVENTS_INDEX = i++;
 
 
 //=================================================================
@@ -230,6 +234,7 @@ var PageFile = {
 	'M': 'media.html',
 	'P': 'place.html',
 	'R': 'repository.html',
+	'E': 'event.html',
 	'N': 'surname.html'
 };
 
@@ -240,6 +245,7 @@ var SearchStringField = {
 	'M': 'Mdx',
 	'P': 'Pdx',
 	'R': 'Rdx',
+	'E': 'Edx',
 	'N': 'Ndx'
 };
 
@@ -250,6 +256,7 @@ var UrlField = {
 	'M': 'mdx',
 	'P': 'pdx',
 	'R': 'rdx',
+	'E': 'edx',
 	'N': 'ndx'
 };
 
@@ -313,6 +320,8 @@ var placeHref = hrefFunction('P');
 var placeRef = refFunction('P');
 var repoHref = hrefFunction('R');
 var repoRef = refFunction('R');
+var eventHref = hrefFunction('E');
+var eventRef = refFunction('E');
 var surnameHref = hrefFunction('N');
 var surnameRef = refFunction('N');
 
@@ -328,6 +337,8 @@ DwrClass.prototype.placeHref = placeHref;
 DwrClass.prototype.placeRef = placeRef;
 DwrClass.prototype.repoHref = repoHref;
 DwrClass.prototype.repoRef = repoRef;
+DwrClass.prototype.eventHref = eventHref;
+DwrClass.prototype.eventRef = eventRef;
 DwrClass.prototype.surnameHref = surnameHref;
 DwrClass.prototype.surnameRef = surnameRef;
 
@@ -337,6 +348,7 @@ var mediaHrefOptimized;
 var sourceHrefOptimized;
 var placeHrefOptimized;
 var repoHrefOptimized;
+var eventHrefOptimized;
 var surnameHrefOptimized;
 
 function computeOptimizedHref()
@@ -347,6 +359,7 @@ function computeOptimizedHref()
 	sourceHrefOptimized = optimizedHrefFunction('S');
 	placeHrefOptimized = optimizedHrefFunction('P');
 	repoHrefOptimized = optimizedHrefFunction('R');
+	eventHrefOptimized = optimizedHrefFunction('E');
 	surnameHrefOptimized = optimizedHrefFunction('N');
 }
 
@@ -605,6 +618,21 @@ function mediaSection(media)
 }
 
 
+function eventLinked(edx, citations)
+{
+	PreloadScripts(NameFieldScripts('E', edx, ['type', 'descr', 'gid']), true);
+	citations = (typeof(citations) !== 'undefined') ? citations : true;
+	var txt = E(edx, 'type')
+	txt += gidBadge(E(edx, 'gid'));
+	if (citations) txt += citaLinks(E(edx, 'cita'));
+	if (INC_EVENTS)
+	{
+		txt = '<a href="' + eventHref(edx) + '">' + txt + '</a>';
+	}
+	return(txt);
+}
+
+
 function eventTable(events, idx, fdx)
 {
 	if (events.length == 0) return([]);
@@ -621,26 +649,30 @@ function eventTable(events, idx, fdx)
 	txt += '</tr></thead><tbody>';
 	for (var j = 0; j < events.length; j++)
 	{
-		var e = events[j];
+		var eref = events[j];
+		var edx = eref.event;
+		var cita = $.extend([], eref.cita, E(edx, 'cita'));
 		txt += '<tr>';
-		txt += '<td class="dwr-attr-title">' + e.type + citaLinks(e.cita) + '</td>';
-		txt += '<td class="dwr-attr-value">' + e.date + '</td>';
-		txt += '<td class="dwr-attr-value">' + placeLink(e.place, idx, fdx, e) + '</td>';
+		txt += '<td class="dwr-attr-title">' + eventLinked(edx) + '</td>';
+		txt += '<td class="dwr-attr-value">' + E(edx, 'date') + '</td>';
+		txt += '<td class="dwr-attr-value">' + placeLink(E(edx, 'place'), idx, fdx, edx) + '</td>';
 		var notes = [];
-		if (e.descr != '') notes.push('<span class="dwr-attr-header">' + _('Description') + '</span>:<br>' + e.descr);
-		if (e.text != '') notes.push('<span class="dwr-attr-header">' + _('Notes') + '</span>:<br>' + notePara(e.text, '<p>'));
-		var mlinks = mediaLinks(e.media);
+		if (E(edx, 'descr') != '') notes.push('<span class="dwr-attr-header">' + _('Description') + '</span>:<br>' + E(edx, 'descr'));
+		if (eref.text != '' || E(edx, 'text') != '') notes.push('<span class="dwr-attr-header">' + _('Notes') + '</span>:' +
+			'<br>' + notePara(eref.text, '<p>') +
+			'<br>' + notePara(E(edx, 'text'), '<p>'));
+		var mlinks = mediaLinks(E(edx, 'media'));
 		if (mlinks != '') notes.push('<span class="dwr-attr-header">' + _('Media') + '</span>:<br>' + mlinks);
 		// Get participants
 		var participants = '';
-		for (var i = 0; i < e.part_person.length; i += 1)
+		for (var i = 0; i < E(edx, 'bki').length; i += 1)
 		{
-			var p_idx = e.part_person[i];
+			var p_idx = E(edx, 'bki')[i].bk_idx;
 			if (p_idx != idx) participants += '<br>' + indiLinked(p_idx, false);
 		}
-		for (var i = 0; i < e.part_family.length; i += 1)
+		for (var i = 0; i < E(edx, 'bkf').length; i += 1)
 		{
-			var p_fdx = e.part_family[i];
+			var p_fdx = E(edx, 'bkf')[i].bk_idx;
 			if (p_fdx != fdx) participants += '<br>' + indiLinked(p_fdx, false);
 		}
 		if (participants != '') notes.push('<span class="dwr-attr-header">' + _('Other participants') + '</span>:' + participants);
@@ -934,21 +966,17 @@ function mediaName(mdx)
 //    - pdx: the place index in table "P"
 //    - idx: the referencing person index in table "I", -1 if none
 //    - fdx: the referencing family index in table "F", -1 if none
-//    - event: the referencing event, if any
+//    - edx: the referencing event index in table "E", -1 if none
 var pagePlaces = [];
-var PP_PDX = 0;
-var PP_IDX = 1;
-var PP_FDX = 2;
-var PP_EVENT = 3;
 
 
-function placeLink(pdx, idx, fdx, event)
+function placeLink(pdx, idx, fdx, edx)
 {
 	if (typeof(idx) === 'undefined') idx = -1;
 	if (typeof(fdx) === 'undefined') fdx = -1;
-	if (typeof(event) === 'undefined') event = null;
+	if (typeof(edx) === 'undefined') edx = -1;
 	if (pdx == -1) return('');
-	pagePlaces.push({pdx: pdx, idx: idx, fdx: fdx, event: event});
+	pagePlaces.push({pdx: pdx, idx: idx, fdx: fdx, edx: edx});
 	if (!INC_PLACES) return(P(pdx, 'name'));
 	if (PageContents == Dwr.PAGE_PLACE && pdx == Dwr.search.Pdx) return(P(pdx, 'name'));
 	return('<a href="' + placeHref(pdx) + '">' + P(pdx, 'name') + '</a>');
@@ -1795,6 +1823,42 @@ function printRepo(rdx)
 }
 
 
+//=================================================================
+//==================================================== Events
+//=================================================================
+
+function printEvent(edx)
+{
+	PreloadScripts(NameFieldScripts('E', edx, ['type', 'gid', 'descr', 'text', 'date', 'place', 'change_time', 'bki', 'bkf']), true);
+	var html = '';
+	html += '<h2 class="page-header">' + E(edx, 'type') + gidBadge(E(edx, 'gid')) + '</h2>';
+	html += '<p class="dwr-attr-value"><span class="dwr-attr-title">' + _('Description') + ': </span>'
+	html += E(edx, 'descr') + '</p>';
+	if (E(edx, 'date'))
+	{
+		html += '<p class="dwr-attr-value"><span class="dwr-attr-title">' + _('Date') + ': </span>'
+		html += E(edx, 'date') + '</p>';
+	}
+	if (E(edx, 'place') >= 0)
+	{
+		html += '<p class="dwr-attr-value"><span class="dwr-attr-title">' + _('Place') + ': </span>'
+		html += placeLink(E(edx, 'place')) + '</p>';
+	}
+	
+	// Back references
+	var bk_txt = printBackRefs(BKREF_TYPE_EVENT, E(edx, 'bki'), E(edx, 'bkf'), [], [], [], []);
+
+	html += PrintTitle('E' + edx, 3, [].concat(
+		strToContents(_('Participants'), bk_txt),
+		noteSection(E(edx, 'text')),
+		sourceSection()),
+		true /*collapsible*/, true /*is_tabbeb*/);
+		
+	html += printChangeTime(E(edx, 'change_time'));
+	return(html);
+}
+
+
 //=========================================================================================
 //=========================================================================================
 //=========================================================================================
@@ -1886,14 +1950,9 @@ function PrintIndexTable(id, header, data, defaultsort, columns)
 			{
 				text_sort = columns[k].fsort(j, k);
 				if (typeof(text_sort) === 'undefined') text_sort = '';
-				if (typeof(text_sort) == 'number')
-				{
-					text_sort = '000000' + text_sort;
-					text_sort = text_sort.substr(text_sort.length - 7);
-				}
-				text_sort = text_sort.toString();
+				if (typeof(text_sort) != 'number') text_sort = text_sort.toString();
 			}
-			if (text_sort != '' && isNaN(parseInt(text_sort))) col_num[k] = false;
+			if (typeof(text_sort) != 'number') col_num[k] = false;
 			line.push({
 				'text': text,
 				'sort': text_sort,
@@ -1953,7 +2012,7 @@ function PrintIndexTable(id, header, data, defaultsort, columns)
 			},
 			// 'width': '200px',
 			'type': (col_num[k] ? 'num' : 'string'),
-			'orderable': (columns[k].fsort !== false) && (data_copy.length <= TABLE_OPTIMIZATION_LIMIT)
+			'orderable': (columns[k].fsort !== false)// && (data_copy.length <= TABLE_OPTIMIZATION_LIMIT)
 		});
 	}
 
@@ -1989,7 +2048,7 @@ function PrintIndexTable(id, header, data, defaultsort, columns)
 	(function(){ // This is used to create instances of local variables
 		$(document).ready(function() {
 			$('#dwr-index-' + id).DataTable({
-				'ordering': (data_copy.length <= TABLE_OPTIMIZATION_LIMIT),
+				'ordering': true, //(data_copy.length <= TABLE_OPTIMIZATION_LIMIT),
 				'order': defaultsort,
 				'orderClasses': false,
 				'info': false,
@@ -2488,6 +2547,7 @@ function indexBkrefName(type, referencedType, referencedDx, bk_field, objects, n
 		if (type == BKREF_TYPE_MEDIA) x_object = bk_table[x_bk].bk_idx;
 		if (type == BKREF_TYPE_SOURCE) x_object = bk_table[x_bk];
 		if (type == BKREF_TYPE_REPO) x_object = bk_table[x_bk].s_idx;
+		if (type == BKREF_TYPE_EVENT) x_object = bk_table[x_bk].bk_idx;
 		if ($.inArray(x_object, already_found) == -1)
 		{
 			already_found.push(x_object);
@@ -2629,18 +2689,15 @@ function htmlSourcesIndexTable(header, data)
 	}, {
 		title: _('Author'),
 		ftext: function(x, col) {return S_author[data[x]]},
-		fhref: function(x) {return sourceHrefOptimized(data[x])},
-		fsort: function(x, col) {return data[x]}
+		fhref: function(x) {return sourceHrefOptimized(data[x])}
 	}, {
 		title: _('Abbreviation'),
 		ftext: function(x, col) {return S_abbrev[data[x]]},
-		fhref: function(x) {return sourceHrefOptimized(data[x])},
-		fsort: function(x, col) {return data[x]}
+		fhref: function(x) {return sourceHrefOptimized(data[x])}
 	}, {
 		title: _('Publication information'),
 		ftext: function(x, col) {return S_publ[data[x]]},
-		fhref: function(x) {return sourceHrefOptimized(data[x])},
-		fsort: function(x, col) {return data[x]}
+		fhref: function(x) {return sourceHrefOptimized(data[x])}
 	}];
 	if (Dwr.search.IndexShowBkrefType) columns.push({
 		title: _('Used for person'),
@@ -2984,6 +3041,139 @@ function ComputePlaceHierarchy(top, fText, fSort)
 
 
 //=========================================================================================
+//=========================================================================== Events Index
+//=========================================================================================
+
+function htmlEventsIndex(data)
+{
+	return PrintIndex('E', _('Events Index'), Dwr.search.IndexTypeE, htmlEventsIndexTable, htmlEventsIndexList, data);
+}
+
+function htmlEventsIndexTable(header, data)
+{
+	var scripts = [
+		['E', 'type'],
+		['E', 'descr'],
+		['E', 'date'],
+		['E', 'date_sdn'],
+		['E', 'place'],
+		['P', 'name']
+	];
+	if (Dwr.search.IndexShowBkrefType) scripts.push(
+		['E', 'bki'],
+		['E', 'bkf'],
+		['I', 'name'],
+		['F', 'name']
+	);
+	if (!Dwr.search.HideGid) scripts.push(['E', 'gid']);
+	PrepareFieldSplitScripts(scripts);
+	if (preloadMode) return;
+
+	// Define columns and build table
+	var columns = [{
+		title: _('Type'),
+		ftext: function(x, col) {return E_type[data[x]] || empty(_('Without type'))},
+		fhref: function(x) {return eventHrefOptimized(data[x])},
+		fsort: function(x, col) {return data[x]}
+	}, {
+		title: _('Description'),
+		ftext: function(x, col) {return E_descr[data[x]]},
+		fhref: function(x) {return eventHrefOptimized(data[x])}
+	}, {
+		title: _('Date'),
+		ftext: function(x, col) {return E_date[data[x]]},
+		fsort: function(x, col) {return E_date_sdn[data[x]]}
+	}, {
+		title: _('Place'),
+		ftext: function(x, col) {return P_name[E_place[data[x]]]},
+		fhref: function(x) {return placeHrefOptimized(E_place[data[x]])},
+		fsort: function(x, col) {return E_place[data[x]]}
+	}];
+	if (Dwr.search.IndexShowBkrefType) columns.push({
+		title: _('Used for person'),
+		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_EVENT, 'E', data[x], 'bki', 'I', 'name', indiHrefOptimized)},
+		fsort: false
+	});
+	if (Dwr.search.IndexShowBkrefType && INC_FAMILIES) columns.push({
+		title: _('Used for family'),
+		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_EVENT, 'E', data[x], 'bkf', 'F', 'name', famHrefOptimized)},
+		fsort: false
+	});
+	if (!Dwr.search.HideGid) columns.unshift({
+		title: _('ID'),
+		ftext: function(x, col) {return E_gid[data[x]]},
+		fhref: function(x) {return eventHrefOptimized(data[x])}
+	});
+	return PrintIndexTable('E', header, data, [[(Dwr.search.HideGid ? 0: 1), 'asc']], columns);
+}
+
+
+function htmlEventsIndexList(header, data)
+{
+	var scripts = [
+		['E', 'type'],
+		['E', 'descr'],
+		['E', 'date'],
+		['E', 'date_sdn'],
+		['E', 'place'],
+		['P', 'name']
+	];
+	if (!Dwr.search.HideGid) scripts.push(['E', 'gid']);
+	PrepareFieldSplitScripts(scripts);
+	if (preloadMode) return;
+
+	var fText = function(edx)
+	{
+		var txt = '<a href="' + eventHrefOptimized(edx) + '">';
+		txt += 
+		txt += E_type[edx] || empty(_('Without type'));
+		txt += gidBadge(E_gid[edx]);
+		if (E_descr[edx]) txt += ': ' + E_descr[edx];
+		txt += '</a>';
+		var d = E_date[edx];
+		var p = P_name[E_place[edx]];
+		if (d && p) txt += '(' + d + ' - ' + p + ')';
+		else if (d) txt += '(' + d + ')';
+		else if (p) txt += '(' + p + ')';
+		return txt;
+	};
+	var sortingAttributes = [
+		{
+			title: _('Type'),
+			id: 'E.type',
+			fSort: function(a, b) {return cmp(a, b)},
+			fLetter: false
+		},
+		{
+			title: _('Description'),
+			id: 'E.descr',
+			fSort: function(a, b) {return cmp(E_descr[a], E_descr[b])},
+			fLetter: false
+		},
+		{
+			title: _('Date'),
+			id: 'E.date',
+			fSort: function(a, b) {return cmp(E_date_sdn[b], E_date_sdn[a])},
+			fLetter: false
+		},
+		{
+			title: _('Place'),
+			id: 'E.place',
+			fSort: function(a, b) {return cmp(E_place[a], E_place[b])},
+			fLetter: false
+		}
+	];
+	if (!Dwr.search.HideGid) sortingAttributes.push({
+		title: _('ID'),
+		id: 'E.gid',
+		fSort: function(a, b) {return cmp(E_gid[a], E_gid[b])},
+		fLetter: false
+	});
+	return PrintIndexList('E', header, data, fText, '', '', '<br>', sortingAttributes, 0);
+}
+
+
+//=========================================================================================
 //========================================================================= Addresses Index
 //=========================================================================================
 
@@ -3196,6 +3386,7 @@ var BKREF_TYPE_MEDIA = 1;
 var BKREF_TYPE_SOURCE = 2;
 var BKREF_TYPE_REPO = 3;
 var BKREF_TYPE_REPOREF = 4;
+var BKREF_TYPE_EVENT = 5;
 
 function printBackRefs(type, bki, bkf, bks, bkm, bkp, bkr)
 {
@@ -3243,6 +3434,18 @@ function printBackRef(type, bk_table, fref, fname)
 			{
 				txt = '<div>' + txt;
 				txt += notePara(ref.note, '<p>');
+				txt += '</div>';
+			}
+		}
+		else if (type == BKREF_TYPE_EVENT)
+		{
+			// This is an event back reference
+			txt = my_fref(ref.bk_idx, fname(ref.bk_idx));
+			txt += citaLinks(ref.cita);
+			if (ref.text != '')
+			{
+				txt = '<div>' + txt;
+				txt += notePara(ref.text, '<p>');
 				txt += '</div>';
 			}
 		}
@@ -3505,17 +3708,20 @@ function mapUpdate()
 			{
 				txt += famLinked(pp.fdx, false);
 			}
-			if (pp.event) txt += ' (' + (pp.event.type || pp.event.descr) + ')';
+			if (pp.edx >= 0)
+			{
+				txt += ' (' + (E(pp.edx, 'type') || E(pp.edx, 'descr')) + ')';
+			}
 			if (txt)
 			{
 				if (!previous_ul) point.mapInfo += '<ul class="dwr-mapinfo">';
 				previous_ul = true;
 				point.mapInfo += '<li class="dwr-mapinfo">' + txt + '</li>';
-				if ($.inArray(pp.event.type, EVENTS_BIRTH) >= 0)
+				if ($.inArray(E(pp.edx, 'type'), EVENTS_BIRTH) >= 0)
 					point.nb_birth += 1;
-				else if ($.inArray(pp.event.type, EVENTS_MARR) >= 0)
+				else if ($.inArray(E(pp.edx, 'type'), EVENTS_MARR) >= 0)
 					point.nb_marr += 1;
-				else if ($.inArray(pp.event.type, EVENTS_DEATH) >= 0)
+				else if ($.inArray(E(pp.edx, 'type'), EVENTS_DEATH) >= 0)
 					point.nb_death += 1;
 				else
 					point.nb_other += 1;
@@ -3919,7 +4125,8 @@ function HomePage()
         ["S", "sources.html"],
         ["M", "medias.html"],
         ["P", "places.html"],
-        ["R", "repositories.html"]
+        ["R", "repositories.html"],
+        ["E", "events.html"]
 	];
 	var sep = '';
 	for (var i = 0; i < tables.length; i += 1)
@@ -3962,7 +4169,8 @@ function ConfigPage()
 		['IndexTypeI', _('Use a table format for the persons index'), ''],
 		['IndexTypeF', _('Use a table format for the families index'), ''],
 		['IndexTypeS', _('Use a table format for the sources index'), ''],
-		['IndexTypeP', _('Use a table format for the places index'), '</div><hr><div class="row">'],
+		['IndexTypeP', _('Use a table format for the places index'), ''],
+		['IndexTypeE', _('Use a table format for the events index'), '</div><hr><div class="row">'],
 		['IndexShowDates', _('Include dates columns on the index pages'), ''],
 		['IndexShowPartner', _('Include a column for partners on the index pages'), ''],
 		['IndexShowParents', _('Include a column for parents on the index pages'), ''],
@@ -4039,9 +4247,19 @@ DwrClass.prototype.Main = function(page)
 	Dwr.ParseSearchString();
 	computeOptimizedHref();
 	preloadMode = true;
+	// First pass preload data, eventually interrupted by exception WaitScriptLoad
+	preloadMode = true;
 	MainRun();
 	$(document).ready(function(){
+		// All data is preloaded, reinitialize and print for good
 		preloadMode = false;
+		duplicates = [];
+		pageSources = [];
+		pageCitations = [];
+		pageCitationsBullets = [];
+		pagePlaces = [];
+		titlesCollapsible = [];
+		titlesTable = [];
 		MainRun();
 	});
 }
@@ -4104,7 +4322,7 @@ function MainRun()
 		{
 			html = printIndi(Dwr.search.Idx);
 		}
-		else if (Dwr.search.Fdx >= 0 && PageContents == Dwr.PAGE_FAM)
+		else if (Dwr.search.Fdx >= 0 && PageContents == Dwr.PAGE_FAM && INC_FAMILIES)
 		{
 			html = printFam(Dwr.search.Fdx);
 		}
@@ -4112,9 +4330,13 @@ function MainRun()
 		{
 			html = printPlace(Dwr.search.Pdx);
 		}
-		else if (Dwr.search.Rdx >= 0 && PageContents == Dwr.PAGE_REPO)
+		else if (Dwr.search.Rdx >= 0 && PageContents == Dwr.PAGE_REPO && INC_REPOSITORIES)
 		{
 			html = printRepo(Dwr.search.Rdx);
+		}
+		else if (Dwr.search.Edx >= 0 && PageContents == Dwr.PAGE_EVENT && INC_EVENTS)
+		{
+			html = printEvent(Dwr.search.Edx);
 		}
 		else if (PageContents == Dwr.PAGE_SEARCH)
 		{
@@ -4136,27 +4358,31 @@ function MainRun()
 		{
 			html = htmlPersonsIndex();
 		}
-		else if (PageContents == Dwr.PAGE_FAMILIES_INDEX)
+		else if (PageContents == Dwr.PAGE_FAMILIES_INDEX && INC_FAMILIES)
 		{
 			html = htmlFamiliesIndex();
 		}
-		else if (PageContents == Dwr.PAGE_SOURCES_INDEX)
+		else if (PageContents == Dwr.PAGE_SOURCES_INDEX && INC_SOURCES)
 		{
 			html = htmlSourcesIndex();
 		}
-		else if (PageContents == Dwr.PAGE_MEDIA_INDEX)
+		else if (PageContents == Dwr.PAGE_MEDIA_INDEX && INC_MEDIA)
 		{
 			html = htmlMediaIndex();
 		}
-		else if (PageContents == Dwr.PAGE_PLACES_INDEX)
+		else if (PageContents == Dwr.PAGE_PLACES_INDEX && INC_PLACES)
 		{
 			html = htmlPlacesIndex();
 		}
-		else if (PageContents == Dwr.PAGE_ADDRESSES_INDEX)
+		else if (PageContents == Dwr.PAGE_EVENTS_INDEX && INC_EVENTS)
+		{
+			html = htmlEventsIndex();
+		}
+		else if (PageContents == Dwr.PAGE_ADDRESSES_INDEX && INC_ADDRESSES)
 		{
 			html = htmlAddressesIndex();
 		}
-		else if (PageContents == Dwr.PAGE_REPOS_INDEX)
+		else if (PageContents == Dwr.PAGE_REPOS_INDEX && INC_REPOSITORIES)
 		{
 			html = htmlReposIndex();
 		}
@@ -4186,8 +4412,8 @@ function MainRun()
 			else $('#body-page').html(html);
 		}
 		else if ($.inArray(PageContents, [
-			Dwr.PAGE_SOURCE, Dwr.PAGE_MEDIA, Dwr.PAGE_INDI, Dwr.PAGE_FAM, Dwr.PAGE_PLACE, Dwr.PAGE_REPO,
-			Dwr.PAGE_SURNAMES_INDEX, Dwr.PAGE_SURNAME_INDEX, Dwr.PAGE_PERSONS_INDEX, Dwr.PAGE_FAMILIES_INDEX, Dwr.PAGE_SOURCES_INDEX, Dwr.PAGE_MEDIA_INDEX, Dwr.PAGE_PLACES_INDEX, Dwr.PAGE_ADDRESSES_INDEX, Dwr.PAGE_REPOS_INDEX
+			Dwr.PAGE_SOURCE, Dwr.PAGE_MEDIA, Dwr.PAGE_INDI, Dwr.PAGE_FAM, Dwr.PAGE_PLACE, Dwr.PAGE_REPO, Dwr.PAGE_EVENT,
+			Dwr.PAGE_SURNAMES_INDEX, Dwr.PAGE_SURNAME_INDEX, Dwr.PAGE_PERSONS_INDEX, Dwr.PAGE_FAMILIES_INDEX, Dwr.PAGE_SOURCES_INDEX, Dwr.PAGE_MEDIA_INDEX, Dwr.PAGE_PLACES_INDEX, Dwr.PAGE_ADDRESSES_INDEX, Dwr.PAGE_REPOS_INDEX, Dwr.PAGE_EVENTS_INDEX
 		]) >= 0)
 		{
 			$('#body-page').html(html);
