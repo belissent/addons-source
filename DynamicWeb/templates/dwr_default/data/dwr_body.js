@@ -298,6 +298,7 @@ DwrClass.prototype.defaultSearchString = {
 	IndexTypeS: DwrConf.index_sources_type,
 	IndexTypeP: DwrConf.index_places_type,
 	IndexTypeE: DwrConf.index_events_type,
+	IndexTypeT: DwrConf.index_notes_type,
 
 	ChartTable: 0,
 	ChartType: 0,
@@ -390,6 +391,7 @@ DwrClass.prototype.ParseSearchString = function()
 	Dwr.search.IndexTypeS = GetURLParameter('cits', DwrConf.index_sources_type);
 	Dwr.search.IndexTypeP = GetURLParameter('citp', DwrConf.index_places_type);
 	Dwr.search.IndexTypeE = GetURLParameter('cite', DwrConf.index_events_type);
+	Dwr.search.IndexTypeT = GetURLParameter('citt', DwrConf.index_notes_type);
 
 	Dwr.search.ChartTable = GetURLParameter('charttable', 0);
 	Dwr.search.ChartType = GetURLParameter('charttype', 0);
@@ -518,6 +520,7 @@ DwrClass.prototype.BuildSearchString = function(params)
 	s = SetURLParameter(s, 'cits', Dwr.search.IndexTypeS, Dwr.search.IndexTypeS, DwrConf.index_sources_type);
 	s = SetURLParameter(s, 'citp', Dwr.search.IndexTypeP, Dwr.search.IndexTypeP, DwrConf.index_places_type);
 	s = SetURLParameter(s, 'cite', Dwr.search.IndexTypeE, Dwr.search.IndexTypeE, DwrConf.index_events_type);
+	s = SetURLParameter(s, 'citt', Dwr.search.IndexTypeT, Dwr.search.IndexTypeT, DwrConf.index_notes_type);
 
 	s = SetURLParameter(s, 'charttable', params.ChartTable, Dwr.search.ChartTable, 0);
 	s = SetURLParameter(s, 'charttype', params.ChartType, Dwr.search.ChartType, 0);

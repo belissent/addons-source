@@ -4340,12 +4340,13 @@ function HomePage()
         ["M", "medias.html"],
         ["P", "places.html"],
         ["R", "repositories.html"],
-        ["E", "events.html"]
+        ["E", "events.html"],
+        ["T", "notes.html"]
 	];
 	var sep = '';
 	for (var i = 0; i < tables.length; i += 1)
 	{
-		for (var j = 0; i < DwrConf.pages_menu_index.length; i += 1)
+		for (var j = 0; j < DwrConf.pages_menu_index.length; j += 1)
 		{
 			if (tables[i][1] != DwrConf.pages_menu_index[j][0]) continue;
 			html += sep
@@ -4374,40 +4375,50 @@ function ConfigPage()
 	html += '<form id="dwr-chart-form" role="form" class="form-horizontal">';
 
 	var configsCheck = [
-//		['IncFamilies', _('Show family pages'), ''],
-//		['IncSources', _('Show sources'), ''],
-//		['IncMedia', _('Show images and media objects'), ''],
-//		['IncPlaces', _('Show place pages'), ''],
-//		['IncRepositories', _('Show repository pages'), ''],
-//		['IncNotes', _('Show notes'), ''],
-//		['IncAddresses', _('Show addresses'), '</div><hr><div class="row">'],
-		['IndexTypeN', _('Use a table format for the surnames index'), ''],
-		['IndexTypeI', _('Use a table format for the persons index'), ''],
-		['IndexTypeF', _('Use a table format for the families index'), ''],
-		['IndexTypeS', _('Use a table format for the sources index'), ''],
-		['IndexTypeP', _('Use a table format for the places index'), ''],
-		['IndexTypeE', _('Use a table format for the events index'), '</div><hr><div class="row">'],
-		['IndexShowDates', _('Include dates columns on the index pages'), ''],
-		['IndexShowPartner', _('Include a column for partners on the index pages'), ''],
-		['IndexShowParents', _('Include a column for parents on the index pages'), ''],
-		['IndexShowPath', _('Include a column for media path on the index pages'), ''],
-		['IndexShowBkrefType', _('Include references in indexes'), '</div><hr><div class="row">'],
-		['MapPlace', _('Include Place map on Place Pages'), ''],
-		['MapFamily', _('Include a map in the individuals and family pages'), '</div><hr><div class="row">'],
-		['ShowAllSiblings', _('Include half and/ or step-siblings on the individual pages'), '</div><div class="row">'],
-		['SourceAuthorInTitle', _('Insert sources author in the sources title'), '</div><div class="row">'],
-		['TabbedPanels', _('Use tabbed panels instead of sections'), ''],
-		['HideGid', _('Suppress Gramps ID'), ''],
-		['IncChangeTime', _('Show last modification time'), '']
+		['check', 'IndexTypeN', _('Use a table format for the surnames index')],
+		['check', 'IndexTypeI', _('Use a table format for the persons index')]
 	];
+	if (DwrConf.inc_families_pages) configsCheck.push(
+		['check', 'IndexTypeF', _('Use a table format for the families index')]);
+	if (DwrConf.inc_sources) configsCheck.push(
+		['check', 'IndexTypeS', _('Use a table format for the sources index')]);
+	if (DwrConf.inc_places_pages) configsCheck.push(
+		['check', 'IndexTypeP', _('Use a table format for the places index')]);
+	if (DwrConf.inc_events_pages) configsCheck.push(
+		['check', 'IndexTypeE', _('Use a table format for the events index')]);
+	if (DwrConf.inc_notes_pages) configsCheck.push(
+		['check', 'IndexTypeT', _('Use a table format for the notes index')]);
+	$.merge(configsCheck, [
+		['separator'],
+		['check', 'IndexShowDates', _('Include dates columns on the index pages')],
+		['check', 'IndexShowPartner', _('Include a column for partners on the index pages')],
+		['check', 'IndexShowParents', _('Include a column for parents on the index pages')],
+		['check', 'IndexShowPath', _('Include a column for media path on the index pages')],
+		['check', 'IndexShowBkrefType', _('Include references in indexes')],
+		['separator'],
+		['check', 'MapPlace', _('Include Place map on Place Pages')],
+		['check', 'MapFamily', _('Include a map in the individuals and family pages')],
+		['separator'],
+		['check', 'TabbedPanels', _('Use tabbed panels instead of sections')],
+		['check', 'ShowAllSiblings', _('Include half and/ or step-siblings on the individual pages')],
+		['check', 'SourceAuthorInTitle', _('Insert sources author in the sources title')],
+		['check', 'HideGid', _('Suppress Gramps ID')],
+		['check', 'IncChangeTime', _('Show last modification time')]
+	]);
 	html += '<div class="row">';
 	for (var i = 0; i < configsCheck.length; i += 1)
 	{
-		var opt = configsCheck[i][0];
-		html += '<div class="checkbox col-xs-12 col-md-6"><label>';
-		html += '<input type="checkbox" id="dwr-cfg-' + opt + '"' + (Dwr.search[opt] ? ' checked' : '') + '>';
-		html += configsCheck[i][1] + '</label></div>';
-		html += configsCheck[i][2];
+		if (configsCheck[i][0] == 'check')
+		{
+			var opt = configsCheck[i][1];
+			html += '<div class="checkbox col-xs-12 col-md-6"><label>';
+			html += '<input type="checkbox" id="dwr-cfg-' + opt + '"' + (Dwr.search[opt] ? ' checked' : '') + '>';
+			html += configsCheck[i][2] + '</label></div>';
+		}
+		if (configsCheck[i][0] == 'separator')
+		{
+			html += '</div><hr><div class="row">';
+		}
 	}
 	html += '</div>';
 	html += '<hr>';
@@ -4425,11 +4436,14 @@ function ConfigPage()
 		$('#dwr-config-ok').click(function() {
 			for (var i = 0; i < configsCheck.length; i++)
 			{
-				var opt = configsCheck[i][0];
-				if (typeof(Dwr.search[opt]) === 'number')
-					Dwr.search[opt] = $('#dwr-cfg-' + opt)[0].checked ? 1 : 0;
-				else
-					Dwr.search[opt] = $('#dwr-cfg-' + opt)[0].checked ? true : false;
+				if (configsCheck[i][0] == 'check')
+				{
+					var opt = configsCheck[i][1];
+					if (typeof(Dwr.search[opt]) === 'number')
+						Dwr.search[opt] = $('#dwr-cfg-' + opt)[0].checked ? 1 : 0;
+					else
+						Dwr.search[opt] = $('#dwr-cfg-' + opt)[0].checked ? true : false;
+				}
 			}
 			window.location.href = Dwr.search.P + '?' + Dwr.BuildSearchString();
 			return(false);
@@ -4437,8 +4451,11 @@ function ConfigPage()
 		$('#dwr-config-restore').click(function() {
 			for (var i = 0; i < configsCheck.length; i++)
 			{
-				var opt = configsCheck[i][0];
-				$('#dwr-cfg-' + opt)[0].checked = Dwr.defaultSearchString[opt] ? true : false;
+				if (configsCheck[i][0] == 'check')
+				{
+					var opt = configsCheck[i][1];
+					$('#dwr-cfg-' + opt)[0].checked = Dwr.defaultSearchString[opt] ? true : false;
+				}
 			}
 			// Clear local storage where Datatables stores the user preferences
 			$.each(sessionStorage, function(key, val) {
