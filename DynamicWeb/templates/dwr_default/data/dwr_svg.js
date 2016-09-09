@@ -365,9 +365,9 @@ DwrSvgClass.prototype.ConfPage = function()
 	html += '<div class="form-group">';
 	html += '<label for="svg-type">' + _('SVG tree graph type') + '</label>';
 	html += '<select name="svg-type" id="svg-type" class="form-control" size="1" title="' + _('Select the type of graph') + '">';
-	for (var i = 0; i < SVG_TREE_TYPES_NAMES.length; i++)
+	for (var i = 0; i < DwrConf.SVG_TREE_TYPES.length; i++)
 	{
-		html += '<option value="' + i + '"' + ((Dwr.search.SvgType == i) ? ' selected' : '') + '>' + SVG_TREE_TYPES_NAMES[i] + '</option>';
+		html += '<option value="' + i + '"' + ((Dwr.search.SvgType == i) ? ' selected' : '') + '>' + DwrConfDwrConf.SVG_TREE_TYPES[i] + '</option>';
 	}
 	html += '</select>';
 	html += '</div>'; // form-group
@@ -376,9 +376,9 @@ DwrSvgClass.prototype.ConfPage = function()
 	html += '<div class="form-group">';
 	html += '<label for="svg-shape">' + _('SVG tree graph shape') + '</label>';
 	html += '<select name="svg-shape" id="svg-shape" class="form-control" size="1" title="' + _('Select the shape of graph') + '">';
-	for (i = 0; i < SVG_TREE_SHAPES_NAMES.length; i++)
+	for (i = 0; i < DwrConf.SVG_TREE_SHAPES.length; i++)
 	{
-		html += '<option value="' + i + '"' + ((Dwr.search.SvgShape == i) ? ' selected' : '') + '>' + SVG_TREE_SHAPES_NAMES[i] + '</option>';
+		html += '<option value="' + i + '"' + ((Dwr.search.SvgShape == i) ? ' selected' : '') + '>' + DwrConf.SVG_TREE_SHAPES[i] + '</option>';
 	}
 	html += '</select>';
 	html += '</div>'; // form-group
@@ -389,9 +389,9 @@ DwrSvgClass.prototype.ConfPage = function()
 	html += '<div class="form-group">';
 	html += '<label for="svg-distrib-asc">' + _('SVG tree parents distribution') + '</label>';
 	html += '<select name="svg-distrib-asc" id="svg-distrib-asc" class="form-control" size="1" title="' + _('Select the parents distribution (fan charts only)') + '">';
-	for (i = 0; i < SVG_TREE_DISTRIB_ASC_NAMES.length; i++)
+	for (i = 0; i < DwrConf.SVG_TREE_DISTRIB_ASC.length; i++)
 	{
-		html += '<option value="' + i + '"' + ((Dwr.search.SvgDistribAsc == i) ? ' selected' : '') + '>' + SVG_TREE_DISTRIB_ASC_NAMES[i] + '</option>';
+		html += '<option value="' + i + '"' + ((Dwr.search.SvgDistribAsc == i) ? ' selected' : '') + '>' + DwrConf.SVG_TREE_DISTRIB_ASC[i] + '</option>';
 	}
 	html += '</select>';
 	html += '</div>'; // form-group
@@ -400,9 +400,9 @@ DwrSvgClass.prototype.ConfPage = function()
 	html += '<div class="form-group">';
 	html += '<label for="svg-distrib-dsc">' + _('SVG tree children distribution') + '</label>';
 	html += '<select name="svg-distrib-dsc" id="svg-distrib-dsc" class="form-control" size="1" title="' + _('Select the children distribution (fan charts only)') + '">';
-	for (i = 0; i < SVG_TREE_DISTRIB_DSC_NAMES.length; i++)
+	for (i = 0; i < DwrConf.SVG_TREE_DISTRIB_DSC.length; i++)
 	{
-		html += '<option value="' + i + '"' + ((Dwr.search.SvgDistribDsc == i) ? ' selected' : '') + '>' + SVG_TREE_DISTRIB_DSC_NAMES[i] + '</option>';
+		html += '<option value="' + i + '"' + ((Dwr.search.SvgDistribDsc == i) ? ' selected' : '') + '>' + DwrConf.SVG_TREE_DISTRIB_DSC[i] + '</option>';
 	}
 	html += '</select>';
 	html += '</div>'; // form-group
@@ -413,9 +413,9 @@ DwrSvgClass.prototype.ConfPage = function()
 	html += '<div class="form-group">';
 	html += '<label for="svg-background">' + _('Background') + '</label>';
 	html += '<select name="svg-background" id="svg-background" class="form-control" size="1" title="' + _('Select the background color scheme') + '">';
-	for (i = 0; i < SVG_TREE_BACKGROUND_NAMES.length; i++)
+	for (i = 0; i < DwrConf.SVG_TREE_BACKGROUNDS.length; i++)
 	{
-		html += '<option value="' + i + '"' + ((Dwr.search.SvgBackground == i) ? ' selected' : '') + '>' + SVG_TREE_BACKGROUND_NAMES[i] + '</option>';
+		html += '<option value="' + i + '"' + ((Dwr.search.SvgBackground == i) ? ' selected' : '') + '>' + DwrConf.SVG_TREE_BACKGROUNDS[i] + '</option>';
 	}
 	html += '</select>';
 	html += '</div>'; // form-group
@@ -424,7 +424,7 @@ DwrSvgClass.prototype.ConfPage = function()
 	html += '<div class="form-group">';
 	html += '<label for="svg-asc">' + _('Ancestors') + '</label>';
 	html += '<select id="svg-asc" class="form-control svg-gens" size="1" title="' + _('Select the number of ascending generations') + '">';
-	for (i = 0; i < NB_GENERATIONS_MAX; i++)
+	for (i = 0; i < DwrConf.graphgens; i++)
 	{
 		html += '<option value="' + i + '"' + ((Dwr.search.Asc == i) ? ' selected' : '') + '>' + i + '</option>';
 	}
@@ -435,7 +435,7 @@ DwrSvgClass.prototype.ConfPage = function()
 	html += '<div class="form-group">';
 	html += '<label for="svg-dsc">' + _('Descendants') + '</label>';
 	html += '<select id="svg-dsc" class="form-control svg-gens" size="1" title="' + _('Select the number of descending generations') + '">';
-	for (i = 0; i < NB_GENERATIONS_MAX; i++)
+	for (i = 0; i < DwrConf.graphgens; i++)
 	{
 		html += '<option value="' + i + '"' + ((Dwr.search.Dsc == i) ? ' selected' : '') + '>' + i + '</option>';
 	}
@@ -735,23 +735,23 @@ function SvgSetStyle(p, text, x_elt, lev)
 	var fill = "#FFFFFF";
 	var stroke = "#000000";
 	var dark = 1.0;
-	if (Dwr.search.SvgBackground == SVG_TREE_BACKGROUND_GENDER)
+	if (Dwr.search.SvgBackground == DwrConf.SVG_TREE_BACKGROUND_GENDER)
 	{
 		var g = 'unknown';
 		if (I(elt[SVGELT_IDX], 'gender') == 'M') g = 'male';
 		if (I(elt[SVGELT_IDX], 'gender') == 'F') g = 'female';
 		var d = 'alive';
 		if (I(elt[SVGELT_IDX], 'death_date') != "") d = 'death';
-		fill = GRAMPS_PREFERENCES['color-gender-' + g + '-' + d];
+		fill = DwrConf.GRAMPS_PREFERENCES['color-gender-' + g + '-' + d];
 	}
-	if (typeof(lev) !== 'undefined' && Dwr.search.SvgBackground == SVG_TREE_BACKGROUND_GENERATION)
+	if (typeof(lev) !== 'undefined' && Dwr.search.SvgBackground == DwrConf.SVG_TREE_BACKGROUND_GENERATION)
 	{
 		fill = SvgColorGrad(0, Math.max(nbGenAscFound, nbGenDscFound) - 1, lev);
 		dark = SVG_GENDER_K;
 	}
 	if (
-		(Dwr.search.SvgBackground == SVG_TREE_BACKGROUND_AGE) ||
-		(Dwr.search.SvgBackground == SVG_TREE_BACKGROUND_PERIOD))
+		(Dwr.search.SvgBackground == DwrConf.SVG_TREE_BACKGROUND_AGE) ||
+		(Dwr.search.SvgBackground == DwrConf.SVG_TREE_BACKGROUND_PERIOD))
 	{
 		var b = parseInt(I(elt[SVGELT_IDX], 'birth_sdn'));
 		var d = parseInt(I(elt[SVGELT_IDX], 'death_sdn'));
@@ -772,28 +772,28 @@ function SvgSetStyle(p, text, x_elt, lev)
 		}
 		dark = SVG_GENDER_K;
 	}
-	if (Dwr.search.SvgBackground == SVG_TREE_BACKGROUND_SINGLE)
+	if (Dwr.search.SvgBackground == DwrConf.SVG_TREE_BACKGROUND_SINGLE)
 	{
-		fill = SVG_TREE_COLOR1;
+		fill = DwrConf.svg_tree_color1;
 	}
-	if (Dwr.search.SvgBackground == SVG_TREE_BACKGROUND_WHITE)
+	if (Dwr.search.SvgBackground == DwrConf.SVG_TREE_BACKGROUND_WHITE)
 	{
-		fill = SVG_TREE_COLOR_SCHEME0[lev % SVG_TREE_COLOR_SCHEME0.length];
+		fill = DwrConf.SVG_TREE_COLOR_SCHEME0[lev % DwrConf.SVG_TREE_COLOR_SCHEME0.length];
 		dark = SVG_GENDER_K;
 	}
-	if (Dwr.search.SvgBackground == SVG_TREE_BACKGROUND_SCHEME1)
+	if (Dwr.search.SvgBackground == DwrConf.SVG_TREE_BACKGROUND_SCHEME1)
 	{
-		fill = SVG_TREE_COLOR_SCHEME1[lev % SVG_TREE_COLOR_SCHEME1.length];
+		fill = DwrConf.SVG_TREE_COLOR_SCHEME1[lev % DwrConf.SVG_TREE_COLOR_SCHEME1.length];
 		dark = SVG_GENDER_K;
 	}
-	if (Dwr.search.SvgBackground == SVG_TREE_BACKGROUND_SCHEME2)
+	if (Dwr.search.SvgBackground == DwrConf.SVG_TREE_BACKGROUND_SCHEME2)
 	{
-		fill = SVG_TREE_COLOR_SCHEME2[lev % SVG_TREE_COLOR_SCHEME2.length];
+		fill = DwrConf.SVG_TREE_COLOR_SCHEME2[lev % DwrConf.SVG_TREE_COLOR_SCHEME2.length];
 		dark = SVG_GENDER_K;
 	}
 	if (Dwr.search.SvgDup && Dwr.isDuplicate(elt[SVGELT_IDX]))
 	{
-		fill = SVG_TREE_COLOR_DUP;
+		fill = DwrConf.svg_tree_color_dup;
 	}
 	if ((elt[SVGELT_IDX] < 0) || (I(elt[SVGELT_IDX], 'gender') == 'F')) dark = 1.0;
 	var fill_hsb = Raphael.rgb2hsb(Raphael.getRGB(fill));
@@ -829,8 +829,8 @@ function SvgColorGrad(mini, maxi, value)
 	if (x >= m) x = m;
 	x = (m == 0) ? 0 : 1.0 * x / m;
 	// Compute color gradient
-	var cstart = Raphael.rgb2hsb(Raphael.getRGB(SVG_TREE_COLOR1));
-	var cend = Raphael.rgb2hsb(Raphael.getRGB(SVG_TREE_COLOR2));
+	var cstart = Raphael.rgb2hsb(Raphael.getRGB(DwrConf.svg_tree_color1));
+	var cend = Raphael.rgb2hsb(Raphael.getRGB(DwrConf.svg_tree_color2));
 	var rgb = Raphael.hsb2rgb({
 		h: (1.0 + cstart.h + x * ((1.0 + cend.h - cstart.h) % 1.0)) % 1.0,
 		s: (1-x) * cstart.s + x * cend.s,

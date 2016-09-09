@@ -62,18 +62,18 @@ function BodyDecorate()
 	}
 
 	// Text for the header
-	if (HEADER != '') $('body').prepend(
+	if (DwrConf.headernote != '') $('body').prepend(
 		'<div id="dwr-header">' +
-		HEADER +
+		DwrConf.headernote +
 		'</div>');
 
 	// Text for the footer
 	var ct = '';
 	if (Dwr.search.IncChangeTime) ct = '<p id="dwr-change-time" class="dwr-change-time">';
-	if ((FOOTER + COPYRIGHT) != '') $('body').append(
-		'<div id="dwr-footer" class="panel-footer">' +
-		FOOTER + COPYRIGHT + ct +
-		'</div>');
+	var foot = DwrConf.footernote + DwrConf.COPYRIGHT + ct;
+	if (foot != '') $('body').append(
+		'<div id="dwr-footer" class="panel-footer">' + foot + '</div>'
+	);
 
 	// Create embedded search forms
 	var esf = $('.embed-search');
@@ -258,40 +258,40 @@ DwrClass.prototype.defaultSearchString = {
 
 	Asc: 4,
 	Dsc: 4,
-	SvgType: SVG_TREE_TYPE,
-	SvgShape: SVG_TREE_SHAPE,
-	SvgDistribAsc: SVG_TREE_DISTRIB_ASC,
-	SvgDistribDsc: SVG_TREE_DISTRIB_DSC,
-	SvgBackground: SVG_TREE_BACKGROUND,
-	SvgDup: SVG_TREE_SHOW_DUP,
+	SvgType: DwrConf.svg_tree_type,
+	SvgShape: DwrConf.svg_tree_shape,
+	SvgDistribAsc: DwrConf.svg_tree_distrib_asc,
+	SvgDistribDsc: DwrConf.svg_tree_distrib_dsc,
+	SvgBackground: DwrConf.svg_tree_background,
+	SvgDup: DwrConf.svg_tree_show_dup,
 	SvgExpanded: false,
 
-	IndexShowDates: INDEX_SHOW_DATES,
-	IndexShowPartner: INDEX_SHOW_PARTNER,
-	IndexShowParents: INDEX_SHOW_PARENTS,
-	IndexShowPath: INDEX_SHOW_PATH,
-	IndexShowBkrefType: INDEX_SHOW_BKREF_TYPE,
-	ShowAllSiblings: SHOW_ALL_SIBLINGS,
-	IncEvents: INC_EVENTS,
-	IncFamilies: INC_FAMILIES,
-	IncSources: INC_SOURCES,
-	IncMedia: INC_MEDIA,
-	IncPlaces: INC_PLACES,
-	IncRepositories: INC_REPOSITORIES,
-	IncNotes: INC_NOTES,
-	IncAddresses: INC_ADDRESSES,
-	MapPlace: MAP_PLACE,
-	MapFamily: MAP_FAMILY,
-	SourceAuthorInTitle: SOURCE_AUTHOR_IN_TITLE,
-	TabbedPanels: TABBED_PANELS,
-	IncChangeTime: INC_CHANGE_TIME,
-	HideGid: HIDE_GID,
-	IndexTypeN: INDEX_SURNAMES_TYPE,
-	IndexTypeI: INDEX_PERSONS_TYPE,
-	IndexTypeF: INDEX_FAMILIES_TYPE,
-	IndexTypeS: INDEX_SOURCES_TYPE,
-	IndexTypeP: INDEX_PLACES_TYPE,
-	IndexTypeE: INDEX_EVENTS_TYPE,
+	IndexShowDates: DwrConf.showdates,
+	IndexShowPartner: DwrConf.showpartner,
+	IndexShowParents: DwrConf.showparents,
+	IndexShowPath: DwrConf.showpath,
+	IndexShowBkrefType: DwrConf.bkref_type,
+	ShowAllSiblings: DwrConf.showallsiblings,
+	IncEvents: DwrConf.inc_events,
+	IncFamilies: DwrConf.inc_families,
+	IncSources: DwrConf.inc_sources,
+	IncMedia: DwrConf.inc_gallery,
+	IncPlaces: DwrConf.inc_places,
+	IncRepositories: DwrConf.inc_repositories,
+	IncNotes: DwrConf.inc_notes,
+	IncAddresses: DwrConf.inc_addresses,
+	MapPlace: DwrConf.placemappages,
+	MapFamily: DwrConf.familymappages,
+	SourceAuthorInTitle: DwrConf.sourceauthor,
+	TabbedPanels: DwrConf.tabbed_panels,
+	IncChangeTime: DwrConf.inc_change_time,
+	HideGid: DwrConf.hide_gid,
+	IndexTypeN: DwrConf.index_surnames_type,
+	IndexTypeI: DwrConf.index_persons_type,
+	IndexTypeF: DwrConf.index_families_type,
+	IndexTypeS: DwrConf.index_sources_type,
+	IndexTypeP: DwrConf.index_places_type,
+	IndexTypeE: DwrConf.index_events_type,
 
 	ChartTable: 0,
 	ChartType: 0,
@@ -311,8 +311,8 @@ DwrClass.prototype.defaultSearchString = {
 	ChartFilter1Max: "",
 	ChartFilter2Max: "",
 	ChartFilter3Max: "",
-	ChartOpacity: STATISTICS_CHART_OPACITY,
-	ChartBackground: CHART_BACKGROUND_GRADIENT,
+	ChartOpacity: DwrConf.STATISTICS_CHART_OPACITY,
+	ChartBackground: DwrConf.CHART_BACKGROUND_GRADIENT,
 	ChartValW: "",
 	ChartValX: "",
 	ChartValY: "",
@@ -347,40 +347,40 @@ DwrClass.prototype.ParseSearchString = function()
 
 	Dwr.search.Asc = GetURLParameter('sasc', 4);
 	Dwr.search.Dsc = GetURLParameter('sdsc', 4);
-	Dwr.search.SvgType = GetURLParameter('svgtype', SVG_TREE_TYPE);
-	Dwr.search.SvgShape = GetURLParameter('svgshape', SVG_TREE_SHAPE);
-	Dwr.search.SvgDistribAsc = GetURLParameter('svgdasc', SVG_TREE_DISTRIB_ASC);
-	Dwr.search.SvgDistribDsc = GetURLParameter('svgddsc', SVG_TREE_DISTRIB_DSC);
-	Dwr.search.SvgBackground = GetURLParameter('svgbk', SVG_TREE_BACKGROUND);
-	Dwr.search.SvgDup = GetURLParameter('svgdup', SVG_TREE_SHOW_DUP);
+	Dwr.search.SvgType = GetURLParameter('svgtype', DwrConf.svg_tree_type);
+	Dwr.search.SvgShape = GetURLParameter('svgshape', DwrConf.svg_tree_shape);
+	Dwr.search.SvgDistribAsc = GetURLParameter('svgdasc', DwrConf.svg_tree_distrib_asc);
+	Dwr.search.SvgDistribDsc = GetURLParameter('svgddsc', DwrConf.svg_tree_distrib_dsc);
+	Dwr.search.SvgBackground = GetURLParameter('svgbk', DwrConf.svg_tree_background);
+	Dwr.search.SvgDup = GetURLParameter('svgdup', DwrConf.svg_tree_show_dup);
 	Dwr.search.SvgExpanded = GetURLParameter('svgx', false);
 
-	Dwr.search.IndexShowDates = GetURLParameter('cid', INDEX_SHOW_DATES);
-	Dwr.search.IndexShowPartner = GetURLParameter('cis', INDEX_SHOW_PARTNER);
-	Dwr.search.IndexShowParents = GetURLParameter('cip', INDEX_SHOW_PARENTS);
-	Dwr.search.IndexShowPath = GetURLParameter('cia', INDEX_SHOW_PATH);
-	Dwr.search.IndexShowBkrefType = GetURLParameter('cib', INDEX_SHOW_BKREF_TYPE);
-	Dwr.search.ShowAllSiblings = GetURLParameter('csib', SHOW_ALL_SIBLINGS);
-	Dwr.search.IncEvents = GetURLParameter('ce', INC_EVENTS);
-	Dwr.search.IncFamilies = GetURLParameter('cf', INC_FAMILIES);
-	Dwr.search.IncSources = GetURLParameter('cs', INC_SOURCES);
-	Dwr.search.IncMedia = GetURLParameter('cm', INC_MEDIA);
-	Dwr.search.IncPlaces = GetURLParameter('cp', INC_PLACES);
-	Dwr.search.IncRepositories = GetURLParameter('cr', INC_REPOSITORIES);
-	Dwr.search.IncNotes = GetURLParameter('cn', INC_NOTES);
-	Dwr.search.IncAddresses = GetURLParameter('ca', INC_ADDRESSES);
-	Dwr.search.MapPlace = GetURLParameter('cmp', MAP_PLACE);
-	Dwr.search.MapFamily = GetURLParameter('cmf', MAP_FAMILY);
-	Dwr.search.SourceAuthorInTitle = GetURLParameter('csa', SOURCE_AUTHOR_IN_TITLE);
-	Dwr.search.TabbedPanels = GetURLParameter('ctp', TABBED_PANELS);
-	Dwr.search.IncChangeTime = GetURLParameter('cct', INC_CHANGE_TIME);
-	Dwr.search.HideGid = GetURLParameter('cg', HIDE_GID);
-	Dwr.search.IndexTypeN = GetURLParameter('citn', INDEX_SURNAMES_TYPE);
-	Dwr.search.IndexTypeI = GetURLParameter('citi', INDEX_PERSONS_TYPE);
-	Dwr.search.IndexTypeF = GetURLParameter('citf', INDEX_FAMILIES_TYPE);
-	Dwr.search.IndexTypeS = GetURLParameter('cits', INDEX_SOURCES_TYPE);
-	Dwr.search.IndexTypeP = GetURLParameter('citp', INDEX_PLACES_TYPE);
-	Dwr.search.IndexTypeE = GetURLParameter('cite', INDEX_EVENTS_TYPE);
+	Dwr.search.IndexShowDates = GetURLParameter('cid', DwrConf.showdates);
+	Dwr.search.IndexShowPartner = GetURLParameter('cis', DwrConf.showpartner);
+	Dwr.search.IndexShowParents = GetURLParameter('cip', DwrConf.showparents);
+	Dwr.search.IndexShowPath = GetURLParameter('cia', DwrConf.showpath);
+	Dwr.search.IndexShowBkrefType = GetURLParameter('cib', DwrConf.bkref_type);
+	Dwr.search.ShowAllSiblings = GetURLParameter('csib', DwrConf.showallsiblings);
+	Dwr.search.IncEvents = GetURLParameter('ce', DwrConf.inc_events);
+	Dwr.search.IncFamilies = GetURLParameter('cf', DwrConf.inc_families);
+	Dwr.search.IncSources = GetURLParameter('cs', DwrConf.inc_sources);
+	Dwr.search.IncMedia = GetURLParameter('cm', DwrConf.inc_gallery);
+	Dwr.search.IncPlaces = GetURLParameter('cp', DwrConf.inc_places);
+	Dwr.search.IncRepositories = GetURLParameter('cr', DwrConf.inc_repositories);
+	Dwr.search.IncNotes = GetURLParameter('cn', DwrConf.inc_notes);
+	Dwr.search.IncAddresses = GetURLParameter('ca', DwrConf.inc_addresses);
+	Dwr.search.MapPlace = GetURLParameter('cmp', DwrConf.placemappages);
+	Dwr.search.MapFamily = GetURLParameter('cmf', DwrConf.familymappages);
+	Dwr.search.SourceAuthorInTitle = GetURLParameter('csa', DwrConf.sourceauthor);
+	Dwr.search.TabbedPanels = GetURLParameter('ctp', DwrConf.tabbed_panels);
+	Dwr.search.IncChangeTime = GetURLParameter('cct', DwrConf.inc_change_time);
+	Dwr.search.HideGid = GetURLParameter('cg', DwrConf.hide_gid);
+	Dwr.search.IndexTypeN = GetURLParameter('citn', DwrConf.index_surnames_type);
+	Dwr.search.IndexTypeI = GetURLParameter('citi', DwrConf.index_persons_type);
+	Dwr.search.IndexTypeF = GetURLParameter('citf', DwrConf.index_families_type);
+	Dwr.search.IndexTypeS = GetURLParameter('cits', DwrConf.index_sources_type);
+	Dwr.search.IndexTypeP = GetURLParameter('citp', DwrConf.index_places_type);
+	Dwr.search.IndexTypeE = GetURLParameter('cite', DwrConf.index_events_type);
 
 	Dwr.search.ChartTable = GetURLParameter('charttable', 0);
 	Dwr.search.ChartType = GetURLParameter('charttype', 0);
@@ -400,8 +400,8 @@ DwrClass.prototype.ParseSearchString = function()
 	Dwr.search.ChartFilter1Max = GetURLParameter('chartfr1a', "");
 	Dwr.search.ChartFilter2Max = GetURLParameter('chartfr2a', "");
 	Dwr.search.ChartFilter3Max = GetURLParameter('chartfr3a', "");
-	Dwr.search.ChartOpacity = GetURLParameter('chartopa', STATISTICS_CHART_OPACITY);
-	Dwr.search.ChartBackground = GetURLParameter('chartbk', CHART_BACKGROUND_GRADIENT);
+	Dwr.search.ChartOpacity = GetURLParameter('chartopa', DwrConf.STATISTICS_CHART_OPACITY);
+	Dwr.search.ChartBackground = GetURLParameter('chartbk', DwrConf.CHART_BACKGROUND_GRADIENT);
 	Dwr.search.ChartValW = GetURLParameter('chartvw', "");
 	Dwr.search.ChartValX = GetURLParameter('chartvx', "");
 	Dwr.search.ChartValY = GetURLParameter('chartvy', "");
@@ -472,40 +472,40 @@ DwrClass.prototype.BuildSearchString = function(params)
 
 	s = SetURLParameter(s, 'sasc', params.Asc, Dwr.search.Asc, 4);
 	s = SetURLParameter(s, 'sdsc', params.Dsc, Dwr.search.Dsc, 4);
-	s = SetURLParameter(s, 'svgtype', params.SvgType, Dwr.search.SvgType, SVG_TREE_TYPE);
-	s = SetURLParameter(s, 'svgshape', params.SvgShape, Dwr.search.SvgShape, SVG_TREE_SHAPE);
-	s = SetURLParameter(s, 'svgdasc', params.SvgDistribAsc, Dwr.search.SvgDistribAsc, SVG_TREE_DISTRIB_ASC);
-	s = SetURLParameter(s, 'svgddsc', params.SvgDistribDsc, Dwr.search.SvgDistribDsc, SVG_TREE_DISTRIB_DSC);
-	s = SetURLParameter(s, 'svgbk', params.SvgBackground, Dwr.search.SvgBackground, SVG_TREE_BACKGROUND);
-	s = SetURLParameter(s, 'svgdup', params.SvgDup, Dwr.search.SvgDup, SVG_TREE_SHOW_DUP);
+	s = SetURLParameter(s, 'svgtype', params.SvgType, Dwr.search.SvgType, DwrConf.svg_tree_type);
+	s = SetURLParameter(s, 'svgshape', params.SvgShape, Dwr.search.SvgShape, DwrConf.svg_tree_shape);
+	s = SetURLParameter(s, 'svgdasc', params.SvgDistribAsc, Dwr.search.SvgDistribAsc, DwrConf.svg_tree_distrib_asc);
+	s = SetURLParameter(s, 'svgddsc', params.SvgDistribDsc, Dwr.search.SvgDistribDsc, DwrConf.svg_tree_distrib_dsc);
+	s = SetURLParameter(s, 'svgbk', params.SvgBackground, Dwr.search.SvgBackground, DwrConf.svg_tree_background);
+	s = SetURLParameter(s, 'svgdup', params.SvgDup, Dwr.search.SvgDup, DwrConf.svg_tree_show_dup);
 	s = SetURLParameter(s, 'svgx', params.SvgExpanded, Dwr.search.SvgExpanded, false);
 
-	s = SetURLParameter(s, 'cid', params.IndexShowDates, Dwr.search.IndexShowDates, INDEX_SHOW_DATES);
-	s = SetURLParameter(s, 'cis', params.IndexShowPartner, Dwr.search.IndexShowPartner, INDEX_SHOW_PARTNER);
-	s = SetURLParameter(s, 'cip', params.IndexShowParents, Dwr.search.IndexShowParents, INDEX_SHOW_PARENTS);
-	s = SetURLParameter(s, 'cia', params.IndexShowPath, Dwr.search.IndexShowPath, INDEX_SHOW_PATH);
-	s = SetURLParameter(s, 'cib', params.IndexShowBkrefType, Dwr.search.IndexShowBkrefType, INDEX_SHOW_BKREF_TYPE);
-	s = SetURLParameter(s, 'csib', params.ShowAllSiblings, Dwr.search.ShowAllSiblings, SHOW_ALL_SIBLINGS);
-	s = SetURLParameter(s, 'ce', params.IncEvents, Dwr.search.IncEvents, INC_EVENTS);
-	s = SetURLParameter(s, 'cf', params.IncFamilies, Dwr.search.IncFamilies, INC_FAMILIES);
-	s = SetURLParameter(s, 'cs', params.IncSources, Dwr.search.IncSources, INC_SOURCES);
-	s = SetURLParameter(s, 'cm', params.IncMedia, Dwr.search.IncMedia, INC_MEDIA);
-	s = SetURLParameter(s, 'cp', params.IncPlaces, Dwr.search.IncPlaces, INC_PLACES);
-	s = SetURLParameter(s, 'cr', params.IncRepositories, Dwr.search.IncRepositories, INC_REPOSITORIES);
-	s = SetURLParameter(s, 'cn', params.IncNotes, Dwr.search.IncNotes, INC_NOTES);
-	s = SetURLParameter(s, 'ca', params.IncAddresses, Dwr.search.IncAddresses, INC_ADDRESSES);
-	s = SetURLParameter(s, 'cmp', params.MapPlace, Dwr.search.MapPlace, MAP_PLACE);
-	s = SetURLParameter(s, 'cmf', params.MapFamily, Dwr.search.MapFamily, MAP_FAMILY);
-	s = SetURLParameter(s, 'csa', params.SourceAuthorInTitle, Dwr.search.SourceAuthorInTitle, SOURCE_AUTHOR_IN_TITLE);
-	s = SetURLParameter(s, 'ctp', params.TabbedPanels, Dwr.search.TabbedPanels, TABBED_PANELS);
-	s = SetURLParameter(s, 'cct', params.IncChangeTime, Dwr.search.IncChangeTime, INC_CHANGE_TIME);
-	s = SetURLParameter(s, 'cg', params.HideGid, Dwr.search.HideGid, HIDE_GID);
-	s = SetURLParameter(s, 'citn', Dwr.search.IndexTypeN, Dwr.search.IndexTypeN, INDEX_SURNAMES_TYPE);
-	s = SetURLParameter(s, 'citi', Dwr.search.IndexTypeI, Dwr.search.IndexTypeI, INDEX_PERSONS_TYPE);
-	s = SetURLParameter(s, 'citf', Dwr.search.IndexTypeF, Dwr.search.IndexTypeF, INDEX_FAMILIES_TYPE);
-	s = SetURLParameter(s, 'cits', Dwr.search.IndexTypeS, Dwr.search.IndexTypeS, INDEX_SOURCES_TYPE);
-	s = SetURLParameter(s, 'citp', Dwr.search.IndexTypeP, Dwr.search.IndexTypeP, INDEX_PLACES_TYPE);
-	s = SetURLParameter(s, 'cite', Dwr.search.IndexTypeE, Dwr.search.IndexTypeE, INDEX_EVENTS_TYPE);
+	s = SetURLParameter(s, 'cid', params.IndexShowDates, Dwr.search.IndexShowDates, DwrConf.showdates);
+	s = SetURLParameter(s, 'cis', params.IndexShowPartner, Dwr.search.IndexShowPartner, DwrConf.showpartner);
+	s = SetURLParameter(s, 'cip', params.IndexShowParents, Dwr.search.IndexShowParents, DwrConf.showparents);
+	s = SetURLParameter(s, 'cia', params.IndexShowPath, Dwr.search.IndexShowPath, DwrConf.showpath);
+	s = SetURLParameter(s, 'cib', params.IndexShowBkrefType, Dwr.search.IndexShowBkrefType, DwrConf.bkref_type);
+	s = SetURLParameter(s, 'csib', params.ShowAllSiblings, Dwr.search.ShowAllSiblings, DwrConf.showallsiblings);
+	s = SetURLParameter(s, 'ce', params.IncEvents, Dwr.search.IncEvents, DwrConf.inc_events);
+	s = SetURLParameter(s, 'cf', params.IncFamilies, Dwr.search.IncFamilies, DwrConf.inc_families);
+	s = SetURLParameter(s, 'cs', params.IncSources, Dwr.search.IncSources, DwrConf.inc_sources);
+	s = SetURLParameter(s, 'cm', params.IncMedia, Dwr.search.IncMedia, DwrConf.inc_gallery);
+	s = SetURLParameter(s, 'cp', params.IncPlaces, Dwr.search.IncPlaces, DwrConf.inc_places);
+	s = SetURLParameter(s, 'cr', params.IncRepositories, Dwr.search.IncRepositories, DwrConf.inc_repositories);
+	s = SetURLParameter(s, 'cn', params.IncNotes, Dwr.search.IncNotes, DwrConf.inc_notes);
+	s = SetURLParameter(s, 'ca', params.IncAddresses, Dwr.search.IncAddresses, DwrConf.inc_addresses);
+	s = SetURLParameter(s, 'cmp', params.MapPlace, Dwr.search.MapPlace, DwrConf.placemappages);
+	s = SetURLParameter(s, 'cmf', params.MapFamily, Dwr.search.MapFamily, DwrConf.familymappages);
+	s = SetURLParameter(s, 'csa', params.SourceAuthorInTitle, Dwr.search.SourceAuthorInTitle, DwrConf.sourceauthor);
+	s = SetURLParameter(s, 'ctp', params.TabbedPanels, Dwr.search.TabbedPanels, DwrConf.tabbed_panels);
+	s = SetURLParameter(s, 'cct', params.IncChangeTime, Dwr.search.IncChangeTime, DwrConf.inc_change_time);
+	s = SetURLParameter(s, 'cg', params.HideGid, Dwr.search.HideGid, DwrConf.hide_gid);
+	s = SetURLParameter(s, 'citn', Dwr.search.IndexTypeN, Dwr.search.IndexTypeN, DwrConf.index_surnames_type);
+	s = SetURLParameter(s, 'citi', Dwr.search.IndexTypeI, Dwr.search.IndexTypeI, DwrConf.index_persons_type);
+	s = SetURLParameter(s, 'citf', Dwr.search.IndexTypeF, Dwr.search.IndexTypeF, DwrConf.index_families_type);
+	s = SetURLParameter(s, 'cits', Dwr.search.IndexTypeS, Dwr.search.IndexTypeS, DwrConf.index_sources_type);
+	s = SetURLParameter(s, 'citp', Dwr.search.IndexTypeP, Dwr.search.IndexTypeP, DwrConf.index_places_type);
+	s = SetURLParameter(s, 'cite', Dwr.search.IndexTypeE, Dwr.search.IndexTypeE, DwrConf.index_events_type);
 
 	s = SetURLParameter(s, 'charttable', params.ChartTable, Dwr.search.ChartTable, 0);
 	s = SetURLParameter(s, 'charttype', params.ChartType, Dwr.search.ChartType, 0);
@@ -525,8 +525,8 @@ DwrClass.prototype.BuildSearchString = function(params)
 	s = SetURLParameter(s, 'chartfr1a', params.ChartFilter1Max, Dwr.search.ChartFilter1Max, "");
 	s = SetURLParameter(s, 'chartfr2a', params.ChartFilter2Max, Dwr.search.ChartFilter2Max, "");
 	s = SetURLParameter(s, 'chartfr3a', params.ChartFilter3Max, Dwr.search.ChartFilter3Max, "");
-	s = SetURLParameter(s, 'chartopa', params.ChartOpacity, Dwr.search.ChartOpacity, STATISTICS_CHART_OPACITY);
-	s = SetURLParameter(s, 'chartbk', params.ChartBackground, Dwr.search.ChartBackground, CHART_BACKGROUND_GRADIENT);
+	s = SetURLParameter(s, 'chartopa', params.ChartOpacity, Dwr.search.ChartOpacity, DwrConf.STATISTICS_CHART_OPACITY);
+	s = SetURLParameter(s, 'chartbk', params.ChartBackground, Dwr.search.ChartBackground, DwrConf.CHART_BACKGROUND_GRADIENT);
 	s = SetURLParameter(s, 'chartvw', params.ChartDataW, Dwr.search.ChartValW, "");
 	s = SetURLParameter(s, 'chartvx', params.ChartDataX, Dwr.search.ChartValX, "");
 	s = SetURLParameter(s, 'chartvy', params.ChartDataY, Dwr.search.ChartValY, "");
@@ -624,9 +624,9 @@ function BuildMenu()
 
 	// Get current menu item
 	var i_current = -1;
-	for (i=0; i<PAGES_TITLE.length; i++)
+	for (i=0; i<DwrConf.pages_menu.length; i++)
 	{
-		if (PAGES_FILE[i].indexOf(ad) >= 0)
+		if (DwrConf.pages_menu[i][0].indexOf(ad) >= 0)
 		{
 			// This menu item is the current page
 			i_current = i;
@@ -644,7 +644,7 @@ function BuildMenu()
 	nbSearchForms += 1;
 	txt_form1 += '</div>';
 	txt_form1 += '</div>';
-	if (INC_PAGECONF)
+	if (DwrConf.inc_pageconf)
 	{
 		txt_form1 += ' <button type="button" id="dwr-conf" class="btn btn-default dwr-navbar-toggle-enabled" onclick="window.location.href=\'' + (Dwr.toRoot + 'conf.html?' + Dwr.BuildSearchString()) + '\';"><span class="glyphicon glyphicon-cog"></span></button>';
 	}
@@ -663,35 +663,35 @@ function BuildMenu()
 	txt_menu += '<span class="icon-bar"></span>';
 	txt_menu += '<span class="icon-bar"></span>';
 	txt_menu += '</button>';
-	if (BRAND_TITLE)
-		txt_menu += '<a class="navbar-brand" href="index.html">' + BRAND_TITLE + '</a>';
+	if (DwrConf.brandnote)
+		txt_menu += '<a class="navbar-brand" href="index.html">' + DwrConf.brandnote + '</a>';
 	else
 		txt_menu += '<a class="navbar-brand" href="https://gramps-project.org/"><img src="data/Gramps_Logo.png"></a>';
 	txt_menu += '</div>';
 
 	txt_menu += '<div id="dwr-navbar-collapse" class="collapse navbar-collapse">';
 	txt_menu += '<ul class="nav navbar-nav">';
-	for (i=0; i<PAGES_TITLE.length; i++)
+	for (i=0; i<DwrConf.pages_menu.length; i++)
 	{
 		var addclass = '';
 		if (i == i_current) addclass = ' class="active"';
-		if (PAGES_FILE[i] == "")
+		if (DwrConf.pages_menu[i][0] == "")
 		{
 			txt_menu += '<li class="dropdown">';
 			txt_menu += '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' + _('Indexes') +' <b class="caret"></b></a>';
 			txt_menu += '<ul class="dropdown-menu">';
-			for (var j = 0; j < PAGES_TITLE_INDEX.length; j += 1)
+			for (var j = 0; j < DwrConf.pages_menu_index.length; j += 1)
 			{
-				txt_menu += '<li' + addclass + '><a href="' + Dwr.toRoot + PAGES_FILE_INDEX[j] + '?' +  Dwr.BuildSearchString() + '">' + PAGES_TITLE_INDEX[j] + '</a></li>';
+				txt_menu += '<li' + addclass + '><a href="' + Dwr.toRoot + DwrConf.pages_menu_index[j][0] + '?' +  Dwr.BuildSearchString() + '">' + DwrConf.pages_menu_index[j][1] + '</a></li>';
 			}
 			txt_menu += '</ul></li>';
 		}
 		else
 		{
-			txt_menu += '<li' + addclass + '><a href="' + Dwr.toRoot + PAGES_FILE[i] + '?' +  Dwr.BuildSearchString() + '">' + PAGES_TITLE[i] + '</a></li>';
+			txt_menu += '<li' + addclass + '><a href="' + Dwr.toRoot + DwrConf.pages_menu[i][0] + '?' +  Dwr.BuildSearchString() + '">' + DwrConf.pages_menu[i][1] + '</a></li>';
 		}
 	}
-	if (INC_PAGECONF)
+	if (DwrConf.inc_pageconf)
 	{
 		txt_menu += '<li class="dwr-navbar-toggle-disabled"><a href="' + Dwr.toRoot + 'conf.html' + '?' +  Dwr.BuildSearchString() + '">' + _('Configuration') + '</a></li>';
 	}

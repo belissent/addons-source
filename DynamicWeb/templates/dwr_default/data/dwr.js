@@ -16,7 +16,7 @@
 
 function _(text)
 {
-	if (__[text]) return(__[text]);
+	if (typeof(DwrConf.__[text]) !== 'undefined') return(DwrConf.__[text]);
 	return(text);
 }
 window._ = _;
@@ -56,7 +56,7 @@ var rebuildPageAfterScriptLoad = false; // Request a restart of the page after s
 
 function GetDb(name, x, field)
 {
-	var i = Math.floor(x / SPLIT);
+	var i = Math.floor(x / DwrConf.SPLIT);
 	var partial = name + '_' + field + '_' + i;
 	if (!window[partial])
 	{
@@ -64,14 +64,14 @@ function GetDb(name, x, field)
 		var file = 'dwr_db_' + partial + '.js';
 		PreloadScripts([file], true);
 	}
-	return(window[partial][x % SPLIT]);
+	return(window[partial][x % DwrConf.SPLIT]);
 }
 DwrClass.prototype.GetDb = GetDb;
 
 function NameSplitScripts(name, field)
 {
 	var scripts = [];
-	for (var i = 0; i < DB_SIZES[name] / SPLIT; i++)
+	for (var i = 0; i < DwrConf.db_sizes[name] / DwrConf.SPLIT; i++)
 	{
 		var partial = name + '_' + field + '_' + i;
 		if (!window[partial])
@@ -88,7 +88,7 @@ function NameFieldScripts(name, x, fields)
 	var scripts = [];
 	for (var i = 0; i < fields.length; i++)
 	{
-		var partial = name + '_' + fields[i] + '_' +  Math.floor(x / SPLIT);;
+		var partial = name + '_' + fields[i] + '_' +  Math.floor(x / DwrConf.SPLIT);;
 		if (!window[partial])
 		{
 			scripts.push('dwr_db_' + partial + '.js');
@@ -146,14 +146,14 @@ function buildDataArray(table, field)
 {
 	// Optimization: Put all the data from the files 'db_dwr_<field>_*.js' into 1 big array, for easier access
 	if (window[table + '_' + field]) return;
-	var data = new Array(DB_SIZES[table]);
-	for (var i = 0; i <= Math.floor(DB_SIZES[table] / SPLIT); i += 1)
+	var data = new Array(DwrConf.db_sizes[table]);
+	for (var i = 0; i <= Math.floor(DwrConf.db_sizes[table] / DwrConf.SPLIT); i += 1)
 	{
 		var partial = window[table + '_' + field + '_' + i];
 		if (!partial) continue;
 		for (var x = 0; x < partial.length; x += 1)
 		{
-			data[SPLIT * i + x] = partial[x];
+			data[DwrConf.SPLIT * i + x] = partial[x];
 		}
 	}
 	window[table + '_' + field] = data;
@@ -585,7 +585,7 @@ function famLinked(fdx, citations)
 	var txt =F(fdx, 'name');
 	txt += gidBadge(F(fdx, 'gid'));
 	if (citations) txt += citaLinks(F(fdx, 'cita'));
-	if (INC_FAMILIES && (fdx != Dwr.search.Fdx || PageContents != Dwr.PAGE_FAM))
+	if (DwrConf.inc_families && (fdx != Dwr.search.Fdx || PageContents != Dwr.PAGE_FAM))
 		txt = '<a href="' + famHref(fdx) + '">' + txt + '</a>';
 	return(txt);
 }
@@ -625,7 +625,7 @@ function eventLinked(edx, citations)
 	var txt = E(edx, 'type')
 	txt += gidBadge(E(edx, 'gid'));
 	if (citations) txt += citaLinks(E(edx, 'cita'));
-	if (INC_EVENTS)
+	if (DwrConf.inc_events)
 	{
 		txt = '<a href="' + eventHref(edx) + '">' + txt + '</a>';
 	}
@@ -977,7 +977,7 @@ function placeLink(pdx, idx, fdx, edx)
 	if (typeof(edx) === 'undefined') edx = -1;
 	if (pdx == -1) return('');
 	pagePlaces.push({pdx: pdx, idx: idx, fdx: fdx, edx: edx});
-	if (!INC_PLACES) return(P(pdx, 'name'));
+	if (!DwrConf.inc_places) return(P(pdx, 'name'));
 	if (PageContents == Dwr.PAGE_PLACE && pdx == Dwr.search.Pdx) return(P(pdx, 'name'));
 	return('<a href="' + placeHref(pdx) + '">' + P(pdx, 'name') + '</a>');
 }
@@ -1191,7 +1191,7 @@ function printIndiAncestors(idx)
 {
 	var html = "";
 	var famc_list = $.map(I(idx, 'famc'), function (fc) {return fc.index});
-	if (SHOW_ALL_SIBLINGS)
+	if (DwrConf.showallsiblings)
 	{
 		for (var j = 0; j < I(idx, 'famc').length; j++)
 		{
@@ -1607,11 +1607,11 @@ function printMediaMap(mdx)
 	var j, k;
 //	html += '<ul id="imgmap">';
 	html += printMediaRefArea(M(mdx, 'bki'), indiHref, function(ref) {return I(ref, 'name')});
-	if (INC_FAMILIES)
+	if (DwrConf.inc_families)
 		html += printMediaRefArea(M(mdx, 'bkf'), famHref, function(ref) {return F(ref, 'name')});
-	if (INC_SOURCES)
+	if (DwrConf.inc_sources)
 		html += printMediaRefArea(M(mdx, 'bks'), sourceHref, sourName);
-	if (INC_PLACES)
+	if (DwrConf.inc_places)
 		html += printMediaRefArea(M(mdx, 'bkp'), placeHref, function(ref) {return P(ref, 'name')});
 //	html += '</ul>';
 	return(html);
@@ -1889,8 +1889,8 @@ function PrintIndex(id, header, type, fTable, fList, data)
 	}
 	else
 	{
-		data = new Array(DB_SIZES[id]);
-		for (var x = 0; x < DB_SIZES[id]; x++) data[x] = x;
+		data = new Array(DwrConf.db_sizes[id]);
+		for (var x = 0; x < DwrConf.db_sizes[id]; x++) data[x] = x;
 	}
 
 	if (type) return fTable(header, data);
@@ -2021,8 +2021,8 @@ function PrintIndexTable(id, header, data, defaultsort, columns)
 	if (header != '')
 	{
 		html += '<h2 class="page-header">' + header + '</h2>';
-		data = new Array(DB_SIZES[id]);
-		for (var x = 0; x < DB_SIZES[id]; x++) data[x] = x;
+		data = new Array(DwrConf.db_sizes[id]);
+		for (var x = 0; x < DwrConf.db_sizes[id]; x++) data[x] = x;
 	}
 
 	// Print table
@@ -2054,8 +2054,8 @@ function PrintIndexTable(id, header, data, defaultsort, columns)
 				'info': false,
 				'responsive': (data_copy.length <= TABLE_OPTIMIZATION_LIMIT),
 				'stateSave': true,
-				'iDisplayLength': INDEXES_SIZES[0][INDEX_DEFAULT_SIZE],
-				'aLengthMenu': INDEXES_SIZES,
+				'iDisplayLength': DwrConf.INDEXES_SIZES[0][DwrConf.entries_shown],
+				'aLengthMenu': DwrConf.INDEXES_SIZES,
 				'columns': colDefs,
 				'data': data_copy,
 				'deferRender': (data_copy.length > TABLE_OPTIMIZATION_LIMIT),
@@ -2624,17 +2624,17 @@ function htmlMediaIndexTable(header, data)
 		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_MEDIA, 'M', data[x], 'bki', 'I', 'name', indiHrefOptimized)},
 		fsort: false
 	});
-	if (Dwr.search.IndexShowBkrefType && INC_FAMILIES) columns.push({
+	if (Dwr.search.IndexShowBkrefType && DwrConf.inc_families) columns.push({
 		title: _('Used for family'),
 		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_MEDIA, 'M', data[x], 'bkf', 'F', 'name', famHrefOptimized)},
 		fsort: false
 	});
-	if (Dwr.search.IndexShowBkrefType && INC_SOURCES) columns.push({
+	if (Dwr.search.IndexShowBkrefType && DwrConf.inc_sources) columns.push({
 		title: _('Used for source'),
 		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_MEDIA, 'M', data[x], 'bks', 'S', 'title', sourceHrefOptimized)},
 		fsort: false
 	});
-	if (Dwr.search.IndexShowBkrefType && INC_PLACES) columns.push({
+	if (Dwr.search.IndexShowBkrefType && DwrConf.inc_places) columns.push({
 		title: _('Used for place'),
 		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_MEDIA, 'M', data[x], 'bkp', 'P', 'name', placeHrefOptimized)},
 		fsort: false
@@ -2704,17 +2704,17 @@ function htmlSourcesIndexTable(header, data)
 		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_SOURCE, 'S', data[x], 'bki', 'I', 'name', indiHrefOptimized)},
 		fsort: false
 	});
-	if (Dwr.search.IndexShowBkrefType && INC_FAMILIES) columns.push({
+	if (Dwr.search.IndexShowBkrefType && DwrConf.inc_families) columns.push({
 		title: _('Used for family'),
 		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_SOURCE, 'S', data[x], 'bkf', 'F', 'name', famHrefOptimized)},
 		fsort: false
 	});
-	if (Dwr.search.IndexShowBkrefType && INC_MEDIA) columns.push({
+	if (Dwr.search.IndexShowBkrefType && DwrConf.inc_gallery) columns.push({
 		title: _('Used for media'),
 		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_SOURCE, 'S', data[x], 'bkm', 'M', 'title', mediaHrefOptimized)},
 		fsort: false
 	});
-	if (Dwr.search.IndexShowBkrefType && INC_PLACES) columns.push({
+	if (Dwr.search.IndexShowBkrefType && DwrConf.inc_places) columns.push({
 		title: _('Used for place'),
 		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_SOURCE, 'S', data[x], 'bkp', 'P', 'name', placeHrefOptimized)},
 		fsort: false
@@ -2866,7 +2866,7 @@ function htmlPlacesIndexTable(header, data)
 		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_INDEX, 'P', data[x], 'bki', 'I', 'name', indiHrefOptimized)},
 		fsort: false
 	});
-	if (Dwr.search.IndexShowBkrefType && INC_FAMILIES) columns.push({
+	if (Dwr.search.IndexShowBkrefType && DwrConf.inc_families) columns.push({
 		title: _('Used for family'),
 		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_INDEX, 'P', data[x], 'bkf', 'F', 'name', famHrefOptimized)},
 		fsort: false
@@ -3094,7 +3094,7 @@ function htmlEventsIndexTable(header, data)
 		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_EVENT, 'E', data[x], 'bki', 'I', 'name', indiHrefOptimized)},
 		fsort: false
 	});
-	if (Dwr.search.IndexShowBkrefType && INC_FAMILIES) columns.push({
+	if (Dwr.search.IndexShowBkrefType && DwrConf.inc_families) columns.push({
 		title: _('Used for family'),
 		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_EVENT, 'E', data[x], 'bkf', 'F', 'name', famHrefOptimized)},
 		fsort: false
@@ -3132,9 +3132,9 @@ function htmlEventsIndexList(header, data)
 		txt += '</a>';
 		var d = E_date[edx];
 		var p = P_name[E_place[edx]];
-		if (d && p) txt += '(' + d + ' - ' + p + ')';
-		else if (d) txt += '(' + d + ')';
-		else if (p) txt += '(' + p + ')';
+		if (d && p) txt += ' (' + d + ' - ' + p + ')';
+		else if (d) txt += ' (' + d + ')';
+		else if (p) txt += ' (' + p + ')';
 		return txt;
 	};
 	var sortingAttributes = [
@@ -3191,7 +3191,7 @@ function htmlAddressesIndex()
 	var adtable = [];
 	var empty_loc = [];
 	var empty_url = {type: '', uri: '', descr: ''};
-	for (var x_i = 0; x_i < DB_SIZES['I']; x_i++)
+	for (var x_i = 0; x_i < DwrConf.db_sizes['I']; x_i++)
 	{
 		for (var x_ad = 0; x_ad < I(x_i, 'addrs').length; x_ad++)
 			adtable.push([x_i, I(x_i, 'addrs')[x_ad].location, empty_url])
@@ -3263,7 +3263,7 @@ function htmlReposIndexTable(header, data)
 			})).join('<br>'));
 		},
 	}];
-	if (Dwr.search.IndexShowBkrefType && INC_SOURCES) columns.push({
+	if (Dwr.search.IndexShowBkrefType && DwrConf.inc_sources) columns.push({
 		title: _('Used for source'),
 		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_REPO, 'R', data[x], 'bks', 'S', 'title', sourceHrefOptimized)},
 		fsort: false
@@ -3392,17 +3392,17 @@ function printBackRefs(type, bki, bkf, bks, bkm, bkp, bkr)
 {
 	var html = '';
 	html += printBackRef(type, bki, indiHref, function(ref) {return I(ref, 'name')});
-	if (INC_FAMILIES)
+	if (DwrConf.inc_families)
 		html += printBackRef(type, bkf, famHref, function(ref) {return F(ref, 'name')});
 	else
 		html += printBackRef(type, bkf, null, function(ref) {return F(ref, 'name')});
-	if (INC_SOURCES)
+	if (DwrConf.inc_sources)
 		html += printBackRef(type, bks, sourceHref, sourName);
-	if (INC_MEDIA)
+	if (DwrConf.inc_gallery)
 		html += printBackRef(type, bkm, mediaHref, mediaName);
-	if (INC_PLACES)
+	if (DwrConf.inc_places)
 		html += printBackRef(type, bkp, placeHref, function(ref) {return P(ref, 'name')});
-	if (INC_REPOSITORIES)
+	if (DwrConf.inc_repositories)
 		html += printBackRef(type, bkr, repoHref, function(ref) {return R(ref, 'name')});
 	if (html == '') return('');
 	return('<ul class="dwr-backrefs">' + html + '</ul>');
@@ -3480,7 +3480,7 @@ var mapObject;
 
 function printMap(enabled)
 {
-	if (!enabled || !INC_PLACES) return([]);
+	if (!enabled || !DwrConf.inc_places) return([]);
 	// Check if there is at least 1 place with coordinates defined
 	var found = false;
 	for (var j = 0; j < pagePlaces.length; j++)
@@ -3529,8 +3529,8 @@ function mapUpdate()
 	if (mapUpdated) return;
 	mapUpdated = true;
 	// Check if online
-	if (MAP_SERVICE == 'Google' && typeof(google) === 'undefined') return;
-	if (MAP_SERVICE == 'OpenStreetMap' && typeof(ol) === 'undefined') return;
+	if (DwrConf.mapservice == 'Google' && typeof(google) === 'undefined') return;
+	if (DwrConf.mapservice == 'OpenStreetMap' && typeof(ol) === 'undefined') return;
 	// Expand map if required
 	if (Dwr.search.MapExpanded)
 	{
@@ -3566,11 +3566,11 @@ function mapUpdate()
 				mapGotit.push(sc);
 				markerPaces[x_marker] = [];
 			}
-			if (MAP_SERVICE == 'Google')
+			if (DwrConf.mapservice == 'Google')
 			{
 				mapCoords[x_marker] = new google.maps.LatLng(lat, lon);
 			}
-			else if (MAP_SERVICE == 'OpenStreetMap')
+			else if (DwrConf.mapservice == 'OpenStreetMap')
 			{
 				// mapCoords[mapCoords.length] = [lon, lat];
 				mapCoords[x_marker] = ol.proj.transform([lon, lat], osmFromProj, osmToProj);
@@ -3607,7 +3607,7 @@ function mapUpdate()
 	// Update map
 	var osmVectorSource;
 	// var osmMarkers;
-	if (MAP_SERVICE == 'Google')
+	if (DwrConf.mapservice == 'Google')
 	{
 		var centerCoord = new google.maps.LatLng((south + north) / 2, (west + east) / 2);
 		var mapOptions = {
@@ -3623,7 +3623,7 @@ function mapUpdate()
 		// Expand event
 		google.maps.event.addListener(mapObject, 'click', mapExpand);
 	}
-	else if (MAP_SERVICE == 'OpenStreetMap')
+	else if (DwrConf.mapservice == 'OpenStreetMap')
 	{
 		var centerCoord = [(west + east) / 2, (south + north) / 2];
 		var centerCoord = ol.proj.transform([(west + east) / 2, (south + north) / 2], osmFromProj, osmToProj);
@@ -3731,7 +3731,7 @@ function mapUpdate()
 		nb_max = Math.max(nb_max, point.nb_birth + point.nb_marr + point.nb_death + point.nb_other);
 		points[x_marker] = point;
 		// Print marker
-		if (MAP_SERVICE == 'Google')
+		if (DwrConf.mapservice == 'Google')
 		{
 			(function(){ // This is used to create instances of local variables
 				var ip = GetIconProps(x_marker);
@@ -3754,7 +3754,7 @@ function mapUpdate()
 				});
 			})();
 		}
-		else if (MAP_SERVICE == 'OpenStreetMap')
+		else if (DwrConf.mapservice == 'OpenStreetMap')
 		{
 			(function(){ // This is used to create instances of local variables
 				var popupname = 'OsmPopup' + x_marker;
@@ -3793,7 +3793,7 @@ function mapUpdate()
 			})();
 		}
 	}
-	if (MAP_SERVICE == 'OpenStreetMap')
+	if (DwrConf.mapservice == 'OpenStreetMap')
 	{
 		var OsmPointStyle = function(feature, resolution)
 		{
@@ -3920,7 +3920,7 @@ function SearchFromString(ss, data, fextract)
 	var terms = ss.match(/[^\s]+/ig);
 	var results = [];
 	if (terms == null) return(results);
-	for (var x = 0; x < DB_SIZES[data]; x++)
+	for (var x = 0; x < DwrConf.db_sizes[data]; x++)
 	{
 		var found = true;
 		var s = fextract(x);
@@ -4116,7 +4116,7 @@ function printCalendar()
 function HomePage()
 {
 	var html = '';
-	html += '<h1>' + TITLE + '</h1>';
+	html += '<h1>' + DwrConf.title + '</h1>';
 	html += '<p>';
 	var tables = [
 		["N", "surnames.html"],
@@ -4131,13 +4131,15 @@ function HomePage()
 	var sep = '';
 	for (var i = 0; i < tables.length; i += 1)
 	{
-		var j = $.inArray(tables[i][1], PAGES_FILE_INDEX);
-		if (j == -1) continue;
-		html += sep
-		html +=	'<a href="' + tables[i][1] + '?' + Dwr.BuildSearchString() + '">';
-		html +=	PAGES_TITLE_INDEX[j] + ': ' + DB_SIZES[tables[i][0]];
-		html +=	'</a>';
-		sep = '<br>';
+		for (var j = 0; i < DwrConf.pages_menu_index.length; i += 1)
+		{
+			if (tables[i][1] != DwrConf.pages_menu_index[j][0]) continue;
+			html += sep
+			html +=	'<a href="' + tables[i][1] + '?' + Dwr.BuildSearchString() + '">';
+			html +=	DwrConf.pages_menu_index[j][1] + ': ' + DwrConf.db_sizes[tables[i][0]];
+			html +=	'</a>';
+			sep = '<br>';
+		}
 	}
 	html += '<br> <p>' + Dwr.embedSearchText() + '<p>';
 	return html;
@@ -4210,7 +4212,10 @@ function ConfigPage()
 			for (var i = 0; i < configsCheck.length; i++)
 			{
 				var opt = configsCheck[i][0];
-				Dwr.search[opt] = $('#dwr-cfg-' + opt)[0].checked ? true : false;
+				if (typeof(Dwr.search[opt]) === 'number')
+					Dwr.search[opt] = $('#dwr-cfg-' + opt)[0].checked ? 1 : 0;
+				else
+					Dwr.search[opt] = $('#dwr-cfg-' + opt)[0].checked ? true : false;
 			}
 			window.location.href = Dwr.search.P + '?' + Dwr.BuildSearchString();
 			return(false);
@@ -4219,7 +4224,7 @@ function ConfigPage()
 			for (var i = 0; i < configsCheck.length; i++)
 			{
 				var opt = configsCheck[i][0];
-				$('#dwr-cfg-' + opt)[0].checked = Dwr.defaultSearchString[opt];
+				$('#dwr-cfg-' + opt)[0].checked = Dwr.defaultSearchString[opt] ? true : false;
 			}
 			// Clear local storage where Datatables stores the user preferences
 			$.each(sessionStorage, function(key, val) {
@@ -4322,19 +4327,19 @@ function MainRun()
 		{
 			html = printIndi(Dwr.search.Idx);
 		}
-		else if (Dwr.search.Fdx >= 0 && PageContents == Dwr.PAGE_FAM && INC_FAMILIES)
+		else if (Dwr.search.Fdx >= 0 && PageContents == Dwr.PAGE_FAM && DwrConf.inc_families)
 		{
 			html = printFam(Dwr.search.Fdx);
 		}
-		else if (Dwr.search.Pdx >= 0 && PageContents == Dwr.PAGE_PLACE && INC_PLACES)
+		else if (Dwr.search.Pdx >= 0 && PageContents == Dwr.PAGE_PLACE && DwrConf.inc_places)
 		{
 			html = printPlace(Dwr.search.Pdx);
 		}
-		else if (Dwr.search.Rdx >= 0 && PageContents == Dwr.PAGE_REPO && INC_REPOSITORIES)
+		else if (Dwr.search.Rdx >= 0 && PageContents == Dwr.PAGE_REPO && DwrConf.inc_repositories)
 		{
 			html = printRepo(Dwr.search.Rdx);
 		}
-		else if (Dwr.search.Edx >= 0 && PageContents == Dwr.PAGE_EVENT && INC_EVENTS)
+		else if (Dwr.search.Edx >= 0 && PageContents == Dwr.PAGE_EVENT && DwrConf.inc_events)
 		{
 			html = printEvent(Dwr.search.Edx);
 		}
@@ -4358,31 +4363,31 @@ function MainRun()
 		{
 			html = htmlPersonsIndex();
 		}
-		else if (PageContents == Dwr.PAGE_FAMILIES_INDEX && INC_FAMILIES)
+		else if (PageContents == Dwr.PAGE_FAMILIES_INDEX && DwrConf.inc_families)
 		{
 			html = htmlFamiliesIndex();
 		}
-		else if (PageContents == Dwr.PAGE_SOURCES_INDEX && INC_SOURCES)
+		else if (PageContents == Dwr.PAGE_SOURCES_INDEX && DwrConf.inc_sources)
 		{
 			html = htmlSourcesIndex();
 		}
-		else if (PageContents == Dwr.PAGE_MEDIA_INDEX && INC_MEDIA)
+		else if (PageContents == Dwr.PAGE_MEDIA_INDEX && DwrConf.inc_gallery)
 		{
 			html = htmlMediaIndex();
 		}
-		else if (PageContents == Dwr.PAGE_PLACES_INDEX && INC_PLACES)
+		else if (PageContents == Dwr.PAGE_PLACES_INDEX && DwrConf.inc_places)
 		{
 			html = htmlPlacesIndex();
 		}
-		else if (PageContents == Dwr.PAGE_EVENTS_INDEX && INC_EVENTS)
+		else if (PageContents == Dwr.PAGE_EVENTS_INDEX && DwrConf.inc_events)
 		{
 			html = htmlEventsIndex();
 		}
-		else if (PageContents == Dwr.PAGE_ADDRESSES_INDEX && INC_ADDRESSES)
+		else if (PageContents == Dwr.PAGE_ADDRESSES_INDEX && DwrConf.inc_addresses)
 		{
 			html = htmlAddressesIndex();
 		}
-		else if (PageContents == Dwr.PAGE_REPOS_INDEX && INC_REPOSITORIES)
+		else if (PageContents == Dwr.PAGE_REPOS_INDEX && DwrConf.inc_repositories)
 		{
 			html = htmlReposIndex();
 		}

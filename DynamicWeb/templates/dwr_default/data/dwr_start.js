@@ -86,46 +86,60 @@ LoadJsFile(scriptFolder + 'unorm/unorm.js');
 // Load styles
 LoadCssFile(scriptFolder + 'dwr_styles.css');
 
-// Load configuration and language file
-LoadJsFile('dwr_conf.js');
-
 // Load base scripts
 LoadJsFile(scriptFolder + 'dwr_body.js');
 LoadJsFile(scriptFolder + 'dwr.js');
 
-// Load SVG tree scripts
-if (!("LOAD_SVG_SCRIPTS" in window)) window.LOAD_SVG_SCRIPTS = false;
-if (LOAD_SVG_SCRIPTS)
+// Process configuration and load optional scripts
+if ('DwrConf' in window)
 {
-	// Load Raphael
-	LoadJsFile(scriptFolder + 'raphael/raphael.min.js');
-	if (BrowserMSIE()) LoadJsFile(scriptFolder + 'innersvg-polyfill/innersvg.js');
-	LoadJsFile(scriptFolder + 'dwr_svg.js');
-}
-
-// Load statistics scripts
-if (!("LOAD_STATS_SCRIPTS" in window)) window.LOAD_STATS_SCRIPTS = false;
-if (LOAD_STATS_SCRIPTS)
-{
-	LoadJsFile(scriptFolder + 'dwr_stats.js');
-}
-
-// Load map scripts
-if (!("LOAD_GOOGLEMAP_SCRIPTS" in window)) window.LOAD_GOOGLEMAP_SCRIPTS = false;
-if (LOAD_GOOGLEMAP_SCRIPTS)
-{
-	var googlemapurl = 'https://maps.googleapis.com/maps/api/js';
-	if (GOOGLEMAPKEY)
+	var filename = location.pathname.substring(location.pathname.lastIndexOf("/") + 1);
+	var LOAD_SVG_SCRIPTS = false;
+	for (var i = 0; i < DwrConf.tree_pages.length; i += 1)
+		if (DwrConf.tree_pages[i] == filename) LOAD_SVG_SCRIPTS = true;
+	var LOAD_STATS_SCRIPTS = false;
+	for (var i = 0; i < DwrConf.statistics_pages.length; i += 1)
+		if (DwrConf.statistics_pages[i] == filename) LOAD_STATS_SCRIPTS = true;
+	var LOAD_GOOGLEMAP_SCRIPTS = false;
+	for (var i = 0; i < DwrConf.map_pages.length; i += 1)
+		if (DwrConf.map_pages[i] == filename) LOAD_GOOGLEMAP_SCRIPTS = true;
+	var LOAD_OSM_SCRIPTS = false;
+	if (DwrConf.mapservice != 'Google')
 	{
-		googlemapurl = googlemapurl + "?key=" + GOOGLEMAPKEY
+		LOAD_OSM_SCRIPTS = LOAD_GOOGLEMAP_SCRIPTS;
+		LOAD_GOOGLEMAP_SCRIPTS = false;
 	}
-	LoadJsFile(googlemapurl)
-}
-if (!("LOAD_OSM_SCRIPTS" in window)) window.LOAD_OSM_SCRIPTS = false;
-if (LOAD_OSM_SCRIPTS)
-{
-	LoadJsFile('http://openlayers.org/en/v3.0.0/build/ol.js');
-	LoadCssFile('http://openlayers.org/en/v3.0.0/css/ol.css');
+
+	// Load SVG tree scripts
+	if (LOAD_SVG_SCRIPTS)
+	{
+		// Load Raphael
+		LoadJsFile(scriptFolder + 'raphael/raphael.min.js');
+		if (BrowserMSIE()) LoadJsFile(scriptFolder + 'innersvg-polyfill/innersvg.js');
+		LoadJsFile(scriptFolder + 'dwr_svg.js');
+	}
+
+	// Load statistics scripts
+	if (LOAD_STATS_SCRIPTS)
+	{
+		LoadJsFile(scriptFolder + 'dwr_stats.js');
+	}
+
+	// Load map scripts
+	if (LOAD_GOOGLEMAP_SCRIPTS)
+	{
+		var googlemapurl = 'https://maps.googleapis.com/maps/api/js';
+		if (DwrConf.googlemapkey)
+		{
+			googlemapurl = googlemapurl + "?key=" + DwrConf.googlemapkey
+		}
+		LoadJsFile(googlemapurl)
+	}
+	if (LOAD_OSM_SCRIPTS)
+	{
+		LoadJsFile('http://openlayers.org/en/v3.0.0/build/ol.js');
+		LoadCssFile('http://openlayers.org/en/v3.0.0/css/ol.css');
+	}
 }
 
 

@@ -921,37 +921,37 @@ function printStatisticsDefaultChart()
 
 
 STATISTICS_GENDER_COLORS = [
-	GRAMPS_PREFERENCES['color-gender-male-death'],
-	GRAMPS_PREFERENCES['color-gender-female-death'],
-	GRAMPS_PREFERENCES['color-gender-unknown-death']
+	DwrConf.GRAMPS_PREFERENCES['color-gender-male-death'],
+	DwrConf.GRAMPS_PREFERENCES['color-gender-female-death'],
+	DwrConf.GRAMPS_PREFERENCES['color-gender-unknown-death']
 ];
 
 function chartColor(i, nb)
 {
 	var color = "#888";
-	if (search.ChartBackground == CHART_BACKGROUND_GENDER)
+	if (search.ChartBackground == DwrConf.CHART_BACKGROUND_GENDER)
 	{
 		color = STATISTICS_GENDER_COLORS[i % STATISTICS_GENDER_COLORS.length];
 	}
-	if (search.ChartBackground == CHART_BACKGROUND_GRADIENT)
+	if (search.ChartBackground == DwrConf.CHART_BACKGROUND_GRADIENT)
 	{
-		color = SvgColorGrad(0, nb - 1, i);
+		color = DwrSvg.SvgColorGrad(0, nb - 1, i);
 	}
-	if (search.ChartBackground == CHART_BACKGROUND_SINGLE)
+	if (search.ChartBackground == DwrConf.CHART_BACKGROUND_SINGLE)
 	{
-		color = SVG_TREE_COLOR1;
+		color = DwrConf.svg_tree_color1;
 	}
-	if (search.ChartBackground == CHART_BACKGROUND_WHITE)
+	if (search.ChartBackground == DwrConf.CHART_BACKGROUND_WHITE)
 	{
-		color = SVG_TREE_COLOR_SCHEME0[i % SVG_TREE_COLOR_SCHEME0.length];
+		color = DwrConf.SVG_TREE_COLOR_SCHEME0[i % DwrConf.SVG_TREE_COLOR_SCHEME0.length];
 	}
-	if (search.ChartBackground == CHART_BACKGROUND_SCHEME1)
+	if (search.ChartBackground == DwrConf.CHART_BACKGROUND_SCHEME1)
 	{
-		color = SVG_TREE_COLOR_SCHEME1[i % SVG_TREE_COLOR_SCHEME1.length];
+		color = DwrConf.SVG_TREE_COLOR_SCHEME1[i % DwrConf.SVG_TREE_COLOR_SCHEME1.length];
 	}
-	if (search.ChartBackground == CHART_BACKGROUND_SCHEME2)
+	if (search.ChartBackground == DwrConf.CHART_BACKGROUND_SCHEME2)
 	{
-		color = SVG_TREE_COLOR_SCHEME2[i % SVG_TREE_COLOR_SCHEME2.length];
+		color = DwrConf.SVG_TREE_COLOR_SCHEME2[i % DwrConf.SVG_TREE_COLOR_SCHEME2.length];
 	}
 	// Opacity
 	var rgb = Raphael.getRGB(color);
@@ -1408,9 +1408,9 @@ function chartConfRepopulate()
 	}
 	$('#dwr-chart-type').html(html);
 	var html = '';
-	for (var i = 0; i < CHART_BACKGROUND_NAMES.length; i++)
+	for (var i = 0; i < DwrConf.CHART_BACKGROUNDS.length; i++)
 	{
-		html += '<option value="' + i + '"' + ((search.ChartBackground == i) ? ' selected' : '') + '>' + CHART_BACKGROUND_NAMES[i] + '</option>';
+		html += '<option value="' + i + '"' + ((search.ChartBackground == i) ? ' selected' : '') + '>' + DwrConf.CHART_BACKGROUNDS[i] + '</option>';
 	}
 	$('#dwr-chart-background').html(html);
 	$('#dwr-chart-opacity').val("" + search.ChartOpacity);
@@ -1598,7 +1598,7 @@ STATISTICS_EXAMPLE_CHARTS = [
 			ChartFunctionY: FUNCTION_NONE,
 			ChartFunctionZ: FUNCTION_NONE,
 			ChartOpacity: 100,
-			ChartBackground: CHART_BACKGROUND_GENDER
+			ChartBackground: DwrConf.CHART_BACKGROUND_GENDER
 		}
 	},
 	{
@@ -1614,7 +1614,7 @@ STATISTICS_EXAMPLE_CHARTS = [
 			ChartFunctionY: FUNCTION_NONE,
 			ChartFunctionZ: FUNCTION_NONE,
 			ChartOpacity: 100,
-			ChartBackground: CHART_BACKGROUND_GRADIENT
+			ChartBackground: DwrConf.CHART_BACKGROUND_GRADIENT
 		}
 	},
 	{
@@ -1630,7 +1630,7 @@ STATISTICS_EXAMPLE_CHARTS = [
 			ChartFunctionY: FUNCTION_NONE,
 			ChartFunctionZ: FUNCTION_NONE,
 			ChartOpacity: 80,
-			ChartBackground: CHART_BACKGROUND_GENDER
+			ChartBackground: DwrConf.CHART_BACKGROUND_GENDER
 		}
 	},
 	{
@@ -1646,7 +1646,7 @@ STATISTICS_EXAMPLE_CHARTS = [
 			ChartFunctionY: FUNCTION_NONE,
 			ChartFunctionZ: FUNCTION_NONE,
 			ChartOpacity: 80,
-			ChartBackground: CHART_BACKGROUND_SINGLE
+			ChartBackground: DwrConf.CHART_BACKGROUND_SINGLE
 		}
 	},
 	{
@@ -1662,7 +1662,7 @@ STATISTICS_EXAMPLE_CHARTS = [
 			ChartFunctionY: FUNCTION_AVERAGE,
 			ChartFunctionZ: FUNCTION_COUNT,
 			ChartOpacity: 20,
-			ChartBackground: CHART_BACKGROUND_SINGLE
+			ChartBackground: DwrConf.CHART_BACKGROUND_SINGLE
 		}
 	},
 	{
@@ -1678,7 +1678,7 @@ STATISTICS_EXAMPLE_CHARTS = [
 			ChartFunctionY: FUNCTION_NONE,
 			ChartFunctionZ: FUNCTION_COUNT,
 			ChartOpacity: 20,
-			ChartBackground: CHART_BACKGROUND_SINGLE
+			ChartBackground: DwrConf.CHART_BACKGROUND_SINGLE
 			// ,
 			// ChartFilter1: EXTRACTOR_F_MARR_DATE,
 			// ChartFilter1Min: "1700",

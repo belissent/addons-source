@@ -366,6 +366,26 @@ SVG_TREE_BACKGROUNDS = [
 ) = range(len(SVG_TREE_BACKGROUNDS))
 DEFAULT_SVG_TREE_BACKGROUND = SVG_TREE_BACKGROUND_GENERATION
 
+GRAMPS_PREFERENCES = dict((pref, config.get('preferences.%s' % pref)) for pref in[
+    'bordercolor-gender-female-alive',
+    'bordercolor-gender-female-death',
+    'bordercolor-gender-male-alive',
+    'bordercolor-gender-male-death',
+    'bordercolor-gender-unknown-alive',
+    'bordercolor-gender-unknown-death',
+    'color-gender-female-alive',
+    'color-gender-female-death',
+    'color-gender-male-alive',
+    'color-gender-male-death',
+    'color-gender-unknown-alive',
+    'color-gender-unknown-death',
+])
+
+SVG_TREE_COLOR_SCHEME0 = [("\"#%02x%02x%02x\"" % (r, g, b)) for (r, g, b) in GENCOLOR[BACKGROUND_WHITE]]
+SVG_TREE_COLOR_SCHEME1 = [("\"#%02x%02x%02x\"" % (r, g, b)) for (r, g, b) in GENCOLOR[BACKGROUND_SCHEME1]]
+SVG_TREE_COLOR_SCHEME2 = [("\"#%02x%02x%02x\"" % (r, g, b)) for (r, g, b) in GENCOLOR[BACKGROUND_SCHEME2]]
+
+
 CHART_BACKGROUNDS = [
     _('Single main (filter) color'),
     _('Gender colors'),
@@ -382,6 +402,8 @@ CHART_BACKGROUNDS = [
     CHART_BACKGROUND_SCHEME2,
     CHART_BACKGROUND_WHITE,
 ) = range(len(CHART_BACKGROUNDS))
+
+STATISTICS_CHART_OPACITY = 70
 
 #: Templates for the website, in the form: [directory, name]
 #  First template is the default one:
@@ -1741,7 +1763,7 @@ class DynamicWebReport(Report):
             jdatas.append(self._data_event_ref(event_ref, self.obj_dict[Event][event_ref.ref][OBJDICT_INDEX]))
         jdatas.sort(key = lambda x: x['event'])
         return(jdatas)
-        
+
     def _data_event_ref(self, ref, index):
         '''
         Build an event reference, in the form:
@@ -2345,328 +2367,308 @@ class DynamicWebReport(Report):
          - Gramps constants that could be used in the Javascript
         '''
         sw = StringIO()
-        sw.write("// This file is generated\n\n")
-        sw.write("DWR_VERSION_410 = " + ("true" if (DWR_VERSION_410) else "false") + ";\n")
-        sw.write("DWR_VERSION_412 = " + ("true" if (DWR_VERSION_412) else "false") + ";\n")
-        sw.write("DWR_VERSION_420 = " + ("true" if (DWR_VERSION_420) else "false") + ";\n")
-        sw.write("DWR_VERSION_500 = " + ("true" if (DWR_VERSION_500) else "false") + ";\n")
-        sw.write("TITLE = \"%s\";\n" % script_escape(self.title))
-        sw.write("SPLIT = %i;\n" % SPLIT)
-        sw_sizes = StringIO()
-        json.dump(self.db_sizes, sw_sizes, sort_keys = True, indent = 4)
-        sw.write("DB_SIZES = %s;" % sw_sizes.getvalue())
-        sw.write("NB_GENERATIONS_MAX = %i;\n" % int(self.options["graphgens"]))
-        sw.write("PAGES_FILE = [")
-        sw.write(", ".join([
-            ("\"" + script_escape(page_menu[0]) + "\"")
-            for page_menu in self.pages_menu]))
-        sw.write("];\n")
-        sw.write("PAGES_TITLE = [")
-        sw.write(", ".join([
-            ("\"" + script_escape(page_menu[1]) + "\"")
-            for page_menu in self.pages_menu]))
-        sw.write("];\n")
-        sw.write("PAGES_FILE_INDEX = [")
-        sw.write(", ".join([
-            ("\"" + script_escape(page_menu[0]) + "\"")
-            for page_menu in self.pages_menu_index]))
-        sw.write("];\n")
-        sw.write("PAGES_TITLE_INDEX = [")
-        sw.write(", ".join([
-            ("\"" + script_escape(page_menu[1]) + "\"")
-            for page_menu in self.pages_menu_index]))
-        sw.write("];\n")
-        sw.write("SVG_TREE_TYPES_NAMES = [")
-        sw.write(", ".join([("\"" + script_escape(n) + "\"") for n in SVG_TREE_TYPES]))
-        sw.write("];\n")
-        sw.write("SVG_TREE_SHAPES_NAMES = [")
-        sw.write(", ".join([("\"" + script_escape(n) + "\"") for n in SVG_TREE_SHAPES]))
-        sw.write("];\n")
-        sw.write("SVG_TREE_DISTRIB_ASC_NAMES = [")
-        sw.write(", ".join([("\"" + script_escape(n) + "\"") for n in SVG_TREE_DISTRIB_ASC]))
-        sw.write("];\n")
-        sw.write("SVG_TREE_DISTRIB_DSC_NAMES = [")
-        sw.write(", ".join([("\"" + script_escape(n) + "\"") for n in SVG_TREE_DISTRIB_DSC]))
-        sw.write("];\n")
-        sw.write("SVG_TREE_BACKGROUND_NAMES = [")
-        sw.write(", ".join([("\"" + script_escape(n) + "\"") for n in SVG_TREE_BACKGROUNDS]))
-        sw.write("];\n")
-        sw.write("SVG_TREE_BACKGROUND_GENDER = %i;\n" % SVG_TREE_BACKGROUND_GENDER)
-        sw.write("SVG_TREE_BACKGROUND_GENERATION = %i;\n" % SVG_TREE_BACKGROUND_GENERATION)
-        sw.write("SVG_TREE_BACKGROUND_AGE = %i;\n" % SVG_TREE_BACKGROUND_AGE)
-        sw.write("SVG_TREE_BACKGROUND_SINGLE = %i;\n" % SVG_TREE_BACKGROUND_SINGLE)
-        sw.write("SVG_TREE_BACKGROUND_PERIOD = %i;\n" % SVG_TREE_BACKGROUND_PERIOD)
-        sw.write("SVG_TREE_BACKGROUND_WHITE = %i;\n" % SVG_TREE_BACKGROUND_WHITE)
-        sw.write("SVG_TREE_BACKGROUND_SCHEME1 = %i;\n" % SVG_TREE_BACKGROUND_SCHEME1)
-        sw.write("SVG_TREE_BACKGROUND_SCHEME2 = %i;\n" % SVG_TREE_BACKGROUND_SCHEME2)
-        sw.write("SVG_TREE_TYPE = %s;\n" % self.options['svg_tree_type'])
-        sw.write("SVG_TREE_SHAPE = %s;\n" % self.options['svg_tree_shape'])
-        sw.write("SVG_TREE_DISTRIB_ASC = %s;\n" % self.options['svg_tree_distrib_asc'])
-        sw.write("SVG_TREE_DISTRIB_DSC = %s;\n" % self.options['svg_tree_distrib_dsc'])
-        sw.write("SVG_TREE_BACKGROUND = %s;\n" % self.options['svg_tree_background'])
-        sw.write("SVG_TREE_COLOR1 = \"%s\";\n" % self.options['svg_tree_color1'])
-        sw.write("SVG_TREE_COLOR2 = \"%s\";\n" % self.options['svg_tree_color2'])
-        sw.write("SVG_TREE_SHOW_DUP = " + ("true" if (self.options['svg_tree_dup']) else "false") + ";\n")
-        sw.write("SVG_TREE_COLOR_DUP = \"%s\";\n" % self.options['svg_tree_color_dup'])
-        sw.write("CHART_BACKGROUND_NAMES = [")
-        sw.write(", ".join([("\"" + script_escape(n) + "\"") for n in CHART_BACKGROUNDS]))
-        sw.write("];\n")
-        sw.write("CHART_BACKGROUND_GENDER = %i;\n" % CHART_BACKGROUND_GENDER)
-        sw.write("CHART_BACKGROUND_GRADIENT = %i;\n" % CHART_BACKGROUND_GRADIENT)
-        sw.write("CHART_BACKGROUND_SINGLE = %i;\n" % CHART_BACKGROUND_SINGLE)
-        sw.write("CHART_BACKGROUND_WHITE = %i;\n" % CHART_BACKGROUND_WHITE)
-        sw.write("CHART_BACKGROUND_SCHEME1 = %i;\n" % CHART_BACKGROUND_SCHEME1)
-        sw.write("CHART_BACKGROUND_SCHEME2 = %i;\n" % CHART_BACKGROUND_SCHEME2)
-        sw.write("STATISTICS_CHART_OPACITY = 70;\n")
-        sw.write("GRAMPS_PREFERENCES = [];\n")
-        for pref in [
-            'bordercolor-gender-female-alive',
-            'bordercolor-gender-female-death',
-            'bordercolor-gender-male-alive',
-            'bordercolor-gender-male-death',
-            'bordercolor-gender-unknown-alive',
-            'bordercolor-gender-unknown-death',
-            'color-gender-female-alive',
-            'color-gender-female-death',
-            'color-gender-male-alive',
-            'color-gender-male-death',
-            'color-gender-unknown-alive',
-            'color-gender-unknown-death',
-            ]:
-            sw.write("GRAMPS_PREFERENCES['%s'] = \"%s\";\n" % (pref, config.get('preferences.%s' % pref)))
-        sw.write("SVG_TREE_COLOR_SCHEME0 = [" + ", ".join(
-            [("\"#%02x%02x%02x\"" % (r, g, b)) for (r, g, b) in GENCOLOR[BACKGROUND_WHITE]])
-            + "];\n")
-        sw.write("SVG_TREE_COLOR_SCHEME1 = [" + ", ".join(
-            [("\"#%02x%02x%02x\"" % (r, g, b)) for (r, g, b) in GENCOLOR[BACKGROUND_SCHEME1]])
-            + "];\n")
-        sw.write("SVG_TREE_COLOR_SCHEME2 = [" + ", ".join(
-            [("\"#%02x%02x%02x\"" % (r, g, b)) for (r, g, b) in GENCOLOR[BACKGROUND_SCHEME2]])
-            + "];\n")
-        sw.write("FOOTER=\"" + script_escape(self.get_header_footer_notes("footernote")) + "\";\n")
-        sw.write("HEADER=\"" + script_escape(self.get_header_footer_notes("headernote")) + "\";\n")
-        sw.write("BRAND_TITLE=\"" + script_escape(self.get_header_footer_notes("brandnote")) + "\";\n")
-        sw.write("COPYRIGHT=\"" + script_escape(self.get_copyright_license()) + "\";\n")
-        sw.write("INDEX_SURNAMES_TYPE=" + ("true" if (self.index_surnames_type == INDEX_TYPE_TABLE) else "false") + ";\n")
-        sw.write("INDEX_PERSONS_TYPE=" + ("true" if (self.index_persons_type == INDEX_TYPE_TABLE) else "false") + ";\n")
-        sw.write("INDEX_FAMILIES_TYPE=" + ("true" if (self.index_families_type == INDEX_TYPE_TABLE) else "false") + ";\n")
-        sw.write("INDEX_SOURCES_TYPE=" + ("true" if (self.index_sources_type == INDEX_TYPE_TABLE) else "false") + ";\n")
-        sw.write("INDEX_MEDIAS_TYPE=" + ("true" if (self.index_medias_type == INDEX_TYPE_TABLE) else "false") + ";\n")
-        sw.write("INDEX_PLACES_TYPE=" + ("true" if (self.index_places_type == INDEX_TYPE_TABLE) else "false") + ";\n")
-        sw.write("INDEX_EVENTS_TYPE=" + ("true" if (self.index_events_type == INDEX_TYPE_TABLE) else "false") + ";\n")
-        sw.write("INDEX_REPOSITORIES_TYPE=" + ("true" if (self.index_repositories_type == INDEX_TYPE_TABLE) else "false") + ";\n")
-        sw.write("INDEX_ADDRESSES_TYPE=" + ("true" if (self.index_addresses_type == INDEX_TYPE_TABLE) else "false") + ";\n")
-        sw.write("INDEX_SHOW_DATES=" + ("true" if (self.options['showdates']) else "false") + ";\n")
-        sw.write("INDEX_SHOW_PARTNER=" + ("true" if (self.options['showpartner']) else "false") + ";\n")
-        sw.write("INDEX_SHOW_PARENTS=" + ("true" if (self.options['showparents']) else "false") + ";\n")
-        sw.write("INDEX_SHOW_PATH=" + ("true" if (self.options['showpath']) else "false") + ";\n")
-        sw.write("INDEX_SHOW_BKREF_TYPE=" + ("true" if (self.options['bkref_type']) else "false") + ";\n")
-        sw.write("INDEX_DEFAULT_SIZE = %s;\n" % self.options['entries_shown'])
-        sw.write("INDEXES_SIZES = %s;\n" % repr(INDEXES_SIZES))
-        sw.write("SHOW_ALL_SIBLINGS=" + ("true" if (self.options['showallsiblings']) else "false") + ";\n")
-        sw.write("INC_EVENTS=" + ("true" if (self.inc_events) else "false") + ";\n")
-        sw.write("INC_FAMILIES=" + ("true" if (self.inc_families) else "false") + ";\n")
-        sw.write("INC_SOURCES=" + ("true" if (self.inc_sources) else "false") + ";\n")
-        sw.write("INC_MEDIA=" + ("true" if (self.inc_gallery) else "false") + ";\n")
-        sw.write("INC_PLACES=" + ("true" if (self.inc_places) else "false") + ";\n")
-        sw.write("INC_REPOSITORIES=" + ("true" if (self.inc_repositories) else "false") + ";\n")
-        sw.write("INC_NOTES=" + ("true" if (self.inc_notes) else "false") + ";\n")
-        sw.write("INC_ADDRESSES=" + ("true" if (self.inc_addresses) else "false") + ";\n")
-        sw.write("MAP_PLACE=" + ("true" if (self.options['placemappages']) else "false") + ";\n")
-        sw.write("MAP_FAMILY=" + ("true" if (self.options['familymappages']) else "false") + ";\n")
-        sw.write("MAP_SERVICE=\"" + script_escape(self.options['mapservice']) + "\";\n")
-        sw.write("SOURCE_AUTHOR_IN_TITLE=" + ("true" if (self.sourceauthor) else "false") + ";\n")
-        sw.write("TABBED_PANELS=" + ("true" if (self.options['tabbed_panels']) else "false") + ";\n")
-        sw.write("INC_CHANGE_TIME=" + ("true" if (self.options['inc_change_time']) else "false") + ";\n")
-        sw.write("HIDE_GID=" + ("true" if (self.options['hide_gid']) else "false") + ";\n")
-        sw.write("INC_PAGECONF = " + ("true" if (self.inc_pageconf) else "false") + ";\n")
-        sw.write("__ = {")
-        sep = "\n"
-        for (s, translated) in (
-            ("(b. %(birthdate)s, d. %(deathdate)s)", _("(b. %(birthdate)s, d. %(deathdate)s)")),
-            ("(b. %s)", _("(b. %s)")),
-            ("(d. %s)", _("(d. %s)")),
-            ("(filtered from _MAX_ total entries)", _("(filtered from _MAX_ total entries)")),
-            ("(m. %s)", _("(m. %s)")),
-            ("(sort by name)", _("(sort by name)")),
-            ("(sort by quantity)", _("(sort by quantity)")),
-            (": activate to sort column ascending", _(": activate to sort column ascending")),
-            (": activate to sort column descending", _(": activate to sort column descending")),
-            ("<p>This page provides the SVG raw code.<br>Copy the contents into a text editor and save as an SVG file.<br>Make sure that the text editor encoding is UTF-8.</p>", _("<p>This page provides the SVG raw code.<br>Copy the contents into a text editor and save as an SVG file.<br>Make sure that the text editor encoding is UTF-8.</p>")),
-            ("Abbreviation", _("Abbreviation")),
-            ("Address", _("Address")),
-            ("Addresses", _("Addresses")),
-            ("Age at death", _("Age at death")),
-            ("Alternate Marriage", _("Alternate Marriage")),
-            ("Alternate Name", _("Alternate Name")),
-            ("Ancestors", _("Ancestors")),
-            ("Associations", _("Associations")),
-            ("Attribute", _("Attribute")),
-            ("Attributes", _("Attributes")),
-            ("Author", _("Author")),
-            ("Background", _("Background")),
-            ("Baptism", _("Baptism")),
-            ("Birth", _("Birth")),
-            ("Burial", _("Burial")),
-            ("Call Name", _("Call Name")),
-            ("Call Number", _("Call Number")),
-            ("Cause Of Death", _("Cause Of Death")),
-            ("Children", _("Children")),
-            ("Christening", _("Christening")),
-            ("Citation", _("Citation")),
-            ("Citations", _("Citations")),
-            ("Click on the map to show it full-screen", _("Click on the map to show it full-screen")),
-            ("Code", _("Code")),
-            ("Configuration", _("Configuration")),
-            ("Configure", _("Configure")),
-            ("Count", _("Count")),
-            ("Cremation", _("Cremation")),
-            ("Date", _("Date")),
-            ("Death", _("Death")),
-            ("Descendants", _("Descendants")),
-            ("Description", _("Description")),
-            ("DynamicWeb_report#Help", _("DynamicWeb_report#Help")),
-            ("Enclosed By", _("Enclosed By")),
-            ("Engagement", _("Engagement")),
-            ("Event", _("Event")),
-            ("Events", _("Events")),
-            ("Examples", _("Examples")),
-            ("F", _("F")),
-            ("Families Index", _("Families Index")),
-            ("Families", _("Families")),
-            ("Family Nick Name", _("Family Nick Name")),
-            ("Father", _("Father")),
-            ("Female", _("Female")),
-            ("File ready", _("File ready")),
-            ("Gender", _("Gender")),
-            ("Help", _("Help")),
-            ("ID", _("ID")),
-            ("Include Place map on Place Pages", _("Include Place map on Place Pages")),
-            ("Include dates columns on the index pages", _("Include dates columns on the index pages")),
-            ("Include a column for parents on the index pages", _("Include a column for parents on the index pages")),
-            ("Include a column for media path on the index pages", _("Include a column for media path on the index pages")),
-            ("Include a column for partners on the index pages", _("Include a column for partners on the index pages")),
-            ("Include a map in the individuals and family pages", _("Include a map in the individuals and family pages")),
-            ("Include half and/ or step-siblings on the individual pages", _("Include half and/ or step-siblings on the individual pages")),
-            ("Include references in indexes", _("Include references in indexes")),
-            ("Indexes", _("Indexes")),
-            ("Individuals", _("Individuals")),
-            ("Insert sources author in the sources title", _("Insert sources author in the sources title")),
-            ("Last Modified", _("Last Modified")),
-            ("Latitude", _("Latitude")),
-            ("Link", _("Link")),
-            ("Loading...", _("Loading...")),
-            ("Location", _("Location")),
-            ("Longitude", _("Longitude")),
-            ("M", _("M")),
-            ("Male", _("Male")),
-            ("Map", _("Map")),
-            ("Marriage", _("Marriage")),
-            ("Maximize", _("Maximize")),
-            ("Media Index", _("Media Index")),
-            ("Media Type", _("Media Type")),
-            ("Media", _("Media")),
-            ("Mother", _("Mother")),
-            ("Name", _("Name")),
-            ("Nick Name", _("Nick Name")),
-            ("No data available in table", _("No data available in table")),
-            ("No matches found", _("No matches found")),
-            ("No matching records found", _("No matching records found")),
-            ("No matching surname.", _("No matching surname.")),
-            ("None", _("None")),
-            ("Notes", _("Notes")),
-            ("OK", _("OK")),
-            ("Other participants", _("Other participants")),
-            ("Parents", _("Parents")),
-            ("Path", _("Path")),
-            ("Person page", _("Person page")),
-            ("Person to search for", _("Person to search for")),
-            ("Person", _("Person")),
-            ("Persons Index", _("Persons Index")),
-            ("Persons", _("Persons")),
-            ("Place", _("Place")),
-            ("Places Index", _("Places Index")),
-            ("Places", _("Places")),
-            ("Preparing file ...", _("Preparing file ...")),
-            ("Processing...", _("Processing...")),
-            ("Publication information", _("Publication information")),
-            ("References", _("References")),
-            ("Relationship to Father", _("Relationship to Father")),
-            ("Relationship to Mother", _("Relationship to Mother")),
-            ("Relationship", _("Relationship")),
-            ("Repositories", _("Repositories")),
-            ("Repository", _("Repository")),
-            ("Restore", _("Restore")),
-            ("Restore default settings", _("Restore default settings")),
-            ("Show last modification time", _("Show last modification time")),
-            ("SVG tree children distribution", _("SVG tree children distribution")),
-            ("SVG tree configuration", _("SVG tree configuration")),
-            ("SVG tree graph shape", _("SVG tree graph shape")),
-            ("SVG tree graph type", _("SVG tree graph type")),
-            ("SVG tree parents distribution", _("SVG tree parents distribution")),
-            ("Save tree as file", _("Save tree as file")),
-            ("Search:", _("Search:")),
-            ("Select the background color scheme", _("Select the background color scheme")),
-            ("Select the children distribution (fan charts only)", _("Select the children distribution (fan charts only)")),
-            ("Select the number of ascending generations", _("Select the number of ascending generations")),
-            ("Select the number of descending generations", _("Select the number of descending generations")),
-            ("Select the parents distribution (fan charts only)", _("Select the parents distribution (fan charts only)")),
-            ("Select the shape of graph", _("Select the shape of graph")),
-            ("Select the type of graph", _("Select the type of graph")),
-            ("Several matches.<br>Precise your search or choose in the lists below.", _("Several matches.<br>Precise your search or choose in the lists below.")),
-            ("Show _MENU_ entries", _("Show _MENU_ entries")),
-            ("Show duplicates", _("Show duplicates")),
-            ("Showing 0 to 0 of 0 entries", _("Showing 0 to 0 of 0 entries")),
-            ("Showing _START_ to _END_ of _TOTAL_ entries", _("Showing _START_ to _END_ of _TOTAL_ entries")),
-            ("Siblings", _("Siblings")),
-            ("Source", _("Source")),
-            ("Sources Index", _("Sources Index")),
-            ("Sources", _("Sources")),
-            ("Spouses", _("Spouses")),
-            ("Suppress Gramps ID", _("Suppress Gramps ID")),
-            ("Surname", _("Surname")),
-            ("Surnames Index", _("Surnames Index")),
-            ("Surnames", _("Surnames")),
-            ("Title", _("Title")),
-            ("Type", _("Type")),
-            ("U", _("U")),
-            ("Unknown", _("Unknown")),
-            ("Use tabbed panels instead of sections", _("Use tabbed panels instead of sections")),
-            ("Use the search box above in order to find a person.", _("Use the search box above in order to find a person.")),
-            ("Used for family", _("Used for family")),
-            ("Used for media", _("Used for media")),
-            ("Used for person", _("Used for person")),
-            ("Used for place", _("Used for place")),
-            ("Used for source", _("Used for source")),
-            ("Value", _("Value")),
-            ("Web Link", _("Web Link")),
-            ("Web Links", _("Web Links")),
-            ("Whether to use a special color for the persons that appear several times in the SVG tree", _("Whether to use a special color for the persons that appear several times in the SVG tree")),
-            ("Without name", _("Without name")),
-            ("Without surname", _("Without surname")),
-            ("Without title", _("Without title")),
-            ("Zoom in", _("Zoom in")),
-            ("Zoom out", _("Zoom out")),
-            ("all", _("all")),
-        ):
-            sw.write(sep + "\"" + script_escape(s) + "\": \"" + script_escape(translated) + "\"")
-            sep = ",\n"
-        for (code, translated, s) in EventType._DATAMAP:
-            sw.write(sep + "\"" + script_escape(s) + "\": \"" + script_escape(translated) + "\"")
-            sep = ",\n"
-        sw.write("\n};\n")
         sw.write(
-            ("URLTYPE_UNKNOWN = %i;\n" % UrlType.UNKNOWN) +
-            ("URLTYPE_CUSTOM = %i;\n" % UrlType.CUSTOM) +
-            ("URLTYPE_EMAIL = %i;\n" % UrlType.EMAIL) +
-            ("URLTYPE_WEB_HOME = %i;\n" % UrlType.WEB_HOME) +
-            ("URLTYPE_WEB_SEARCH = %i;\n" % UrlType.WEB_SEARCH) +
-            ("URLTYPE_WEB_FTP = %i;\n" % UrlType.WEB_FTP))
-        for placetype in (
+            '// This file is generated\n\n'
+            '(function(window, undefined) {\n'
+            '"use strict";\n'
+            'window.DwrConfClass = function () {}\n'
+            'window.DwrConf = new DwrConfClass();\n')
+
+        for const in [
+            'DWR_VERSION_410',
+            'DWR_VERSION_412',
+            'DWR_VERSION_420',
+            'DWR_VERSION_500',
+            'SPLIT',
+            'SVG_TREE_TYPES',
+            'SVG_TREE_SHAPES',
+            'SVG_TREE_DISTRIB_ASC',
+            'SVG_TREE_DISTRIB_DSC',
+            'SVG_TREE_BACKGROUNDS',
+            'SVG_TREE_BACKGROUND_GENDER',
+            'SVG_TREE_BACKGROUND_GENERATION',
+            'SVG_TREE_BACKGROUND_AGE',
+            'SVG_TREE_BACKGROUND_SINGLE',
+            'SVG_TREE_BACKGROUND_PERIOD',
+            'SVG_TREE_BACKGROUND_WHITE',
+            'SVG_TREE_BACKGROUND_SCHEME1',
+            'SVG_TREE_BACKGROUND_SCHEME2',
+            'CHART_BACKGROUNDS',
+            'CHART_BACKGROUND_GENDER',
+            'CHART_BACKGROUND_GRADIENT',
+            'CHART_BACKGROUND_SINGLE',
+            'CHART_BACKGROUND_WHITE',
+            'CHART_BACKGROUND_SCHEME1',
+            'CHART_BACKGROUND_SCHEME2',
+            'STATISTICS_CHART_OPACITY',
+            'GRAMPS_PREFERENCES',
+            'SVG_TREE_COLOR_SCHEME0',
+            'SVG_TREE_COLOR_SCHEME1',
+            'SVG_TREE_COLOR_SCHEME2',
+            'INDEXES_SIZES',
             'STREET', 'LOCALITY', 'CITY', 'PARISH', 'COUNTY', 'STATE', 'POSTAL', 'COUNTRY', 'PHONE',
-        ):
-            sw.write("%s = \"%s\";\n" % (placetype, globals()[placetype]))
+        ]:
+            self._print_conf_value(sw, const, globals()[const])
+
+        for data in [
+            'title',
+            'db_sizes',
+            'pages_menu',
+            'pages_menu_index',
+            'inc_events',
+            'inc_families',
+            'inc_sources',
+            'inc_gallery',
+            'inc_places',
+            'inc_repositories',
+            'inc_notes',
+            'inc_addresses',
+            'sourceauthor',
+            'inc_pageconf',
+            'tree_pages',
+            'statistics_pages',
+            'map_pages',
+        ]:
+            self._print_conf_value(sw, data, self.__dict__[data])
+
+        for option in [
+            'graphgens',
+            'svg_tree_type',
+            'svg_tree_shape',
+            'svg_tree_distrib_asc',
+            'svg_tree_distrib_dsc',
+            'svg_tree_background',
+            'svg_tree_color1',
+            'svg_tree_color2',
+            'svg_tree_dup',
+            'index_surnames_type',
+            'index_persons_type',
+            'index_families_type',
+            'index_sources_type',
+            'index_medias_type',
+            'index_places_type',
+            'index_events_type',
+            'index_repositories_type',
+            'index_addresses_type',
+            'showdates',
+            'showpartner',
+            'showparents',
+            'showpath',
+            'bkref_type',
+            'entries_shown',
+            'showallsiblings',
+            'placemappages',
+            'familymappages',
+            'mapservice',
+            'tabbed_panels',
+            'inc_change_time',
+            'hide_gid',
+            'mapservice',
+            'googlemapkey',
+        ]:
+            self._print_conf_value(sw, option, self.options[option])
+
+        for (name, value) in [
+            ('footernote', self.get_header_footer_notes("footernote")),
+            ('headernote', self.get_header_footer_notes("headernote")),
+            ('brandnote', self.get_header_footer_notes("brandnote")),
+            ('COPYRIGHT', self.get_copyright_license()),
+            ('URLTYPE_UNKNOWN', UrlType.UNKNOWN),
+            ('URLTYPE_CUSTOM', UrlType.CUSTOM),
+            ('URLTYPE_EMAIL', UrlType.EMAIL),
+            ('URLTYPE_WEB_HOME', UrlType.WEB_HOME),
+            ('URLTYPE_WEB_SEARCH', UrlType.WEB_SEARCH),
+            ('URLTYPE_WEB_FTP', UrlType.WEB_FTP),
+        ]:
+            self._print_conf_value(sw, name, value)
+
+        # Translation strings
+        translation_strings = {
+            "(b. %(birthdate)s, d. %(deathdate)s)": _("(b. %(birthdate)s, d. %(deathdate)s)"),
+            "(b. %s)": _("(b. %s)"),
+            "(d. %s)": _("(d. %s)"),
+            "(filtered from _MAX_ total entries)": _("(filtered from _MAX_ total entries)"),
+            "(m. %s)": _("(m. %s)"),
+            "(sort by name)": _("(sort by name)"),
+            "(sort by quantity)": _("(sort by quantity)"),
+            ": activate to sort column ascending": _(": activate to sort column ascending"),
+            ": activate to sort column descending": _(": activate to sort column descending"),
+            "<p>This page provides the SVG raw code.<br>Copy the contents into a text editor and save as an SVG file.<br>Make sure that the text editor encoding is UTF-8.</p>": _("<p>This page provides the SVG raw code.<br>Copy the contents into a text editor and save as an SVG file.<br>Make sure that the text editor encoding is UTF-8.</p>"),
+            "Abbreviation": _("Abbreviation"),
+            "Address": _("Address"),
+            "Addresses": _("Addresses"),
+            "Age at death": _("Age at death"),
+            "Alternate Marriage": _("Alternate Marriage"),
+            "Alternate Name": _("Alternate Name"),
+            "Ancestors": _("Ancestors"),
+            "Associations": _("Associations"),
+            "Attribute": _("Attribute"),
+            "Attributes": _("Attributes"),
+            "Author": _("Author"),
+            "Background": _("Background"),
+            "Baptism": _("Baptism"),
+            "Birth": _("Birth"),
+            "Burial": _("Burial"),
+            "Call Name": _("Call Name"),
+            "Call Number": _("Call Number"),
+            "Cause Of Death": _("Cause Of Death"),
+            "Children": _("Children"),
+            "Christening": _("Christening"),
+            "Citation": _("Citation"),
+            "Citations": _("Citations"),
+            "Click on the map to show it full-screen": _("Click on the map to show it full-screen"),
+            "Code": _("Code"),
+            "Configuration": _("Configuration"),
+            "Configure": _("Configure"),
+            "Count": _("Count"),
+            "Cremation": _("Cremation"),
+            "Date": _("Date"),
+            "Death": _("Death"),
+            "Descendants": _("Descendants"),
+            "Description": _("Description"),
+            "DynamicWeb_report#Help": _("DynamicWeb_report#Help"),
+            "Enclosed By": _("Enclosed By"),
+            "Engagement": _("Engagement"),
+            "Event": _("Event"),
+            "Events": _("Events"),
+            "Examples": _("Examples"),
+            "F": _("F"),
+            "Families Index": _("Families Index"),
+            "Families": _("Families"),
+            "Family Nick Name": _("Family Nick Name"),
+            "Father": _("Father"),
+            "Female": _("Female"),
+            "File ready": _("File ready"),
+            "Gender": _("Gender"),
+            "Help": _("Help"),
+            "ID": _("ID"),
+            "Include Place map on Place Pages": _("Include Place map on Place Pages"),
+            "Include dates columns on the index pages": _("Include dates columns on the index pages"),
+            "Include a column for parents on the index pages": _("Include a column for parents on the index pages"),
+            "Include a column for media path on the index pages": _("Include a column for media path on the index pages"),
+            "Include a column for partners on the index pages": _("Include a column for partners on the index pages"),
+            "Include a map in the individuals and family pages": _("Include a map in the individuals and family pages"),
+            "Include half and/ or step-siblings on the individual pages": _("Include half and/ or step-siblings on the individual pages"),
+            "Include references in indexes": _("Include references in indexes"),
+            "Indexes": _("Indexes"),
+            "Individuals": _("Individuals"),
+            "Insert sources author in the sources title": _("Insert sources author in the sources title"),
+            "Last Modified": _("Last Modified"),
+            "Latitude": _("Latitude"),
+            "Link": _("Link"),
+            "Loading...": _("Loading..."),
+            "Location": _("Location"),
+            "Longitude": _("Longitude"),
+            "M": _("M"),
+            "Male": _("Male"),
+            "Map": _("Map"),
+            "Marriage": _("Marriage"),
+            "Maximize": _("Maximize"),
+            "Media Index": _("Media Index"),
+            "Media Type": _("Media Type"),
+            "Media": _("Media"),
+            "Mother": _("Mother"),
+            "Name": _("Name"),
+            "Nick Name": _("Nick Name"),
+            "No data available in table": _("No data available in table"),
+            "No matches found": _("No matches found"),
+            "No matching records found": _("No matching records found"),
+            "No matching surname.": _("No matching surname."),
+            "None": _("None"),
+            "Notes": _("Notes"),
+            "OK": _("OK"),
+            "Other participants": _("Other participants"),
+            "Parents": _("Parents"),
+            "Path": _("Path"),
+            "Person page": _("Person page"),
+            "Person to search for": _("Person to search for"),
+            "Person": _("Person"),
+            "Persons Index": _("Persons Index"),
+            "Persons": _("Persons"),
+            "Place": _("Place"),
+            "Places Index": _("Places Index"),
+            "Places": _("Places"),
+            "Preparing file ...": _("Preparing file ..."),
+            "Processing...": _("Processing..."),
+            "Publication information": _("Publication information"),
+            "References": _("References"),
+            "Relationship to Father": _("Relationship to Father"),
+            "Relationship to Mother": _("Relationship to Mother"),
+            "Relationship": _("Relationship"),
+            "Repositories": _("Repositories"),
+            "Repository": _("Repository"),
+            "Restore": _("Restore"),
+            "Restore default settings": _("Restore default settings"),
+            "Show last modification time": _("Show last modification time"),
+            "SVG tree children distribution": _("SVG tree children distribution"),
+            "SVG tree configuration": _("SVG tree configuration"),
+            "SVG tree graph shape": _("SVG tree graph shape"),
+            "SVG tree graph type": _("SVG tree graph type"),
+            "SVG tree parents distribution": _("SVG tree parents distribution"),
+            "Save tree as file": _("Save tree as file"),
+            "Search:": _("Search:"),
+            "Select the background color scheme": _("Select the background color scheme"),
+            "Select the children distribution (fan charts only)": _("Select the children distribution (fan charts only)"),
+            "Select the number of ascending generations": _("Select the number of ascending generations"),
+            "Select the number of descending generations": _("Select the number of descending generations"),
+            "Select the parents distribution (fan charts only)": _("Select the parents distribution (fan charts only)"),
+            "Select the shape of graph": _("Select the shape of graph"),
+            "Select the type of graph": _("Select the type of graph"),
+            "Several matches.<br>Precise your search or choose in the lists below.": _("Several matches.<br>Precise your search or choose in the lists below."),
+            "Show _MENU_ entries": _("Show _MENU_ entries"),
+            "Show duplicates": _("Show duplicates"),
+            "Showing 0 to 0 of 0 entries": _("Showing 0 to 0 of 0 entries"),
+            "Showing _START_ to _END_ of _TOTAL_ entries": _("Showing _START_ to _END_ of _TOTAL_ entries"),
+            "Siblings": _("Siblings"),
+            "Source": _("Source"),
+            "Sources Index": _("Sources Index"),
+            "Sources": _("Sources"),
+            "Spouses": _("Spouses"),
+            "Suppress Gramps ID": _("Suppress Gramps ID"),
+            "Surname": _("Surname"),
+            "Surnames Index": _("Surnames Index"),
+            "Surnames": _("Surnames"),
+            "Title": _("Title"),
+            "Type": _("Type"),
+            "U": _("U"),
+            "Unknown": _("Unknown"),
+            "Use tabbed panels instead of sections": _("Use tabbed panels instead of sections"),
+            "Use the search box above in order to find a person.": _("Use the search box above in order to find a person."),
+            "Used for family": _("Used for family"),
+            "Used for media": _("Used for media"),
+            "Used for person": _("Used for person"),
+            "Used for place": _("Used for place"),
+            "Used for source": _("Used for source"),
+            "Value": _("Value"),
+            "Web Link": _("Web Link"),
+            "Web Links": _("Web Links"),
+            "Whether to use a special color for the persons that appear several times in the SVG tree": _("Whether to use a special color for the persons that appear several times in the SVG tree"),
+            "Without name": _("Without name"),
+            "Without surname": _("Without surname"),
+            "Without title": _("Without title"),
+            "Zoom in": _("Zoom in"),
+            "Zoom out": _("Zoom out"),
+            "all": _("all"),
+        }
+        for (code, translated, s) in EventType._DATAMAP:
+            translation_strings[script_escape(s)] = script_escape(translated)
+        sw.write("DwrConf.__ = ")
+        json.dump(translation_strings, sw, sort_keys = True, indent = 4)
+        sw.write(";\n")
+
+        sw.write('})(this);')
         self.update_file("dwr_conf.js", sw.getvalue(), "UTF-8")
+
+
+    def _print_conf_value(self, sw, name, value):
+        if type(value) is int:
+            sw.write('DwrConf.%s = %i;\n' % (name, value))
+        elif type(value) is str:
+            sw.write('DwrConf.%s = "%s";\n' % (name, script_escape(value)))
+        else:
+            sw.write('DwrConf.%s = ' % name)
+            json.dump(value, sw, sort_keys = True, indent = 4)
+            sw.write(';\n')
 
 
     def _export_html_page(self, filename, title, cmd, menu):
@@ -2677,29 +2679,7 @@ class DynamicWebReport(Report):
         @param cmd: Javascript code that generates the page
         @param menu: Whether to put a menu on the page
         '''
-        svg = "false"
-        stats = "false"
-        google = "false"
-        key = ""
-        osm = "false"
-        if filename in self.tree_pages: svg = "true"
-        if filename in self.statistics_pages: stats = "true"
-        if filename in self.map_pages:
-            if self.options['mapservice'] == "Google":
-                google = "true"
-                key = self.options['googlemapkey']
-            else:
-                osm = "true"
-        script = Html("script", (
-            "LOAD_SVG_SCRIPTS = %s;\n"
-            "LOAD_STATS_SCRIPTS = %s;\n"
-            "LOAD_GOOGLEMAP_SCRIPTS = %s;\n"
-            "GOOGLEMAPKEY = '%s';\n"
-            "LOAD_OSM_SCRIPTS = %s;\n"
-            ) % (svg, stats, google, key, osm),
-            language = "javascript"
-        )
-        (page, head, body) = self.write_header(title, menu, script)
+        (page, head, body) = self.write_header(title, menu)
         body += Html("script", cmd, language = "javascript")
         self.update_file(filename, html_text(page))
 
@@ -2719,16 +2699,12 @@ class DynamicWebReport(Report):
         self.update_file(filename, html_text(page))
 
 
-    def write_header(self, title, menu, script = None):
+    def write_header(self, title, menu):
         '''
         Generate an HTML page header
         @param title: Title of the page (prepended to L{self.title}
         @param menu: Whether to put a menu on the page
         @return: List of L{Html} objects as follows: (page, head, body)
-        '''
-        '''
-        Note. 'title' is used as currentsection in the navigation links and
-        as part of the header title.
         '''
         # Begin each html page...
         xmllang = xml_lang()
@@ -2744,7 +2720,7 @@ class DynamicWebReport(Report):
         head += Html("meta", attr = 'name="author" content="%s"' % self.author)
         # Create script and favicon links
         head += Html("link", type = "image/x-icon", href = "data/favicon.ico", rel = "shortcut icon")
-        if script is not None: head += script
+        head += Html("script", language = 'javascript', src = 'dwr_conf.js')
         head += Html("script", language = 'javascript', src = 'data/dwr_start.js')
         # Disable menu
         if (not menu):
