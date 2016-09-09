@@ -655,14 +655,13 @@ class DynamicWebReport(Report):
             self.author = self.author.replace(',,,', '')
 
         # The following data are local copies of the options. Refer to the L{DynamicWebOptions} class for more details.
-        self.inc_events = self.options['inc_events']
-        self.inc_places = self.options['inc_places']
-        self.inc_families = self.options['inc_families']
+        self.inc_events_pages = self.options['inc_events_pages']
+        self.inc_places_pages = self.options['inc_places_pages']
+        self.inc_families_pages = self.options['inc_families_pages']
         self.inc_gallery = self.options['inc_gallery']
         self.copy_media = int(self.options['copy_media'])
         self.inc_notes = self.options['inc_notes']
         self.inc_notes_pages = self.options['inc_notes_pages']
-        self.print_notes_type = self.options['print_notes_type']
         self.inc_sources = self.options['inc_sources']
         self.inc_repositories = self.options['inc_repositories']
         # Repositories are not exported unless sources are exported
@@ -673,7 +672,7 @@ class DynamicWebReport(Report):
         self.encoding = self.options['encoding']
         self.copyright = self.options['copyright']
         self.inc_gendex = self.options['inc_gendex']
-        self.sourceauthor = self.options['sourceauthor']
+        self.source_author = self.options['source_author']
         self.template = self.options['template']
         self.inc_pageconf = self.options['inc_pageconf']
         self.pages_number = self.options['pages_number']
@@ -720,6 +719,8 @@ class DynamicWebReport(Report):
             'R': 0,
             'M': 0,
             'P': 0,
+            'E': 0,
+            'T': 0,
             'N': 0,
         }
 
@@ -844,29 +845,13 @@ class DynamicWebReport(Report):
           - death_sdn: The death serial date number (0 if not known)
           - death_place: The death place
           - death_age: The death age
-          - events: A list of events, with for each event:
-              - event: Event index in table 'E'
-              - text: event reference notes
-              - cita: A list of the event reference source citations index (in table 'C')
-          - addrs: A list of addresses, with for each address:
-              - date: The address date
-              - date_sdn: The address serial date number
-              - location: The address place in the form:
-                  [street, locality, parish, city, state, county, zip, country]
-              - note: The address notes
-              - cita: A list of the address source citations index (in table 'C')
-          - note: The person notes
-          - media: A list of the person media references, in the form:
-              - m_idx: media index (in table 'M')
-              - thumb: media thumbnail path
-              - rect: [x1, y1, x2, y2] of the media reference
-              - note: notes of the media reference
-              - cita: list of the media reference source citations index (in table 'C')
-          - note: A list of the person source citations index (in table 'C')
-          - media: The list of the person attributes in the form:
-              [attribute, value, note, list of citations]
-          - urls: The list of the person URL in the form:
-              [type, url, description]
+          - events: see _data_event_reference_index
+          - addrs: A list of addresses, see _data_addresses
+          - notes: The person notes
+          - media: A list of the person media references, see _data_media_reference_index
+          - notes: A list of the person notes index (in table 'T')
+          - attr: The list of the person attributes, see _data_attributes
+          - urls: The list of the person URL, see _data_url_list
           - fams: A list of partners families index (in table 'F')
           - famc: A list of parents families in the form:
               [index (in table 'F'), relation to father, relation to mother, notes, list of citations]
@@ -908,7 +893,7 @@ class DynamicWebReport(Report):
             # Addresses
             jdata['addrs'] = self._data_addresses(person)
             # Get individual notes
-            jdata['note'] = self.get_notes_text(person)
+            jdata['notes'] = self._data_notes(person)
             # Get individual media
             jdata['media'] = self._data_media_reference_index(person)
             # Get individual sources
@@ -970,7 +955,7 @@ class DynamicWebReport(Report):
             datetext = format_date(name.date) or ""
             jdata['date'] = datetext
             # Get name notes
-            jdata['note'] = self.get_notes_text(name)
+            jdata['notes'] = self._data_notes(name)
             # Get name sources
             jdata['cita'] = self._data_source_citation_index(name)
             #
@@ -1031,20 +1016,11 @@ class DynamicWebReport(Report):
           - marr_date: The marriage year in the form '1700', '?' (unknown), or '' (not married)
           - marr_sdn: The marriage serial date number (0 if not known)
           - marr_place: The marriage place
-          - events: A list of events, with for each event:
-              - event: Event index in table 'E'
-              - text: event reference notes
-              - cita: A list of the event reference source citations index (in table 'C')
-          - note: The family notes
-          - media: A list of the family media references, in the form:
-              - m_idx: media index (in table 'M')
-              - thumb: media thumbnail path
-              - rect: [x1, y1, x2, y2] of the media reference
-              - note: notes of the media reference
-              - cita: list of the media reference source citations index (in table 'C')
+          - events: A list of events, see _data_event_reference_index
+          - notes: The family notes
+          - media: A list of the family media references, see _data_media_reference_index
           - cita: A list of the family source citations index (in table 'C')
-          - attr: The list of the family attributes in the form:
-              [attribute, value, note, list of citations]
+          - attr: The list of the family attributes, see _data_attributes
           - spou: A list of spouses index (in table 'I')
           - chil: A list of child in the form:
               [index (in table 'I'), relation to father, relation to mother, notes, list of citations]
@@ -1068,7 +1044,7 @@ class DynamicWebReport(Report):
             # Events
             jdata['events'] = self._data_event_reference_index(family)
             # Get family notes
-            jdata['note'] = self.get_notes_text(family)
+            jdata['notes'] = self._data_notes(family)
             # Get family media
             jdata['media'] = self._data_media_reference_index(family)
             # Get family sources
@@ -1097,7 +1073,7 @@ class DynamicWebReport(Report):
         #  - date_sdn: The address serial date number (sortable)\n"
         #  - location: The address place in the form:\n"
         #      [street, locality, parish, city, state, county, zip, country]\n"\n"
-        #  - note: The address notes\n"
+        #  - notes: The address notes\n"
         #  - cita: A list of the address source citations index (in table 'C')\n"
         if (not self.inc_addresses): return([])
         addrlist = object.get_address_list()
@@ -1121,7 +1097,7 @@ class DynamicWebReport(Report):
             ]
             jdata['location'] = addr_data
             # Get address notes
-            jdata['note'] = self.get_notes_text(addr)
+            jdata['notes'] = self._data_notes(addr)
             # Get address sources
             jdata['cita'] = self._data_source_citation_index(addr)
             #
@@ -1142,21 +1118,11 @@ class DynamicWebReport(Report):
           - author: The source author
           - abbrev: The source abbreviation
           - publ: The source publication information
-          - note: The source notes
-          - media: A list of the source media references, in the form:
-              - m_idx: media index (in table 'M')
-              - thumb: media thumbnail path
-              - rect: [x1, y1, x2, y2] of the media reference
-              - note: notes of the media reference
-              - cita: list of the media reference source citations index (in table 'C')
+          - notes: The source notes
+          - media: A list of the source media references, see _data_media_reference_index
           - bkc: A list of the citations index (in table 'C') referencing this source
-          - repo: A list of the repositories for this source, in the form:
-              - r_idx: repository index (in table 'R')
-              - media_type: media type
-              - call_number: call number
-              - note: notes of the repository reference
-          - attr: The list of the sources attributes in the form:
-              [attribute, value, note, list of citations]
+          - repo: A list of the repositories for this source, see _data_repo_reference_index
+          - attr: The list of the sources attributes, see _data_attributes
           - change_time: last record modification date
         '''
         jdatas = []
@@ -1182,7 +1148,7 @@ class DynamicWebReport(Report):
                 else:
                     jdata[field] = ""
             # Get source notes
-            jdata['note'] = self.get_notes_text(source)
+            jdata['notes'] = self._data_notes(source)
             # Get source media
             jdata['media'] = self._data_media_reference_index(source)
             # Get source citations
@@ -1191,7 +1157,7 @@ class DynamicWebReport(Report):
             jdata['repo'] = self._data_repo_reference_index(source)
             # Get source attributes
             if (DWR_VERSION_410):
-                jdata['attr'] = self._data_attributes_src(source)
+                jdata['attr'] = self._data_attributes_source(source)
             else:
                 jdata['attr'] = []
             # Last change date
@@ -1209,13 +1175,8 @@ class DynamicWebReport(Report):
           - gid: Gramps ID
           - source: The source index (in table 'S')
           - text: The citation text (page, etc.)
-          - note: The citation notes
-          - media: A list of the citation media references, in the form:
-              - m_idx: media index (in table 'M')
-              - thumb: media thumbnail path
-              - rect: [x1, y1, x2, y2] of the media reference
-              - note: notes of the media reference
-              - cita: list of the media reference source citations index (in table 'C')
+          - notes: The citation notes
+          - media: A list of the citation media references, see _data_media_reference_index
           - bki: A list of the person index (in table 'I') referencing this citation
             (including the person events referencing this citation)
           - bkf: A list of the family index (in table 'F') referencing this citation
@@ -1225,6 +1186,7 @@ class DynamicWebReport(Report):
           - bkp: A list of the place index (in table 'P') referencing this citation
             (including the media references referencing this citation)
           - bkr: A list of the repository index (in table 'R') referencing this citation
+          - bke: A list of the event index (in table 'E') referencing this citation
           - change_time: last record modification date
         '''
         jdatas = []
@@ -1252,7 +1214,7 @@ class DynamicWebReport(Report):
                     html = Html("p") + Html("b", label + ": ") + value
                     jdata['text'] += html_text(html)
             # Get citation notes
-            jdata['note'] = self.get_notes_text(citation)
+            jdata['notes'] = self._data_notes(citation)
             # Get citation media
             jdata['media'] = self._data_media_reference_index(citation)
             # Get references
@@ -1261,6 +1223,7 @@ class DynamicWebReport(Report):
             jdata['bkm'] = self._data_bkref_index(Citation, citation_handle, _Media)
             jdata['bkp'] = self._data_bkref_index(Citation, citation_handle, Place)
             jdata['bkr'] = self._data_bkref_index(Citation, citation_handle, Repository)
+            jdata['bke'] = self._data_bkref_index(Citation, citation_handle, Event)
             # Last change date
             jdata['change_time'] = format_time(citation.get_change_time())
             #
@@ -1277,21 +1240,10 @@ class DynamicWebReport(Report):
           - gid: Gramps ID
           - name: The repository name
           - type: The repository type
-          - addrs: A list of addresses, with for each address:
-              - date: The address date
-              - date_sdn: The address serial date number
-              - location: The address place in the form:
-                  [street, locality, parish, city, state, county, zip, country]
-              - note: The address notes
-              - cita: A list of the address source citations index (in table 'C')
+          - addrs: A list of addresses, see _data_addresses
           - note: The repository notes
-          - urls: The list of the repository URL in the form:
-              [type, url, description]
-          - bks: A list of the sources referencing this repository, in the form:
-              - s_idx: source index (in table 'S')
-              - media_type: media type
-              - call_number: call number
-              - note: notes of the repository reference
+          - urls: The list of the repository URL, see _data_url_list
+          - bks: A list of the sources referencing this repository, see _data_repo_backref_index
           - change_time: last record modification date
         '''
         jdatas = []
@@ -1309,7 +1261,7 @@ class DynamicWebReport(Report):
             # Addresses
             jdata['addrs'] = self._data_addresses(repo)
             # Get repository notes
-            jdata['note'] = self.get_notes_text(repo)
+            jdata['notes'] = self._data_notes(repo)
             # Get repository URL
             jdata['urls'] = self._data_url_list(repo)
             # Get source references
@@ -1334,35 +1286,15 @@ class DynamicWebReport(Report):
           - mime: The media MIME type
           - date: The media date
           - date_sdn: The media serial date number
-          - note: The media notes
+          - notes: The media notes
           - cita: A list of the media source citations index (in table 'C')
-          - attr: The list of the media attributes in the form:
-              [attribute, value, note, list of citations]
+          - attr: The list of the media attributes, see _data_attributes
           - thumb: Media thumbnail path
-          - bki: A list of the person referencing this media (including the person events referencing this media), in the form:
-              - bk_idx: person index (in table 'I')
-              - thumb: media thumbnail path
-              - rect: [x1, y1, x2, y2] of the media reference
-              - note: notes of the media reference
-              - cita: list of the media reference source citations index (in table 'C')
-          - bkf: A list of the family referencing this media (including the family events referencing this media), in the form:
-              - bk_idx: family index (in table 'F')
-              - thumb: media thumbnail path
-              - rect: [x1, y1, x2, y2] of the media reference
-              - note: notes of the media reference
-              - cita: list of the media reference source citations index (in table 'C')
-          - bks: A list of the source referencing this media (including the source citations referencing this media), in the form:
-              - bk_idx: source index (in table 'S')
-              - thumb: media thumbnail path
-              - rect: [x1, y1, x2, y2] of the media reference
-              - note: notes of the media reference
-              - cita: list of the media reference source citations index (in table 'C')
-          - bkp: A list of the places referencing this media, in the form:
-              - bk_idx: place index (in table 'P')
-              - thumb: media thumbnail path
-              - rect: [x1, y1, x2, y2] of the media reference
-              - note: notes of the media reference
-              - cita: list of the media reference source citations index (in table 'C')
+          - bki: A list of the person referencing this media, see _data_media_backref_index
+          - bkf: A list of the family referencing this media, see _data_media_backref_index
+          - bks: A list of the source referencing this media, see _data_media_backref_index
+          - bkp: A list of the places referencing this media, see _data_media_backref_index
+          - bke: A list of the events referencing this media, see _data_media_backref_index
           - change_time: last record modification date
         '''
         jdatas = []
@@ -1384,7 +1316,7 @@ class DynamicWebReport(Report):
             jdata['date'] = date
             jdata['date_sdn'] = media.get_date_object().get_sort_value()
             # Get media notes
-            jdata['note'] = self.get_notes_text(media)
+            jdata['notes'] = self._data_notes(media)
             # Get media sources
             jdata['cita'] = self._data_source_citation_index(media)
             # Get media attributes
@@ -1396,6 +1328,7 @@ class DynamicWebReport(Report):
             jdata['bkf'] = self._data_media_backref_index(media, Family)
             jdata['bks'] = self._data_media_backref_index(media, Source)
             jdata['bkp'] = self._data_media_backref_index(media, Place)
+            jdata['bke'] = self._data_media_backref_index(media, Event)
             # Last change date
             jdata['change_time'] = format_time(media.get_change_time())
             #
@@ -1426,20 +1359,15 @@ class DynamicWebReport(Report):
                 }
           - coords: The coordinates [latitude, longitude]
           - code: The place code
-          - note: The place notes
-          - media: A list of the place media references, in the form:
-              - m_idx: media index (in table 'M')
-              - thumb: media thumbnail path
-              - rect: [x1, y1, x2, y2] of the media reference
-              - note: notes of the media reference
-              - cita: list of the media reference source citations index (in table 'C')
+          - notes: The place notes
+          - media: A list of the place media references, see _data_media_reference_index
           - cita: A list of the place source citations index (in table 'C')
-          - urls: The list of the place URL in the form:
-              [type, url, description]
+          - urls: The list of the place URL, see _data_url_list
           - bki: A list of the person index (in table 'I') for events referencing this place
             (including the persons directly referencing this place)
           - bkf: A list of the family index (in table 'F') for events referencing this place
           - bkp: A list of the places index (in table 'P') for places enclosed by this place (empty for version 4.0 and below)
+          - bke: A list of the events index (in table 'E') for events referencing this place
           - change_time: last record modification date
         '''
         jdatas = []
@@ -1452,7 +1380,7 @@ class DynamicWebReport(Report):
             place_name = utils.place_name(self.database, place_handle)
             jdata['name'] = place_name
             jdata['letter'] = first_letter(place_name).strip()
-            if (not self.inc_places):
+            if (not self.inc_places_pages):
                 jdatas.append(jdata)
                 continue
             if DWR_VERSION_410:
@@ -1523,7 +1451,7 @@ class DynamicWebReport(Report):
             jdata['coords'] = coords
             jdata['code'] = place.get_code()
             # Get place notes
-            jdata['note'] = self.get_notes_text(place)
+            jdata['notes'] = self._data_notes(place)
             # Get place media
             jdata['media'] = self._data_media_reference_index(place)
             # Get place sources
@@ -1537,6 +1465,7 @@ class DynamicWebReport(Report):
                 jdata['bkp'] = self._data_bkref_index(Place, place_handle, Place)
             else:
                 jdata['bkp'] = []
+            jdata['bke'] = self._data_bkref_index(Place, place_handle, Event)
             # Last change date
             jdata['change_time'] = format_time(place.get_change_time())
             #
@@ -1556,22 +1485,11 @@ class DynamicWebReport(Report):
           - date_sdn: The event serial date number
           - place: The event place index (in table 'P'), -1 if none
           - descr: The event description
-          - text: The event text and notes (including event reference notes)
-          - media: A list of the event media index, in the form:
-              - m_idx: media index (in table 'M')
-              - thumb: media thumbnail path
-              - rect: [x1, y1, x2, y2] of the media reference
-              - note: notes of the media reference
-              - cita: list of the media reference source citations index (in table 'C')
+          - attr: The event text and notes (including event reference notes)
+          - media: A list of the event media index, see _data_media_reference_index
           - cita: A list of the event source citations index (in table 'C')
-          - bki: A list of the person index (in table 'I') participating to this event, in the form:
-              - bk_idx: person index (in table 'I')
-              - text: event reference notes
-              - cita: list of the event reference source citations index (in table 'C')
-          - bkf: A list of the family index (in table 'F') participating to this event, in the form:
-              - bk_idx: family index (in table 'F')
-              - text: event reference notes
-              - cita: list of the event reference source citations index (in table 'C')
+          - bki: A list of the person index (in table 'I') participating to this event, see _data_event_backref_index
+          - bkf: A list of the family index (in table 'F') participating to this event, see _data_event_backref_index
         '''
         jdatas = []
         event_list = list(self.obj_dict[Event])
@@ -1594,15 +1512,12 @@ class DynamicWebReport(Report):
             if (evt_desc is None): evt_desc = ""
             jdata['descr'] = html_escape(evt_desc)
             # Get event notes
-            notelist = event.get_note_list()
-            attrlist = event.get_attribute_list()
-            jdata['text'] = self.get_notes_attributes_text(notelist, attrlist)
+            jdata['attr'] = self._data_attributes(event)
+            jdata['notes'] = self._data_notes(event)
             # Get event media
             jdata['media'] = self._data_media_reference_index(event)
             # Get event sources
-            citationlist = event.get_citation_list()
-            for attr in attrlist: citationlist.extend(attr.get_citation_list())
-            jdata['cita'] = self._data_source_citation_index_from_list(citationlist)
+            jdata['cita'] = self._data_source_citation_index_with_attributes(event)
             # Get back references
             jdata['bki'] = self._data_event_backref_index(event_handle, Person)
             jdata['bkf'] = self._data_event_backref_index(event_handle, Family)
@@ -1619,69 +1534,49 @@ class DynamicWebReport(Report):
         The notes data is stored in the Javascript Array "T"
         'T' is sorted by note text
         'T' gives for note:
+          - gid: note Gramps ID
+          - type: note type
+          - text: note text
+          - bki: A list of the person index (in table 'I') referencing this note
+          - bkf: A list of the family index (in table 'F') referencing this note
+          - bkm: A list of the media index (in table 'M') referencing this note
+          - bks: A list of the source index (in table 'S') referencing this note
+          - bkr: A list of the repository index (in table 'R') referencing this note
+          - bkp: A list of the place index (in table 'P') referencing this note
+          - bke: A list of the event index (in table 'E') referencing this note
           - change_time: last record modification date
         '''
-        return
         jdatas = []
         note_list = list(self.obj_dict[Note].keys())
-        note_list.sort(key = lambda x: self.obj_dict[Person][x][OBJDICT_INDEX])
+        if (not self.inc_notes): note_list = []
+        note_list.sort(key = lambda x: self.obj_dict[Note][x][OBJDICT_INDEX])
         for note_handle in note_list:
             jdata = {}
             note = self.database.get_note_from_handle(note_handle)
             jdata['gid'] = self.obj_dict[Note][note_handle][OBJDICT_GID]
+            jdata['type'] = str(note.type)
+            jdata['text'] = html_text(self.get_note_format(note))
             # Last change date
             jdata['change_time'] = format_time(note.get_change_time())
+            # Get references
+            jdata['bki'] = self._data_note_backref_index(note_handle, Person)
+            jdata['bkf'] = self._data_note_backref_index(note_handle, Family)
+            jdata['bkm'] = self._data_note_backref_index(note_handle, _Media)
+            jdata['bks'] = self._data_note_backref_index(note_handle, Source)
+            jdata['bkr'] = self._data_note_backref_index(note_handle, Repository)
+            jdata['bkp'] = self._data_note_backref_index(note_handle, Place)
+            jdata['bke'] = self._data_note_backref_index(note_handle, Event)
             #
             jdatas.append(jdata)
         self.update_db_file("T", jdatas)
 
 
-    def get_notes_text(self, object):
-        if (not self.inc_notes): return("")
+    def _data_notes(self, object):
+        if (not self.inc_notes): return([])
         notelist = object.get_note_list()
-        htmllist = self.dump_notes(notelist)
-        if (not htmllist): return("")
-        return(html_text(htmllist))
-
-
-    def get_notes_attributes_text(self, notelist, attrlist):
-        if (not self.inc_notes): return("")
-        # Get notes
-        htmllist = self.dump_notes(notelist)
-        # Get attributes
-        for attr in attrlist:
-            if (not htmllist): htmllist = Html("div")
-            htmllist.extend(Html(
-                "p", _("%(type)s: %(value)s") % {
-                'type': Html("b", attr.get_type()),
-                'value': attr.get_value()
-                }
-            ))
-            # Also output notes attached to the attributes
-            notelist2 = attr.get_note_list()
-            htmlnotelist = self.dump_notes(notelist2)
-            if (htmlnotelist): htmllist.extend(htmlnotelist)
-        if (not htmllist): return("")
-        return(html_text(htmllist))
-
-
-    def dump_notes(self, notelist):
-        '''
-        dump out of list of notes with very little elements of its own
-
-        @param: notelist -- list of notes
-        '''
-        notesection = None
-        if (not notelist): return(notesection)
-        if (not self.inc_notes): return(notesection)
-        for note_handle in notelist:
-            if (not notesection): notesection = Html("div")
-            this_note = self.database.get_note_from_handle(note_handle)
-            if this_note is not None:
-                if (self.print_notes_type):
-                    notesection.extend(Html("i", str(this_note.type), class_="NoteType"))
-                notesection.extend(self.get_note_format(this_note))
-        return(notesection)
+        return [
+            self.obj_dict[Note][note_handle][OBJDICT_INDEX] for note_handle in notelist
+        ]
 
     def get_note_format(self, note):
         '''
@@ -1768,19 +1663,17 @@ class DynamicWebReport(Report):
         '''
         Build an event reference, in the form:
           - event: Event index in table 'E'
-          - text: event reference notes
+          - attr: event reference notes
+          - notes: event reference notes
           - cita: A list of the event reference source citations index (in table 'C')
         '''
         jdata = {}
         jdata['event'] = index
         # Get event reference notes
-        notelist = ref.get_note_list()
-        attrlist = ref.get_attribute_list()
-        jdata['text'] = self.get_notes_attributes_text(notelist, attrlist)
+        jdata['attr'] = self._data_attributes(ref)
+        jdata['notes'] = self._data_notes(ref)
         # Get event reference sources
-        citationlist = ref.get_citation_list()
-        for attr in attrlist: citationlist.extend(attr.get_citation_list())
-        jdata['cita'] = self._data_source_citation_index_from_list(citationlist)
+        jdata['cita'] = self._data_source_citation_index_with_attributes(ref)
         return(jdata)
 
 
@@ -1790,6 +1683,19 @@ class DynamicWebReport(Report):
         See L{_data_source_citation_index_from_list}
         '''
         citationlist = object.get_citation_list()
+        return(self._data_source_citation_index_from_list(citationlist))
+        
+    def _data_source_citation_index_with_attributes(self, object):
+        '''
+        Export sources citations indexes related to L{object}
+        See L{_data_source_citation_index_from_list}
+        '''
+        citationlist = object.get_citation_list()
+        attrlist = object.get_attribute_list()
+        for attr in attrlist: citationlist.extend(attr.get_citation_list())
+        # BUG: it seems that attribute references are given by both object.get_citation_list and object->attr.get_citation_list
+        seen = set()
+        citationlist = [x for x in citationlist if not (x in seen or seen.add(x))]
         return(self._data_source_citation_index_from_list(citationlist))
 
     def _data_source_citation_index_from_list(self, citationlist):
@@ -1840,7 +1746,7 @@ class DynamicWebReport(Report):
         jdata['r_idx'] = index
         jdata['media_type'] = str(ref.get_media_type())
         jdata['call_number'] = ref.get_call_number()
-        jdata['note'] = self.get_notes_text(ref)
+        jdata['notes'] = self._data_notes(ref)
         return(jdata)
 
 
@@ -1865,7 +1771,8 @@ class DynamicWebReport(Report):
          - m_idx: media index (in table 'M')
          - thumb: media thumbnail path
          - rect: [x1, y1, x2, y2] of the media reference
-         - note: notes of the media reference
+         - attr: attributes and notes of the media reference
+         - notes: notes of the media reference
          - cita: list of the media reference source citations index (in table 'C')
         '''
         media_handle = ref.get_reference_handle()
@@ -1875,12 +1782,9 @@ class DynamicWebReport(Report):
         jdata['thumb'] = self.copy_thumbnail(media, ref.get_rectangle())
         rect = ref.get_rectangle() or (0,0,100,100)
         jdata['rect'] = list(rect)
-        attrlist = ref.get_attribute_list()
-        jdata['note'] = self.get_notes_attributes_text(ref.get_note_list(), attrlist)
-        citationlist = ref.get_citation_list()
-        for attr in attrlist: citationlist.extend(attr.get_citation_list())
-        # BUG: it seems that attribute references are given by both ref.get_citation_list and attr.get_citation_list
-        jdata['cita'] = self._data_source_citation_index_from_list(citationlist)
+        jdata['attr'] = self._data_attributes(ref)
+        jdata['notes'] = self._data_notes(ref)
+        jdata['cita'] = self._data_source_citation_index_with_attributes(ref)
         return(jdata)
 
 
@@ -1977,7 +1881,7 @@ class DynamicWebReport(Report):
     def _data_attributes(self, object):
         '''
         Build the list of the L{object} attributes as a Javascript string, in the form:
-          [attribute, value, note, list of citations]
+          [attribute, value, notes, list of citations]
         '''
         attrlist = object.get_attribute_list()
         jdatas = []
@@ -1986,14 +1890,14 @@ class DynamicWebReport(Report):
             jdata['type'] = str(attr.get_type())
             jdata['value'] = str(attr.get_value())
             # Get attribute notes
-            jdata['note'] = self.get_notes_text(attr)
+            jdata['notes'] = self._data_notes(attr)
             # Get attribute sources
             jdata['cita'] = self._data_source_citation_index(attr)
             #
             jdatas.append(jdata)
         return(jdatas)
 
-    def _data_attributes_src(self, source):
+    def _data_attributes_source(self, source):
         '''
         Build the list of the L{source} sources attributes as a Javascript string, in the form:
           [attribute, value, "", []]
@@ -2005,7 +1909,7 @@ class DynamicWebReport(Report):
             jdata['type'] = str(attr.get_type())
             jdata['value'] = str(attr.get_value())
             # Get attribute notes
-            jdata['note'] = ""
+            jdata['notes'] = []
             # Get attribute sources
             jdata['cita'] = []
             #
@@ -2136,7 +2040,7 @@ class DynamicWebReport(Report):
         jdata['to_father'] = str(child_ref.get_father_relation())
         jdata['to_mother'] = str(child_ref.get_mother_relation())
         # Get child reference notes
-        jdata['note'] = self.get_notes_text(child_ref)
+        jdata['notes'] = self._data_notes(child_ref)
         # Get child reference sources
         jdata['cita'] = self._data_source_citation_index(child_ref)
         return(jdata)
@@ -2151,7 +2055,7 @@ class DynamicWebReport(Report):
             jdata['person'] = self.obj_dict[Person][person_ref.ref][OBJDICT_INDEX]
             jdata['relationship'] = str(person_ref.get_relation())
             # Get association notes
-            jdata['note'] = self.get_notes_text(person_ref)
+            jdata['notes'] = self._data_notes(person_ref)
             # Get association sources
             jdata['cita'] = self._data_source_citation_index(person_ref)
             #
@@ -2257,12 +2161,13 @@ class DynamicWebReport(Report):
             ("conf.html", _("Configuration"), self.inc_pageconf, True, "Dwr.Main(Dwr.PAGE_CONF);"),
             # Objects pages
             ("person.html", _("Person"), True, True, "Dwr.Main(Dwr.PAGE_INDI);"),
-            ("family.html", _("Family"), self.inc_families, True, "Dwr.Main(Dwr.PAGE_FAM);"),
+            ("family.html", _("Family"), self.inc_families_pages, True, "Dwr.Main(Dwr.PAGE_FAM);"),
             ("source.html", _("Source"), self.inc_sources, True, "Dwr.Main(Dwr.PAGE_SOURCE);"),
             ("media.html", _("Media"), self.inc_gallery, True, "Dwr.Main(Dwr.PAGE_MEDIA);"),
-            ("place.html", _("Place"), self.inc_places, True, "Dwr.Main(Dwr.PAGE_PLACE);"),
+            ("place.html", _("Place"), self.inc_places_pages, True, "Dwr.Main(Dwr.PAGE_PLACE);"),
             ("repository.html", _("Repository"), self.inc_repositories, True, "Dwr.Main(Dwr.PAGE_REPO);"),
-            ("event.html", _("Event"), self.inc_events, True, "Dwr.Main(Dwr.PAGE_EVENT);"),
+            ("event.html", _("Event"), self.inc_events_pages, True, "Dwr.Main(Dwr.PAGE_EVENT);"),
+            ("note.html", _("Note"), self.inc_notes_pages, True, "Dwr.Main(Dwr.PAGE_NOTE);"),
             ("search.html", _("Search results"), True, True, "Dwr.Main(Dwr.PAGE_SEARCH);"),
             ("tree_svg_full.html", _("Tree"), PAGE_SVG_TREE in self.page_content, False, "Dwr.Main(Dwr.PAGE_SVG_TREE_FULL);"),
             ("tree_svg_conf.html", _("Tree"), PAGE_SVG_TREE in self.page_content, True, "Dwr.Main(Dwr.PAGE_SVG_TREE_CONF);"),
@@ -2282,6 +2187,7 @@ class DynamicWebReport(Report):
             ("medias.html", _("Media"), False, True, "Dwr.Main(Dwr.PAGE_MEDIA_INDEX);"),
             ("places.html", _("Places"), False, True, "Dwr.Main(Dwr.PAGE_PLACES_INDEX);"),
             ("events.html", _("Events"), False, True, "Dwr.Main(Dwr.PAGE_EVENTS_INDEX);"),
+            ("notes.html", _("Notes"), False, True, "Dwr.Main(Dwr.PAGE_NOTES_INDEX);"),
             ("repositories.html", _("Repositories"), False, True, "Dwr.Main(Dwr.PAGE_REPOS_INDEX);"),
             ("addresses.html", _("Addresses"), False, True, "Dwr.Main(Dwr.PAGE_ADDRESSES_INDEX);"),
         ]
@@ -2301,13 +2207,14 @@ class DynamicWebReport(Report):
         self.index_pages = [p for p in  self.index_pages if (
             (p != "surnames.html" or (self.index_surnames_type != INDEX_TYPE_NONE)) and
             (p != "persons.html" or (self.index_persons_type != INDEX_TYPE_NONE)) and
-            (p != "families.html" or (self.inc_families and self.index_families_type != INDEX_TYPE_NONE)) and
+            (p != "families.html" or (self.inc_families_pages and self.index_families_type != INDEX_TYPE_NONE)) and
             (p != "sources.html" or (self.inc_sources and self.index_sources_type != INDEX_TYPE_NONE)) and
             (p != "medias.html" or (self.inc_gallery and self.index_medias_type != INDEX_TYPE_NONE)) and
-            (p != "places.html" or (self.inc_places and self.index_places_type != INDEX_TYPE_NONE)) and
-            (p != "events.html" or (self.inc_events and self.index_events_type != INDEX_TYPE_NONE)) and
+            (p != "places.html" or (self.inc_places_pages and self.index_places_type != INDEX_TYPE_NONE)) and
+            (p != "events.html" or (self.inc_events_pages and self.index_events_type != INDEX_TYPE_NONE)) and
             (p != "repositories.html" or (self.inc_repositories and self.index_repositories_type != INDEX_TYPE_NONE)) and
             (p != "addresses.html" or (self.inc_addresses and self.index_addresses_type != INDEX_TYPE_NONE))
+            # (p != "notes.html" or (self.inc_notes_pages and self.index_notes_type != INDEX_TYPE_NONE))
         )]
 
         self.map_pages = []
@@ -2415,15 +2322,16 @@ class DynamicWebReport(Report):
             'db_sizes',
             'pages_menu',
             'pages_menu_index',
-            'inc_events',
-            'inc_families',
+            'inc_events_pages',
+            'inc_families_pages',
+            'inc_notes_pages',
             'inc_sources',
             'inc_gallery',
-            'inc_places',
+            'inc_places_pages',
             'inc_repositories',
             'inc_notes',
             'inc_addresses',
-            'sourceauthor',
+            'source_author',
             'inc_pageconf',
             'tree_pages',
             'statistics_pages',
@@ -2450,18 +2358,19 @@ class DynamicWebReport(Report):
             'index_events_type',
             'index_repositories_type',
             'index_addresses_type',
-            'showdates',
-            'showpartner',
-            'showparents',
-            'showpath',
-            'bkref_type',
+            'index_show_dates',
+            'index_show_partner',
+            'index_show_parents',
+            'index_show_path',
+            'index_show_bkref',
             'entries_shown',
-            'showallsiblings',
+            'show_all_siblings',
             'placemappages',
             'familymappages',
             'mapservice',
             'tabbed_panels',
             'inc_change_time',
+            'print_notes_type',
             'hide_gid',
             'mapservice',
             'googlemapkey',
@@ -2877,7 +2786,7 @@ class DynamicWebReport(Report):
                 sw.write("\n"
                     "Dwr.ScriptLoaded('dwr_db_%s_%s_%i.js');\n" % (name, k, i))
                 self.update_file("dwr_db_%s_%s_%i.js" % (name, k, i), sw.getvalue())
-        if name in ["I", "F", "S", "M", "P", "R", "E"]:
+        if name in ["I", "F", "S", "M", "P", "R", "E", "T"]:
             self.update_gid_xref_file(name, jdatas)
 
     def update_gid_xref_file(self, name, jdatas):
@@ -3149,7 +3058,7 @@ class DynamicWebReport(Report):
             if (handle in self.obj_dict[Place]):
                 href = "%s?pdx=%i" % (href, self.obj_dict[Place][handle][OBJDICT_INDEX])
         else:
-            print(_("DynamicWebReport ignoring link type '%(class)s'") % {"class": obj_class})
+            log.warning(_("DynamicWebReport ignoring link type '%(class)s'") % {"class": obj_class})
         return(href)
 
 
@@ -3250,6 +3159,20 @@ class DynamicWebReport(Report):
             del jdata['event']
             jdatas.append(jdata)
         jdatas.sort(key = lambda x: x['bk_idx'])
+        return(jdatas)
+
+    def _data_note_backref_index(self, note_handle, ref_class):
+        '''
+        Build a list of object indexes referencing a given note
+        '''
+        if (note_handle not in self.obj_dict[Note]): return([])
+        bkref_list = self.bkref_dict[Note][note_handle]
+        if (not bkref_list): return ([])
+        jdatas = [
+            self.obj_dict[ref_class][bkref_handle][OBJDICT_INDEX]
+            for (bkref_class, bkref_handle, event_ref) in bkref_list
+            if (ref_class is bkref_class)
+        ]
         return(jdatas)
 
 
@@ -3458,19 +3381,22 @@ class DynamicWebReport(Report):
         # Person citations
         for citation_handle in person.get_citation_list():
             self._add_citation(citation_handle, Person, person_handle)
-        # Person name citations
-        for name in [person.get_primary_name()] + \
-                        person.get_alternate_names():
+        # Person name citations and notes
+        for name in [person.get_primary_name()] + person.get_alternate_names():
             for citation_handle in name.get_citation_list():
                 self._add_citation(citation_handle, Person, person_handle)
+            for note_handle in name.get_note_list():
+                self._add_note(note_handle, Person, person_handle)
         # LDS Ordinance citations
         for lds_ord in person.get_lds_ord_list():
             for citation_handle in lds_ord.get_citation_list():
                 self._add_citation(citation_handle, Person, person_handle)
-        # Attribute citations
+        # Attribute citations and notes
         for attr in person.get_attribute_list():
             for citation_handle in attr.get_citation_list():
                 self._add_citation(citation_handle, Person, person_handle)
+            for note_handle in attr.get_note_list():
+                self._add_note(note_handle, Person, person_handle)
         # Person families
         family_handle_list = person.get_family_handle_list()
         if family_handle_list:
@@ -3480,14 +3406,21 @@ class DynamicWebReport(Report):
         for media_ref in person.get_media_list():
             media_handle = media_ref.get_reference_handle()
             self._add_media(media_handle, Person, person_handle, media_ref)
-        # Association citations
+        # Association citations and notes
         for assoc in person.get_person_ref_list():
             for citation_handle in assoc.get_citation_list():
                 self._add_citation(citation_handle, Person, person_handle)
-        # Addresses citations
+            for note_handle in assoc.get_note_list():
+                self._add_note(note_handle, Person, person_handle)
+        # Addresses citations and notes
         for addr in person.get_address_list():
             for citation_handle in addr.get_citation_list():
                 self._add_citation(citation_handle, Person, person_handle)
+            for note_handle in addr.get_note_list():
+                self._add_note(note_handle, Person, person_handle)
+        # Notes
+        for note_handle in person.get_note_list():
+            self._add_note(note_handle, Person, person_handle)
 
 
     def get_person_name(self, person):
@@ -3528,10 +3461,12 @@ class DynamicWebReport(Report):
         for lds_ord in family.get_lds_ord_list():
             for citation_handle in lds_ord.get_citation_list():
                 self._add_citation(citation_handle, Family, family_handle)
-        # Attributes citations
+        # Attributes citations and notes
         for attr in family.get_attribute_list():
             for citation_handle in attr.get_citation_list():
                 self._add_citation(citation_handle, Family, family_handle)
+            for note_handle in attr.get_note_list():
+                self._add_note(note_handle, Family, family_handle)
         # Family citations
         for citation_handle in family.get_citation_list():
             self._add_citation(citation_handle, Family, family_handle)
@@ -3539,6 +3474,9 @@ class DynamicWebReport(Report):
         for media_ref in family.get_media_list():
             media_handle = media_ref.get_reference_handle()
             self._add_media(media_handle, Family, family_handle, media_ref)
+        # Notes
+        for note_handle in family.get_note_list():
+            self._add_note(note_handle, Family, family_handle)
 
 
     def get_family_name(self, family):
@@ -3586,10 +3524,16 @@ class DynamicWebReport(Report):
         # Update the dictionaries of objects back references
         if (bkref_class is not None):
             self.bkref_dict[Event][event_handle].add((bkref_class, bkref_handle, event_ref))
-            # Event reference attributes citations
+            # Citations and notes for event reference and attributes 
+            for citation_handle in event_ref.get_citation_list():
+                self._add_citation(citation_handle, bkref_class, bkref_handle)
+            for note_handle in event_ref.get_note_list():
+                self._add_note(note_handle, bkref_class, bkref_handle)
             for attr in event_ref.get_attribute_list():
                 for citation_handle in attr.get_citation_list():
                     self._add_citation(citation_handle, bkref_class, bkref_handle)
+                for note_handle in attr.get_note_list():
+                    self._add_note(note_handle, bkref_class, bkref_handle)
         # Check if the event is already added
         if (event_handle in self.obj_dict[Event]): return
         # Add event in the dictionaries of objects
@@ -3606,6 +3550,9 @@ class DynamicWebReport(Report):
         if not (event_desc == "" or event_desc is None or event_desc =="Y"):
             event_name = event_name + ": " + event_desc
         self.obj_dict[Event][event_handle] = [event_name, event.gramps_id, len(self.obj_dict[Event])]
+        # If the event pages are enabled, then the back reference go to the event page
+        bkref_class = Event
+        bkref_handle = event_handle
         # Event place
         place_handle = event.get_place_handle()
         if (place_handle):
@@ -3621,6 +3568,9 @@ class DynamicWebReport(Report):
         for media_ref in event.get_media_list():
             media_handle = media_ref.get_reference_handle()
             self._add_media(media_handle, bkref_class, bkref_handle, media_ref)
+        # Notes
+        for note_handle in event.get_note_list():
+            self._add_note(note_handle, bkref_class, bkref_handle)
 
 
     def _add_place(self, place_handle, bkref_class = None, bkref_handle = None, place_ref = None):
@@ -3644,7 +3594,7 @@ class DynamicWebReport(Report):
         else:
             place_name = place.get_title()
         self.obj_dict[Place][place_handle] = [place_name, place.gramps_id, len(self.obj_dict[Place])]
-        if (self.inc_places):
+        if (self.inc_places_pages):
             # Enclosing places
             if DWR_VERSION_410:
                 for place_ref2 in place.get_placeref_list():
@@ -3657,6 +3607,9 @@ class DynamicWebReport(Report):
             for media_ref in place.get_media_list():
                 media_handle = media_ref.get_reference_handle()
                 self._add_media(media_handle, Place, place_handle, media_ref)
+            # Notes
+            for note_handle in place.get_note_list():
+                self._add_note(note_handle, Place, place_handle)
 
 
     def _add_source(self, source_handle, bkref_class = None, bkref_handle = None):
@@ -3673,7 +3626,7 @@ class DynamicWebReport(Report):
         source = self.database.get_source_from_handle(source_handle)
         source_name = source.get_title()
         source_author = source.get_author()
-        if (self.sourceauthor and source_author):
+        if (self.source_author and source_author):
             source_name = source_author + ": " + source_name
         self.obj_dict[Source][source_handle] = [source_name, source.gramps_id, len(self.obj_dict[Source])]
         # Source repository
@@ -3685,6 +3638,9 @@ class DynamicWebReport(Report):
         for media_ref in source.get_media_list():
             media_handle = media_ref.get_reference_handle()
             self._add_media(media_handle, Source, source_handle, media_ref)
+        # Notes
+        for note_handle in source.get_note_list():
+            self._add_note(note_handle, Source, source_handle)
 
 
     def _add_citation(self, citation_handle, bkref_class = None, bkref_handle = None):
@@ -3708,6 +3664,9 @@ class DynamicWebReport(Report):
         for media_ref in citation.get_media_list():
             media_handle = media_ref.get_reference_handle()
             self._add_media(media_handle, Source, source_handle, media_ref)
+        # Notes
+        for note_handle in citation.get_note_list():
+            self._add_note(note_handle, Source, source_handle)
 
 
     def _add_media(self, media_handle, bkref_class = None, bkref_handle = None, media_ref = None):
@@ -3723,12 +3682,16 @@ class DynamicWebReport(Report):
         # Update the dictionaries of objects back references
         if (bkref_class is not None):
             self.bkref_dict[_Media][media_handle].add((bkref_class, bkref_handle, media_ref))
-            # Citations for media reference, media reference attributes
-            citation_list = media_ref.get_citation_list()
-            for attr in media_ref.get_attribute_list():
-                citation_list.extend(attr.get_citation_list())
-            for citation_handle in citation_list:
+            # Citations and notes for media reference, media reference attributes
+            for citation_handle in media_ref.get_citation_list():
                 self._add_citation(citation_handle, _Media, media_handle)
+            for note_handle in media_ref.get_note_list():
+                self._add_note(note_handle, _Media, media_handle)
+            for attr in media_ref.get_attribute_list():
+                for citation_handle in attr.get_citation_list():
+                    self._add_citation(citation_handle, _Media, media_handle)
+                for note_handle in attr.get_note_list():
+                    self._add_note(note_handle, _Media, media_handle)
         # Check if the media is already added
         if (media_handle in self.obj_dict[_Media]): return
         # Add media in the dictionaries of objects
@@ -3741,6 +3704,9 @@ class DynamicWebReport(Report):
             citation_list.extend(attr.get_citation_list())
         for citation_handle in citation_list:
             self._add_citation(citation_handle, _Media, media_handle)
+        # Notes
+        for note_handle in media.get_note_list():
+            self._add_note(note_handle, _Media, media_handle)
 
 
     def _add_repository(self, repo_handle, bkref_class = None, bkref_handle = None, repo_ref = None):
@@ -3756,6 +3722,9 @@ class DynamicWebReport(Report):
         # Update the dictionaries of objects back references
         if (bkref_class is not None):
             self.bkref_dict[Repository][repo_handle].add((bkref_class, bkref_handle, repo_ref))
+            # Repository reference notes
+            for note_handle in repo_ref.get_note_list():
+                self._add_note(note_handle, bkref_class, bkref_handle)
         # Check if the repository is already added
         if (repo_handle in self.obj_dict[Repository]): return
         # Add repository in the dictionaries of objects
@@ -3766,6 +3735,25 @@ class DynamicWebReport(Report):
         for addr in repo.get_address_list():
             for citation_handle in addr.get_citation_list():
                 self._add_citation(citation_handle, Repository, repo_handle)
+        # Notes
+        for note_handle in repo.get_note_list():
+            self._add_note(note_handle, Repository, repo_handle)
+
+
+    def _add_note(self, note_handle, bkref_class = None, bkref_handle = None):
+        '''
+        Add note_handle to the L{self.obj_dict}, and recursively all referenced objects
+        '''
+        if (not self.inc_notes): return
+        # Update the dictionaries of objects back references
+        if (bkref_class is not None):
+            self.bkref_dict[Note][note_handle].add((bkref_class, bkref_handle, None))
+        # Check if the note is already added
+        if (note_handle in self.obj_dict[Note]): return
+        # Add note in the dictionaries of objects
+        note = self.database.get_note_from_handle(note_handle)
+        note_name = str(note.type) + " " + note.gramps_id
+        self.obj_dict[Note][note_handle] = [note_name, note.gramps_id, len(self.obj_dict[Note])]
 
 
     ##############################################################################################
@@ -3803,7 +3791,7 @@ class DynamicWebReport(Report):
             self.obj_dict[Family][x][OBJDICT_INDEX] = i
 
         # Sort others
-        for cls in (Citation, Source, Repository, _Media, Place, Event):
+        for cls in (Citation, Source, Repository, _Media, Place, Event, Note):
             objs = list(self.obj_dict[cls].keys())
             sortkeys = {}
             for handle in objs:
@@ -4069,10 +4057,10 @@ class DynamicWebOptions(MenuReportOptions):
         print_notes_type.set_help(_("Whether to print the notes type in the notes text"))
         addopt("print_notes_type", print_notes_type)
 
-        self.__inc_places = BooleanOption(_("Print place pages"), True)
-        self.__inc_places.set_help(_("Whether to show pages for the places"))
-        addopt("inc_places", self.__inc_places)
-        self.__inc_places.connect("value-changed", self.__placemap_options_changed)
+        self.__inc_places_pages = BooleanOption(_("Print place pages"), True)
+        self.__inc_places_pages.set_help(_("Whether to show pages for the places"))
+        addopt("inc_places_pages", self.__inc_places_pages)
+        self.__inc_places_pages.connect("value-changed", self.__placemap_options_changed)
 
         self.__placemappages = BooleanOption(_("Include Place map on Place Pages"), False)
         self.__placemappages.set_help(_(
@@ -4119,21 +4107,21 @@ class DynamicWebOptions(MenuReportOptions):
         encoding.set_help(_("The encoding to be used for the web files"))
         addopt("encoding", encoding)
 
-        self.__inc_families = BooleanOption(_("Include family pages"), False)
-        self.__inc_families.set_help(_("Whether or not to include family pages"))
-        addopt("inc_families", self.__inc_families)
+        self.__inc_families_pages = BooleanOption(_("Include family pages"), False)
+        self.__inc_families_pages.set_help(_("Whether or not to include family pages"))
+        addopt("inc_families_pages", self.__inc_families_pages)
 
-        inc_events = BooleanOption(_('Include event pages'), False)
-        inc_events.set_help(_('Add a complete events list and relevant pages or not'))
-        addopt("inc_events", inc_events)
+        inc_events_pages = BooleanOption(_('Include event pages'), False)
+        inc_events_pages.set_help(_('Add a complete events list and relevant pages or not'))
+        addopt("inc_events_pages", inc_events_pages)
 
         inc_notes_pages = BooleanOption(_('Include note pages'), False)
         inc_notes_pages.set_help(_('Add a complete notes list and relevant pages or not'))
         addopt("inc_notes_pages", inc_notes_pages)
 
-        showallsiblings = BooleanOption(_("Include half and/ or step-siblings on the individual pages"), False)
-        showallsiblings.set_help(_( "Whether to include half and/ or step-siblings with the parents and siblings"))
-        addopt('showallsiblings', showallsiblings)
+        show_all_siblings = BooleanOption(_("Include half and/ or step-siblings on the individual pages"), False)
+        show_all_siblings.set_help(_( "Whether to include half and/ or step-siblings with the parents and siblings"))
+        addopt('show_all_siblings', show_all_siblings)
 
         inc_gendex = BooleanOption(_('Include GENDEX file (/gendex.txt)'), False)
         inc_gendex.set_help(_('Whether to include a GENDEX file or not'))
@@ -4151,9 +4139,9 @@ class DynamicWebOptions(MenuReportOptions):
         inc_change_time.set_help(_( "Whether to show the last modification time in the pages footer"))
         addopt('inc_change_time', inc_change_time)
 
-        sourceauthor = BooleanOption(_("Insert sources author in the sources title"), False)
-        sourceauthor.set_help(_( "Whether to insert sources author in the sources title"))
-        addopt('sourceauthor', sourceauthor)
+        source_author = BooleanOption(_("Insert sources author in the sources title"), False)
+        source_author.set_help(_( "Whether to insert sources author in the sources title"))
+        addopt('source_author', source_author)
 
         hide_gid = BooleanOption(_("Suppress Gramps ID"), True)
         hide_gid.set_help(_( "Whether to hide the Gramps ID"))
@@ -4186,25 +4174,25 @@ class DynamicWebOptions(MenuReportOptions):
             index_type.set_help(option_help)
             addopt("index_" + index + "_type", index_type)
 
-        showdates = BooleanOption(_("Include dates columns on the index pages"), True)
-        showdates.set_help(_('Whether to include dates columns (birth, death, marriage) on the index pages'))
-        addopt("showdates", showdates)
+        index_show_dates = BooleanOption(_("Include dates columns on the index pages"), True)
+        index_show_dates.set_help(_('Whether to include dates columns (birth, death, marriage) on the index pages'))
+        addopt("index_show_dates", index_show_dates)
 
-        showpartner = BooleanOption(_("Include a column for partners on the index pages"), False)
-        showpartner.set_help(_('Whether to include a partners column'))
-        addopt("showpartner", showpartner)
+        index_show_partner = BooleanOption(_("Include a column for partners on the index pages"), False)
+        index_show_partner.set_help(_('Whether to include a partners column on the index pages'))
+        addopt("index_show_partner", index_show_partner)
 
-        showparents = BooleanOption(_("Include a column for parents on the index pages"), False)
-        showparents.set_help(_('Whether to include a parents column'))
-        addopt("showparents", showparents)
+        index_show_parents = BooleanOption(_("Include a column for parents on the index pages"), False)
+        index_show_parents.set_help(_('Whether to include a parents column on the index pages'))
+        addopt("index_show_parents", index_show_parents)
 
-        showpath = BooleanOption(_("Include a column for media path on the index pages"), False)
-        showpath.set_help(_('Whether to include a column showing the media path'))
-        addopt("showpath", showpath)
+        index_show_path = BooleanOption(_("Include a column for media path on the index pages"), False)
+        index_show_path.set_help(_('Whether to include a column showing the media path on the index pages'))
+        addopt("index_show_path", index_show_path)
 
-        bkref_type = BooleanOption(_('Include references in indexes'), False)
-        bkref_type.set_help(_('Whether to include the references to the items in the index pages. For example, in the media index page, the names of the individuals, families, places, sources that reference the media.'))
-        addopt("bkref_type", bkref_type)
+        index_show_bkref = BooleanOption(_('Include references in indexes'), False)
+        index_show_bkref.set_help(_('Whether to include the references to the items in the index pages. For example, in the media index page, the names of the individuals, families, places, sources that reference the media.'))
+        addopt("index_show_bkref", index_show_bkref)
 
         entries_shown = EnumeratedListOption(_('Default number of entries in the indexes'), 0)
         for (i, eopt) in enumerate(INDEXES_SIZES[1]):
@@ -4384,7 +4372,7 @@ class DynamicWebOptions(MenuReportOptions):
         Handles the changing nature of the place map Options
         '''
         # get values for all Place Map Options tab...
-        place_active = self.__inc_places.get_value()
+        place_active = self.__inc_places_pages.get_value()
         place_map_active = self.__placemappages.get_value()
         family_active = self.__familymappages.get_value()
         mapservice_opts = self.__mapservice.get_value()

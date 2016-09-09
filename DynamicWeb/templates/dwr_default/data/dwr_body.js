@@ -156,6 +156,7 @@ DwrClass.prototype.search = {
 	//Pdx; // Index of the current place (in table "P")
 	//Rdx; // Index of the current repository (in table "R")
 	//Edx; // Index of the current repository (in table "E")
+	//Tdx; // Index of the current note (in table "T")
 	//Ndx; // Index of the current surname (in table "N")
 	//Igid; // Gramps ID of the current person
 	//Fgid; // Gramps ID of the current family
@@ -163,6 +164,8 @@ DwrClass.prototype.search = {
 	//Sgid; // Gramps ID of the current source
 	//Pgid; // Gramps ID of the current place
 	//Rgid; // Gramps ID of the current repository
+	//Egid; // Gramps ID of the current event
+	//Tgid; // Gramps ID of the current note
 	//ImgList; // List of media index (in table "M") for the slideshow
 	//MapExpanded; // Whether the map should be expanded to full screen
 	//=========================================== SVG tree
@@ -246,6 +249,7 @@ DwrClass.prototype.defaultSearchString = {
 	Pdx: -1,
 	Rdx: -1,
 	Edx: -1,
+	Tdx: -1,
 	Ndx: -1,
 	Igid: '',
 	Fgid: '',
@@ -253,6 +257,8 @@ DwrClass.prototype.defaultSearchString = {
 	Sgid: '',
 	Pgid: '',
 	Rgid: '',
+	Egid: '',
+	Tgid: '',
 	ImgList: [],
 	MapExpanded: false,
 
@@ -266,23 +272,23 @@ DwrClass.prototype.defaultSearchString = {
 	SvgDup: DwrConf.svg_tree_show_dup,
 	SvgExpanded: false,
 
-	IndexShowDates: DwrConf.showdates,
-	IndexShowPartner: DwrConf.showpartner,
-	IndexShowParents: DwrConf.showparents,
-	IndexShowPath: DwrConf.showpath,
-	IndexShowBkrefType: DwrConf.bkref_type,
-	ShowAllSiblings: DwrConf.showallsiblings,
-	IncEvents: DwrConf.inc_events,
-	IncFamilies: DwrConf.inc_families,
+	IndexShowDates: DwrConf.index_show_dates,
+	IndexShowPartner: DwrConf.index_show_partner,
+	IndexShowParents: DwrConf.index_show_parents,
+	IndexShowPath: DwrConf.index_show_path,
+	IndexShowBkrefType: DwrConf.index_show_bkref,
+	ShowAllSiblings: DwrConf.show_all_siblings,
+	IncEvents: DwrConf.inc_events_pages,
+	IncFamilies: DwrConf.inc_families_pages,
 	IncSources: DwrConf.inc_sources,
 	IncMedia: DwrConf.inc_gallery,
-	IncPlaces: DwrConf.inc_places,
+	IncPlaces: DwrConf.inc_places_pages,
 	IncRepositories: DwrConf.inc_repositories,
 	IncNotes: DwrConf.inc_notes,
 	IncAddresses: DwrConf.inc_addresses,
 	MapPlace: DwrConf.placemappages,
 	MapFamily: DwrConf.familymappages,
-	SourceAuthorInTitle: DwrConf.sourceauthor,
+	SourceAuthorInTitle: DwrConf.source_author,
 	TabbedPanels: DwrConf.tabbed_panels,
 	IncChangeTime: DwrConf.inc_change_time,
 	HideGid: DwrConf.hide_gid,
@@ -334,6 +340,7 @@ DwrClass.prototype.ParseSearchString = function()
 	Dwr.search.Pdx = GetURLParameter('pdx', -1);
 	Dwr.search.Rdx = GetURLParameter('rdx', -1);
 	Dwr.search.Edx = GetURLParameter('edx', -1);
+	Dwr.search.Tdx = GetURLParameter('tdx', -1);
 	Dwr.search.Ndx = GetURLParameter('ndx', -1);
 	Dwr.search.Igid = GetURLParameter('igid', '');
 	Dwr.search.Fgid = GetURLParameter('fgid', '');
@@ -341,6 +348,8 @@ DwrClass.prototype.ParseSearchString = function()
 	Dwr.search.Sgid = GetURLParameter('sgid', '');
 	Dwr.search.Pgid = GetURLParameter('pgid', '');
 	Dwr.search.Rgid = GetURLParameter('rgid', '');
+	Dwr.search.Egid = GetURLParameter('egid', '');
+	Dwr.search.Tgid = GetURLParameter('tgid', '');
 	Dwr.search.ImgList = GetURLParameter('simg', []);
 	if (Dwr.search.Mdx != -1 && Dwr.search.ImgList.length == 0) Dwr.search.ImgList = [Dwr.search.Mdx];
 	Dwr.search.MapExpanded = GetURLParameter('mexp', false);
@@ -355,23 +364,23 @@ DwrClass.prototype.ParseSearchString = function()
 	Dwr.search.SvgDup = GetURLParameter('svgdup', DwrConf.svg_tree_show_dup);
 	Dwr.search.SvgExpanded = GetURLParameter('svgx', false);
 
-	Dwr.search.IndexShowDates = GetURLParameter('cid', DwrConf.showdates);
-	Dwr.search.IndexShowPartner = GetURLParameter('cis', DwrConf.showpartner);
-	Dwr.search.IndexShowParents = GetURLParameter('cip', DwrConf.showparents);
-	Dwr.search.IndexShowPath = GetURLParameter('cia', DwrConf.showpath);
-	Dwr.search.IndexShowBkrefType = GetURLParameter('cib', DwrConf.bkref_type);
-	Dwr.search.ShowAllSiblings = GetURLParameter('csib', DwrConf.showallsiblings);
-	Dwr.search.IncEvents = GetURLParameter('ce', DwrConf.inc_events);
-	Dwr.search.IncFamilies = GetURLParameter('cf', DwrConf.inc_families);
+	Dwr.search.IndexShowDates = GetURLParameter('cid', DwrConf.index_show_dates);
+	Dwr.search.IndexShowPartner = GetURLParameter('cis', DwrConf.index_show_partner);
+	Dwr.search.IndexShowParents = GetURLParameter('cip', DwrConf.index_show_parents);
+	Dwr.search.IndexShowPath = GetURLParameter('cia', DwrConf.index_show_path);
+	Dwr.search.IndexShowBkrefType = GetURLParameter('cib', DwrConf.index_show_bkref);
+	Dwr.search.ShowAllSiblings = GetURLParameter('csib', DwrConf.show_all_siblings);
+	Dwr.search.IncEvents = GetURLParameter('ce', DwrConf.inc_events_pages);
+	Dwr.search.IncFamilies = GetURLParameter('cf', DwrConf.inc_families_pages);
 	Dwr.search.IncSources = GetURLParameter('cs', DwrConf.inc_sources);
 	Dwr.search.IncMedia = GetURLParameter('cm', DwrConf.inc_gallery);
-	Dwr.search.IncPlaces = GetURLParameter('cp', DwrConf.inc_places);
+	Dwr.search.IncPlaces = GetURLParameter('cp', DwrConf.inc_places_pages);
 	Dwr.search.IncRepositories = GetURLParameter('cr', DwrConf.inc_repositories);
 	Dwr.search.IncNotes = GetURLParameter('cn', DwrConf.inc_notes);
 	Dwr.search.IncAddresses = GetURLParameter('ca', DwrConf.inc_addresses);
 	Dwr.search.MapPlace = GetURLParameter('cmp', DwrConf.placemappages);
 	Dwr.search.MapFamily = GetURLParameter('cmf', DwrConf.familymappages);
-	Dwr.search.SourceAuthorInTitle = GetURLParameter('csa', DwrConf.sourceauthor);
+	Dwr.search.SourceAuthorInTitle = GetURLParameter('csa', DwrConf.source_author);
 	Dwr.search.TabbedPanels = GetURLParameter('ctp', DwrConf.tabbed_panels);
 	Dwr.search.IncChangeTime = GetURLParameter('cct', DwrConf.inc_change_time);
 	Dwr.search.HideGid = GetURLParameter('cg', DwrConf.hide_gid);
@@ -460,6 +469,7 @@ DwrClass.prototype.BuildSearchString = function(params)
 	s = SetURLParameter(s, 'pdx', params.Pdx, Dwr.search.Pdx, -1);
 	s = SetURLParameter(s, 'rdx', params.Rdx, Dwr.search.Rdx, -1);
 	s = SetURLParameter(s, 'edx', params.Edx, Dwr.search.Edx, -1);
+	s = SetURLParameter(s, 'tdx', params.Tdx, Dwr.search.Tdx, -1);
 	s = SetURLParameter(s, 'ndx', params.Ndx, Dwr.search.Ndx, -1);
 	s = SetURLParameter(s, 'igid', params.Igid, Dwr.search.Igid, '');
 	s = SetURLParameter(s, 'fgid', params.Fgid, Dwr.search.Fgid, '');
@@ -467,6 +477,8 @@ DwrClass.prototype.BuildSearchString = function(params)
 	s = SetURLParameter(s, 'sgid', params.Sgid, Dwr.search.Sgid, '');
 	s = SetURLParameter(s, 'pgid', params.Pgid, Dwr.search.Pgid, '');
 	s = SetURLParameter(s, 'rgid', params.Rgid, Dwr.search.Rgid, '');
+	s = SetURLParameter(s, 'egid', params.Egid, Dwr.search.Egid, '');
+	s = SetURLParameter(s, 'tgid', params.Tgid, Dwr.search.Tgid, '');
 	s = SetURLParameter(s, 'simg', params.ImgList, Dwr.search.ImgList, []);
 	s = SetURLParameter(s, 'mexp', params.MapExpanded, Dwr.search.MapExpanded, false);
 
@@ -480,23 +492,23 @@ DwrClass.prototype.BuildSearchString = function(params)
 	s = SetURLParameter(s, 'svgdup', params.SvgDup, Dwr.search.SvgDup, DwrConf.svg_tree_show_dup);
 	s = SetURLParameter(s, 'svgx', params.SvgExpanded, Dwr.search.SvgExpanded, false);
 
-	s = SetURLParameter(s, 'cid', params.IndexShowDates, Dwr.search.IndexShowDates, DwrConf.showdates);
-	s = SetURLParameter(s, 'cis', params.IndexShowPartner, Dwr.search.IndexShowPartner, DwrConf.showpartner);
-	s = SetURLParameter(s, 'cip', params.IndexShowParents, Dwr.search.IndexShowParents, DwrConf.showparents);
-	s = SetURLParameter(s, 'cia', params.IndexShowPath, Dwr.search.IndexShowPath, DwrConf.showpath);
-	s = SetURLParameter(s, 'cib', params.IndexShowBkrefType, Dwr.search.IndexShowBkrefType, DwrConf.bkref_type);
-	s = SetURLParameter(s, 'csib', params.ShowAllSiblings, Dwr.search.ShowAllSiblings, DwrConf.showallsiblings);
-	s = SetURLParameter(s, 'ce', params.IncEvents, Dwr.search.IncEvents, DwrConf.inc_events);
-	s = SetURLParameter(s, 'cf', params.IncFamilies, Dwr.search.IncFamilies, DwrConf.inc_families);
+	s = SetURLParameter(s, 'cid', params.IndexShowDates, Dwr.search.IndexShowDates, DwrConf.index_show_dates);
+	s = SetURLParameter(s, 'cis', params.IndexShowPartner, Dwr.search.IndexShowPartner, DwrConf.index_show_partner);
+	s = SetURLParameter(s, 'cip', params.IndexShowParents, Dwr.search.IndexShowParents, DwrConf.index_show_parents);
+	s = SetURLParameter(s, 'cia', params.IndexShowPath, Dwr.search.IndexShowPath, DwrConf.index_show_path);
+	s = SetURLParameter(s, 'cib', params.IndexShowBkrefType, Dwr.search.IndexShowBkrefType, DwrConf.index_show_bkref);
+	s = SetURLParameter(s, 'csib', params.ShowAllSiblings, Dwr.search.ShowAllSiblings, DwrConf.show_all_siblings);
+	s = SetURLParameter(s, 'ce', params.IncEvents, Dwr.search.IncEvents, DwrConf.inc_events_pages);
+	s = SetURLParameter(s, 'cf', params.IncFamilies, Dwr.search.IncFamilies, DwrConf.inc_families_pages);
 	s = SetURLParameter(s, 'cs', params.IncSources, Dwr.search.IncSources, DwrConf.inc_sources);
 	s = SetURLParameter(s, 'cm', params.IncMedia, Dwr.search.IncMedia, DwrConf.inc_gallery);
-	s = SetURLParameter(s, 'cp', params.IncPlaces, Dwr.search.IncPlaces, DwrConf.inc_places);
+	s = SetURLParameter(s, 'cp', params.IncPlaces, Dwr.search.IncPlaces, DwrConf.inc_places_pages);
 	s = SetURLParameter(s, 'cr', params.IncRepositories, Dwr.search.IncRepositories, DwrConf.inc_repositories);
 	s = SetURLParameter(s, 'cn', params.IncNotes, Dwr.search.IncNotes, DwrConf.inc_notes);
 	s = SetURLParameter(s, 'ca', params.IncAddresses, Dwr.search.IncAddresses, DwrConf.inc_addresses);
 	s = SetURLParameter(s, 'cmp', params.MapPlace, Dwr.search.MapPlace, DwrConf.placemappages);
 	s = SetURLParameter(s, 'cmf', params.MapFamily, Dwr.search.MapFamily, DwrConf.familymappages);
-	s = SetURLParameter(s, 'csa', params.SourceAuthorInTitle, Dwr.search.SourceAuthorInTitle, DwrConf.sourceauthor);
+	s = SetURLParameter(s, 'csa', params.SourceAuthorInTitle, Dwr.search.SourceAuthorInTitle, DwrConf.source_author);
 	s = SetURLParameter(s, 'ctp', params.TabbedPanels, Dwr.search.TabbedPanels, DwrConf.tabbed_panels);
 	s = SetURLParameter(s, 'cct', params.IncChangeTime, Dwr.search.IncChangeTime, DwrConf.inc_change_time);
 	s = SetURLParameter(s, 'cg', params.HideGid, Dwr.search.HideGid, DwrConf.hide_gid);
