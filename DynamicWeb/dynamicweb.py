@@ -686,6 +686,7 @@ class DynamicWebReport(Report):
         self.index_events_type = int(self.options['index_events_type'])
         self.index_repositories_type = int(self.options['index_repositories_type'])
         self.index_addresses_type = int(self.options['index_addresses_type'])
+        self.index_notes_type = int(self.options['index_notes_type'])
         # Validate pages number in proper range
         self.pages_number = max(1, min(NB_TOTAL_PAGES_MAX, self.pages_number))
         self.page_content = [
@@ -2203,6 +2204,7 @@ class DynamicWebReport(Report):
             "events.html",
             "repositories.html",
             "addresses.html",
+            "notes.html",
         ]
         self.index_pages = [p for p in  self.index_pages if (
             (p != "surnames.html" or (self.index_surnames_type != INDEX_TYPE_NONE)) and
@@ -2213,8 +2215,8 @@ class DynamicWebReport(Report):
             (p != "places.html" or (self.inc_places_pages and self.index_places_type != INDEX_TYPE_NONE)) and
             (p != "events.html" or (self.inc_events_pages and self.index_events_type != INDEX_TYPE_NONE)) and
             (p != "repositories.html" or (self.inc_repositories and self.index_repositories_type != INDEX_TYPE_NONE)) and
-            (p != "addresses.html" or (self.inc_addresses and self.index_addresses_type != INDEX_TYPE_NONE))
-            # (p != "notes.html" or (self.inc_notes_pages and self.index_notes_type != INDEX_TYPE_NONE))
+            (p != "addresses.html" or (self.inc_addresses and self.index_addresses_type != INDEX_TYPE_NONE)) and
+            (p != "notes.html" or (self.inc_notes_pages and self.index_notes_type != INDEX_TYPE_NONE))
         )]
 
         self.map_pages = []
@@ -2358,6 +2360,7 @@ class DynamicWebReport(Report):
             'index_events_type',
             'index_repositories_type',
             'index_addresses_type',
+            'index_notes_type',
             'index_show_dates',
             'index_show_partner',
             'index_show_parents',
@@ -2440,6 +2443,7 @@ class DynamicWebReport(Report):
             "Engagement": _("Engagement"),
             "Event": _("Event"),
             "Events": _("Events"),
+            "Events Index": _("Events Index"),
             "Examples": _("Examples"),
             "F": _("F"),
             "Families Index": _("Families Index"),
@@ -2485,6 +2489,7 @@ class DynamicWebReport(Report):
             "No matching surname.": _("No matching surname."),
             "None": _("None"),
             "Notes": _("Notes"),
+            "Notes Index": _("Notes Index"),
             "OK": _("OK"),
             "Other participants": _("Other participants"),
             "Parents": _("Parents"),
@@ -2495,8 +2500,8 @@ class DynamicWebReport(Report):
             "Persons Index": _("Persons Index"),
             "Persons": _("Persons"),
             "Place": _("Place"),
-            "Places Index": _("Places Index"),
             "Places": _("Places"),
+            "Places Index": _("Places Index"),
             "Preparing file ...": _("Preparing file ..."),
             "Processing...": _("Processing..."),
             "Publication information": _("Publication information"),
@@ -2505,6 +2510,7 @@ class DynamicWebReport(Report):
             "Relationship to Mother": _("Relationship to Mother"),
             "Relationship": _("Relationship"),
             "Repositories": _("Repositories"),
+            "Repositories Index": _("Repositories Index"),
             "Repository": _("Repository"),
             "Restore": _("Restore"),
             "Restore default settings": _("Restore default settings"),
@@ -4167,6 +4173,7 @@ class DynamicWebOptions(MenuReportOptions):
             ["events", 2, _("Default format for the events index"), _("The default format for the events index")],
             ["repositories", 2, _("Default format for the repositories index"), _("The default format for the repositories index")],
             ["addresses", 2, _("Default format for the addresses index"), _("The default format for the addresses index")],
+            ["notes", 2, _("Default format for the notes index"), _("The default format for the notes index")],
         ]:
             index_type = EnumeratedListOption(option_text, default)
             for (i, eopt) in enumerate(index_types):

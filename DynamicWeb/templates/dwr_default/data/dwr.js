@@ -846,6 +846,23 @@ function NoteText(text, p)
 	return text;
 }
 
+function GetFirstLine(text)
+{
+	text = text
+		.replace(/\n/g, ' ')
+		.replace(/&nbsp;/g, ' ')
+		.replace(/<[^>]*>/g, '')
+		.replace(/\s+/g, ' ')
+		.replace(/^\s+|\s+$/g, '');
+	var maxlen = 40;
+	maxlen += text.length - text.replace(/&[a-z]+;/gi, '&').length;
+	if (text.length > maxlen)
+	{
+		text = text.substr(0, maxlen) + "&hellip;";
+	}
+	return text;
+}
+
 
 var pageSources = [];
 var pageCitations = [];
@@ -3188,7 +3205,6 @@ function htmlEventsIndexList(header, data)
 	var fText = function(edx)
 	{
 		var txt = '<a href="' + eventHrefOptimized(edx) + '">';
-		txt += 
 		txt += E_type[edx] || empty(_('Without type'));
 		txt += gidBadge(E_gid[edx]);
 		if (E_descr[edx]) txt += ': ' + E_descr[edx];
@@ -3233,6 +3249,139 @@ function htmlEventsIndexList(header, data)
 		fLetter: false
 	});
 	return PrintIndexList('E', header, data, fText, '', '', '<br>', sortingAttributes, 0);
+}
+
+
+//=========================================================================================
+//=========================================================================== Notes Index
+//=========================================================================================
+
+function htmlNotesIndex(data)
+{
+	return PrintIndex('T', _('Notes Index'), Dwr.search.IndexTypeT, htmlNotesIndexTable, htmlNotesIndexList, data);
+}
+
+function htmlNotesIndexTable(header, data)
+{
+	var scripts = [
+		['T', 'type'],
+		['T', 'text']
+	];
+	if (Dwr.search.IndexShowBkrefType) scripts.push(
+		['T', 'bki'],
+		['T', 'bkf'],
+		['T', 'bkm'],
+		['T', 'bks'],
+		['T', 'bkr'],
+		['T', 'bkp'],
+		['T', 'bke'],
+		['I', 'name'],
+		['F', 'name'],
+		['M', 'title'],
+		['S', 'title'],
+		['R', 'name'],
+		['P', 'name'],
+		['E', 'gid']
+	);
+	if (!Dwr.search.HideGid) scripts.push(['T', 'gid']);
+	PrepareFieldSplitScripts(scripts);
+	if (preloadMode) return;
+
+	// Define columns and build table
+	var columns = [{
+		title: _('Type'),
+		ftext: function(x, col) {return T_type[data[x]] || empty(_('Without type'))},
+		fhref: function(x) {return noteHrefOptimized(data[x])},
+		fsort: function(x, col) {return data[x]}
+	}, {
+		title: _('Text'),
+		ftext: function(x, col) {return GetFirstLine(T_text[data[x]])},
+		fhref: function(x) {return noteHrefOptimized(data[x])}
+	}];
+	if (Dwr.search.IndexShowBkrefType) columns.push({
+		title: _('Used for person'),
+		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_INDEX, 'T', data[x], 'bki', 'I', 'name', indiHrefOptimized)},
+		fsort: false
+	});
+	if (Dwr.search.IndexShowBkrefType && DwrConf.inc_families_pages) columns.push({
+		title: _('Used for family'),
+		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_INDEX, 'T', data[x], 'bkf', 'F', 'name', famHrefOptimized)},
+		fsort: false
+	});
+	if (Dwr.search.IndexShowBkrefType && DwrConf.inc_gallery) columns.push({
+		title: _('Used for media'),
+		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_INDEX, 'T', data[x], 'bkm', 'M', 'title', mediaHrefOptimized)},
+		fsort: false
+	});
+	if (Dwr.search.IndexShowBkrefType && DwrConf.inc_sources) columns.push({
+		title: _('Used for source'),
+		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_INDEX, 'T', data[x], 'bks', 'S', 'title', sourceHrefOptimized)},
+		fsort: false
+	});
+	if (Dwr.search.IndexShowBkrefType && DwrConf.inc_repositories) columns.push({
+		title: _('Used for repository'),
+		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_INDEX, 'T', data[x], 'bkr', 'R', 'name', repoHrefOptimized)},
+		fsort: false
+	});
+	if (Dwr.search.IndexShowBkrefType && DwrConf.inc_places_pages) columns.push({
+		title: _('Used for place'),
+		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_INDEX, 'T', data[x], 'bkp', 'P', 'name', placeHrefOptimized)},
+		fsort: false
+	});
+	if (Dwr.search.IndexShowBkrefType && DwrConf.inc_events_pages) columns.push({
+		title: _('Used for event'),
+		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_INDEX, 'T', data[x], 'bke', 'E', 'gid', eventHrefOptimized)},
+		fsort: false
+	});
+	if (!Dwr.search.HideGid) columns.unshift({
+		title: _('ID'),
+		ftext: function(x, col) {return T_gid[data[x]]},
+		fhref: function(x) {return noteHrefOptimized(data[x])}
+	});
+	return PrintIndexTable('T', header, data, [[(Dwr.search.HideGid ? 0: 1), 'asc']], columns);
+}
+
+
+function htmlNotesIndexList(header, data)
+{
+	var scripts = [
+		['T', 'type'],
+		['T', 'text']
+	];
+	if (!Dwr.search.HideGid) scripts.push(['T', 'gid']);
+	PrepareFieldSplitScripts(scripts);
+	if (preloadMode) return;
+
+	var fText = function(tdx)
+	{
+		var txt = '<a href="' + noteHrefOptimized(tdx) + '">';
+		txt += T_type[tdx] || empty(_('Without type'));
+		txt += gidBadge(T_gid[tdx]);
+		txt += ': ' + GetFirstLine(T_text[tdx]);
+		txt += '</a>';
+		return txt;
+	};
+	var sortingAttributes = [
+		{
+			title: _('Type'),
+			id: 'T.type',
+			fSort: function(a, b) {return cmp(a, b)},
+			fLetter: false
+		},
+		{
+			title: _('Text'),
+			id: 'T.text',
+			fSort: function(a, b) {return cmp(GetFirstLine(T_text[a]), GetFirstLine(T_text[b]))},
+			fLetter: false
+		}
+	];
+	if (!Dwr.search.HideGid) sortingAttributes.push({
+		title: _('ID'),
+		id: 'T.gid',
+		fSort: function(a, b) {return cmp(T_gid[a], T_gid[b])},
+		fLetter: false
+	});
+	return PrintIndexList('T', header, data, fText, '', '', '<br>', sortingAttributes, 0);
 }
 
 
@@ -4459,6 +4608,10 @@ function MainRun()
 		else if (PageContents == Dwr.PAGE_REPOS_INDEX && DwrConf.inc_repositories)
 		{
 			html = htmlReposIndex();
+		}
+		else if (PageContents == Dwr.PAGE_NOTES_INDEX && DwrConf.inc_notes_pages)
+		{
+			html = htmlNotesIndex();
 		}
 		else
 		{
