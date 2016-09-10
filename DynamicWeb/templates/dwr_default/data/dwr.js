@@ -828,7 +828,7 @@ function NotesString(notes, p)
 		if (DwrConf.print_notes_type || DwrConf.inc_notes_pages)
 		{
 			txt += '<p>';
-			if (DwrConf.inc_notes_pages) txt += '<a href="' + noteHref(tdx) + '">';
+			if (DwrConf.inc_notes_pages) txt += '<a href="' + noteHref(tdx) + '" class="dwr-note-type">';
 			txt += T(tdx, 'type');
 			if (DwrConf.inc_notes_pages) txt += '</a>';
 			txt += gidBadge(T(tdx, 'gid'));
