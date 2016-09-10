@@ -236,7 +236,7 @@ li p {
   max-width: initial;
 }
 .dwr-note-type {
-  font-style:	italic;
+  font-style: italic;
 }
 .dwr-empty {
   font-style: italic;
@@ -247,7 +247,7 @@ li p {
 }
 .dwr-gid {
   font-size: 60%;
-  font-family: monospace;
+  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
   color: #A7A7A7;
 }
 .dwr-number {
