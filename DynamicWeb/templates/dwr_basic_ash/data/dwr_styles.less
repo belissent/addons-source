@@ -1,0 +1,79 @@
+/* Gramps - a GTK+/GNOME based genealogy program
+
+Copyright (C) 2014 Pierre Bélissent
+
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*/
+
+
+@import "bootstrap/less/variables.less";
+@import "bootstrap/less/mixins/size.less";
+@import "bootstrap/less/mixins/opacity.less";
+@import "bootstrap/less/mixins/center-block.less";
+
+@import (less) "../../dwr_default/data/dwr_styles_base.css";
+
+
+/*===================================================== Body */
+
+.container {
+	background-color: white;
+}
+
+
+/*===================================================== Main divs */
+
+/*===================================================== Menu */
+
+.navbar {
+	font-weight: bold;
+	font-size: @font-size-small;
+	border-bottom: solid 1px @gray;
+	background-color: white;
+	> div {
+		background-color: @gray-lighter;
+	}
+	.form-control, .btn {
+		font-weight: bold;
+		font-size: @font-size-small;
+		padding: 5px;
+		top: 1px;
+		line-height: 16px;
+	}
+}
+.navbar-nav>li>a {
+    border-top: solid 1px transparent;
+    border-bottom: solid 1px transparent;
+	line-height: 16px;
+	&:hover {
+		border-bottom: solid 1px black;
+	}
+}
+.navbar-nav>.active>a {
+	top: 1px;
+	border: solid 1px @gray;
+    border-bottom: solid 1px transparent;
+	&:hover {
+		border-bottom: solid 1px transparent;
+	}
+}
+
+
+/*===================================================== Panels */
+
+/*===================================================== Tabs */
+
+.nav-tabs {
+	border-width: 2px 2px 4px 2px;
+	border-style: solid;
+	border-color: black;
+	.panel-title {
+		font-weight: bold;
+	}
+}
+
+
+/*===================================================== Page contents */
+
