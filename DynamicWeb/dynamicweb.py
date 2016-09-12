@@ -66,6 +66,11 @@ The generated pages use lots of Javascript:
 During the pages generation, the template files are copied into the destination directory.
 The files in the destination directory are overwritten, unless the destination files are more recent than the template files.
 
+The templates for the website are declared by creating the file 'template.json' in the template directory.
+The first template is the default one:
+ -  The files in the default template are used when they are not present in another template
+ -  Only the files that are different from the default template are present in the other templates directories
+
 The pages format and layout is documented in "dwr_body.js"
 The pages dynamic generation is documented in "dwr.js"
 The pages graph generation is documented in "dwr_svg.js"
@@ -405,14 +410,6 @@ CHART_BACKGROUNDS = [
 
 STATISTICS_CHART_OPACITY = 70
 
-#: Templates for the website, in the form: [directory, name]
-#  First template is the default one:
-#  The files in the default template are used when they are not present in another template
-#  Only the files that are different from the default template are present in the other templates directories
-WEB_TEMPLATE_LIST = (
-    ("dwr_default", _("Default")),
-    ("dwr_mainz", _("Mainz")),
-)
 
 # Files not copied from the template directory to the website
 # (as regex)
@@ -569,6 +566,23 @@ def rmtree_fix(dirname):
         if (not os.path.exists(tmp)): break
         time.sleep(0.1)
 
+        
+def get_templates():
+    # Read available templates
+    web_template_list = []
+    tmpl_root_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
+    for tmpl_dir in os.listdir(tmpl_root_path):
+        tmpl_descr = os.path.join(tmpl_root_path, tmpl_dir, 'template.json')
+        if (os.path.exists(tmpl_descr)):
+            tmpl_f = codecs.open(tmpl_descr, "r")
+            tmpl_json = json.load(tmpl_f)
+            tmpl_json['name'] = _(tmpl_json['name'])
+            tmpl_json['path'] = os.path.join(tmpl_root_path, tmpl_dir)
+            web_template_list.append(tmpl_json)
+    web_template_list.sort(key = lambda t: t['order'])
+    return web_template_list
+
+WEB_TEMPLATE_LIST = get_templates()
 
 
 #------------------------------------------------
@@ -1685,7 +1699,7 @@ class DynamicWebReport(Report):
         '''
         citationlist = object.get_citation_list()
         return(self._data_source_citation_index_from_list(citationlist))
-        
+
     def _data_source_citation_index_with_attributes(self, object):
         '''
         Export sources citations indexes related to L{object}
@@ -2903,8 +2917,8 @@ class DynamicWebReport(Report):
          - The files contained in the default template directory, unless they are also present in the chosen template directory
         '''
         # Get template path
-        tmpl_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates", WEB_TEMPLATE_LIST[self.template][0])
-        default_tmpl_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates", WEB_TEMPLATE_LIST[0][0])
+        tmpl_path = WEB_TEMPLATE_LIST[self.template]['path']
+        default_tmpl_path = WEB_TEMPLATE_LIST[0]['path']
         try:
             # Copy template files
             self.copy_template_files_sub(tmpl_path)
@@ -3530,7 +3544,7 @@ class DynamicWebReport(Report):
         # Update the dictionaries of objects back references
         if (bkref_class is not None):
             self.bkref_dict[Event][event_handle].add((bkref_class, bkref_handle, event_ref))
-            # Citations and notes for event reference and attributes 
+            # Citations and notes for event reference and attributes
             for citation_handle in event_ref.get_citation_list():
                 self._add_citation(citation_handle, bkref_class, bkref_handle)
             for note_handle in event_ref.get_note_list():
@@ -3983,8 +3997,8 @@ class DynamicWebOptions(MenuReportOptions):
             addopt("short_name_format", short_name_format)
 
         template = EnumeratedListOption(_("Web site template"), 0)
-        for (i, (directory, name)) in enumerate(WEB_TEMPLATE_LIST):
-            template.add_item(i, name)
+        for (i, tmpl) in enumerate(WEB_TEMPLATE_LIST):
+            template.add_item(i, tmpl['name'])
         template.set_help(_("Select the template of the web site"))
         addopt("template", template)
 

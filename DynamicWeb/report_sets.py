@@ -99,7 +99,7 @@ default_options = {
 
 report_list = [
 {
-    'title': "Example using template '%s'" % WEB_TEMPLATE_LIST[0][1],
+    'title': "Example using template '%s'" % WEB_TEMPLATE_LIST[0]['name'],
     'link': "person.html?igid=I0044",
     'environ': {
         'LANGUAGE': "en_US",
@@ -129,10 +129,14 @@ report_list = [
             'what': "Contents ZIP of archive",
             'path': "archive.zip",
         },
+        {
+            'what': "Indexes as tables",
+            'path': "home.html",
+        },
     ]
 },
 {
-    'title':  "Example using template '%s'" % WEB_TEMPLATE_LIST[1][1],
+    'title':  "Example using template '%s'" % WEB_TEMPLATE_LIST[1]['name'],
     'link': "person.html?igid=I0044",
     'environ': {
         'LANGUAGE': "en_US",
@@ -147,6 +151,10 @@ report_list = [
         'index_families_type': 0,
         'index_sources_type': 0,
         'index_places_type': 0,
+        'index_events_type': 0,
+        'index_repositories_type': 0,
+        'index_addresses_type': 0,
+        'index_notes_type': 0,
         'tabbed_panels': True,
     },
     'procedures': [
@@ -158,24 +166,41 @@ report_list = [
             'what': "Contents of TGZ archive",
             'path': "archive.tgz",
         },
+        {
+            'what': "Tabbed panels",
+            'path': "person.html?igid=I0044",
+        },
+        {
+            'what': "Indexes as lists",
+            'path': "home.html",
+        },
     ]
 },
 {
-    'title':  "Example using template '%s' French translation and OpenStreetMap" % WEB_TEMPLATE_LIST[0][1],
+    'title':  "Example using template '%s' French translation and OpenStreetMap" % WEB_TEMPLATE_LIST[2]['name'],
     'link': "person.html?igid=I0044",
     'environ': {
         'LANGUAGE': "fr_FR",
         'LANG': "fr_FR.UTF-8",
     },
     'options': {
-        'template': 0,
+        'template': 2,
         'mapservice': "OpenStreetMap",
         'tabbed_panels': True,
+        'hide_gid': False,
+        'inc_families_pages': False,
+        'inc_places_pages': False,
+        'inc_events_pages': False,
+        'inc_so': False,
     },
     'procedures': [
         {
             'what': "French translation test",
             'path': "person.html?igid=I0044",
+        },
+        {
+            'what': "No event, place, family pages, check notes backrefs links",
+            'path': "notes.html",
         },
         {
             'what': "OpenStreetMap test",
@@ -185,10 +210,14 @@ report_list = [
             'what': "OpenStreetMap test in families",
             'path': "family.html?fgid=F0017",
         },
+        {
+            'what': "OpenStreetMap test in families",
+            'path': "family.html?fgid=F0017",
+        },
     ]
 },
 {
-    'title': "Example using template '%s' without media copy without note types" % WEB_TEMPLATE_LIST[0][1],
+    'title': "Example using template '%s' without media copy without note types" % WEB_TEMPLATE_LIST[0]['name'],
     'link': "person.html?igid=I0044",
     'environ': {
         'LANGUAGE': "en_US",
@@ -198,9 +227,10 @@ report_list = [
         'template': 0,
         'copy_media': "2",
         'print_notes_type': False,
-        'sourceauthor': True,
+        'source_author': True,
         'custom_menu_0': True,
-        'inc_families': False,
+        'inc_families_pages': False,
+        'inc_events_pages': False,
         'living_people': LivingProxyDb.MODE_EXCLUDE_ALL,
     },
     'procedures': [
@@ -215,6 +245,10 @@ report_list = [
         {
             'what': "Search works both in menu and in page",
             'path': "custom_1.html",
+        },
+        {
+            'what': "No family , event pages, check places backrefs links",
+            'path': "events.html",
         },
     ]
 },

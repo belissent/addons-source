@@ -1,5 +1,4 @@
 
-
 # This script launches the less CSS pre-processor in order to generate the CSS files.
 
 # Pre-requisites:
@@ -31,26 +30,43 @@ TEMPLATES_PATH := $(MAKEFILE_PATH)/templates
 default_target:
 	@echo ''
 	@echo 'Use the following targets:'
-	@echo '    make css: builds the DynamicWeb report CSS files'
-	@echo '    make bootstrap: builds Bootstrap'
-	@echo '    make all: builds everything'
-	@echo '    make clean_dist: Removes useles files (generated during the build process).'
+	@echo '    make css: build the DynamicWeb report CSS files'
+	@echo '    make bootstrap: install less, grunt, bootstrap dependencies, and build Bootstrap'
+	@echo '    make all: build everything'
+	@echo '    make build: build Bootstrap and the DynamicWeb report CSS files (do not install anything)'
+	@echo '    make clean_dist: Remove useles files (generated during the build process)'
 	@echo ''
 
-.PHONY: all clean_dist css bootstrap clean_css clean_bootstrap force
+.PHONY: all clean_dist css bootstrap bootstrap_install bootstrap_build css_clean bootstrap_clean force
 
 all: bootstrap css
 
-clean_dist: clean_css clean_bootstrap
+clean_dist: css_clean bootstrap_clean
 
-bootstrap:
-	@for template in $(wildcard $(TEMPLATES_PATH)/*); do \
-		cd $$template/data/bootstrap; npm install; \
-		rm -rf cd $$template/data/bootstrap/dist; \
-		cd $$template/data/bootstrap; grunt dist; \
-	done
+bootstrap: bootstrap_install bootstrap_build
 
-clean_bootstrap:
+build: bootstrap_build css
+
+bootstrap_install: $(patsubst %,%_install,$(wildcard $(TEMPLATES_PATH)/*/data/bootstrap))
+
+bootstrap_build: $(patsubst %,%_build,$(wildcard $(TEMPLATES_PATH)/*/data/bootstrap))
+
+%/bootstrap_install: force
+	@echo "############################################################################"
+	@echo "## Installing    $(@:%_install=%)"
+	@echo "############################################################################"
+	cd $(@:%_install=%); npm install -g less
+	cd $(@:%_install=%); npm install -g grunt-cli
+	cd $(@:%_install=%); npm install
+
+%/bootstrap_build: force
+	@echo '============================================================================'
+	@echo '== Building    $(@:%_build=%)'
+	@echo '============================================================================'
+	rm -rf $(@:%_build=%)/dist
+	cd $(@:%_build=%); grunt dist
+
+bootstrap_clean:
 	@for template in $(wildcard $(TEMPLATES_PATH)/*); do \
 		rm -rf \
 		$$template/data/bootstrap/dist/css/*.map \
@@ -63,11 +79,14 @@ clean_bootstrap:
 
 css: $(patsubst %.less,%.css,$(wildcard $(TEMPLATES_PATH)/*/data/*.less))
 
-clean_css:
+css_clean:
 	@#Nothing to do
 	@#rm -f $(patsubst %.less,%.css,$(wildcard $(TEMPLATES_PATH)/*/data/*.less))
 
 %.css: %.less force
-	lessc $< $@
+	@echo '============================================================================'
+	@echo '== Building    $@'
+	@echo '============================================================================'
+	templates/dwr_default/data/bootstrap/node_modules/grunt-contrib-less/node_modules/.bin/lessc $< $@
 
 force:

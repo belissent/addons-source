@@ -661,7 +661,9 @@ function BuildMenu()
 	txt_form1 += '</div>';
 	if (DwrConf.inc_pageconf)
 	{
-		txt_form1 += ' <button type="button" id="dwr-conf" class="btn btn-default dwr-navbar-toggle-enabled" onclick="window.location.href=\'' + (Dwr.toRoot + 'conf.html?' + Dwr.BuildSearchString()) + '\';"><span class="glyphicon glyphicon-cog"></span></button>';
+		txt_form1 += ' <div class="input-group"><div class="input-group-btn">';
+		txt_form1 += '<button type="button" id="dwr-conf" class="btn btn-default dwr-navbar-toggle-enabled" onclick="window.location.href=\'' + (Dwr.toRoot + 'conf.html?' + Dwr.BuildSearchString()) + '\';"><span class="glyphicon glyphicon-cog"></span></button>';
+		txt_form1 += '</div></div>';
 	}
 	txt_form1 += '</form>';
 	txt_form1 += '</div>';
