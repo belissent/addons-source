@@ -695,11 +695,11 @@ class DynamicWebReport(Report):
         self.index_persons_type = int(self.options['index_persons_type'])
         self.index_families_type = int(self.options['index_families_type'])
         self.index_sources_type = int(self.options['index_sources_type'])
-        self.index_medias_type = int(self.options['index_medias_type'])
+        # self.index_medias_type = int(self.options['index_medias_type'])
         self.index_places_type = int(self.options['index_places_type'])
         self.index_events_type = int(self.options['index_events_type'])
-        self.index_repositories_type = int(self.options['index_repositories_type'])
-        self.index_addresses_type = int(self.options['index_addresses_type'])
+        # self.index_repositories_type = int(self.options['index_repositories_type'])
+        # self.index_addresses_type = int(self.options['index_addresses_type'])
         self.index_notes_type = int(self.options['index_notes_type'])
         # Validate pages number in proper range
         self.pages_number = max(1, min(NB_TOTAL_PAGES_MAX, self.pages_number))
@@ -2225,11 +2225,11 @@ class DynamicWebReport(Report):
             (p != "persons.html" or (self.index_persons_type != INDEX_TYPE_NONE)) and
             (p != "families.html" or (self.inc_families_pages and self.index_families_type != INDEX_TYPE_NONE)) and
             (p != "sources.html" or (self.inc_sources and self.index_sources_type != INDEX_TYPE_NONE)) and
-            (p != "medias.html" or (self.inc_gallery and self.index_medias_type != INDEX_TYPE_NONE)) and
+            # (p != "medias.html" or (self.inc_gallery and self.index_medias_type != INDEX_TYPE_NONE)) and
             (p != "places.html" or (self.inc_places_pages and self.index_places_type != INDEX_TYPE_NONE)) and
             (p != "events.html" or (self.inc_events_pages and self.index_events_type != INDEX_TYPE_NONE)) and
-            (p != "repositories.html" or (self.inc_repositories and self.index_repositories_type != INDEX_TYPE_NONE)) and
-            (p != "addresses.html" or (self.inc_addresses and self.index_addresses_type != INDEX_TYPE_NONE)) and
+            # (p != "repositories.html" or (self.inc_repositories and self.index_repositories_type != INDEX_TYPE_NONE)) and
+            # (p != "addresses.html" or (self.inc_addresses and self.index_addresses_type != INDEX_TYPE_NONE)) and
             (p != "notes.html" or (self.inc_notes_pages and self.index_notes_type != INDEX_TYPE_NONE))
         )]
 
@@ -2369,11 +2369,11 @@ class DynamicWebReport(Report):
             'index_persons_type',
             'index_families_type',
             'index_sources_type',
-            'index_medias_type',
+            # 'index_medias_type',
             'index_places_type',
             'index_events_type',
-            'index_repositories_type',
-            'index_addresses_type',
+            # 'index_repositories_type',
+            # 'index_addresses_type',
             'index_notes_type',
             'index_show_dates',
             'index_show_partner',
@@ -4182,11 +4182,11 @@ class DynamicWebOptions(MenuReportOptions):
             ["persons", 1, _("Default format for the persons index"), _("The default format for the persons index")],
             ["families", 2, _("Default format for the families index"), _("The default format for the families index")],
             ["sources", 1, _("Default format for the sources index"), _("The default format for the sources index")],
-            ["medias", 1, _("Default format for the media index"), _("The default format for the media index")],
+            # ["medias", 1, _("Default format for the media index"), _("The default format for the media index")],
             ["places", 1, _("Default format for the places index"), _("The default format for the places index")],
             ["events", 2, _("Default format for the events index"), _("The default format for the events index")],
-            ["repositories", 2, _("Default format for the repositories index"), _("The default format for the repositories index")],
-            ["addresses", 2, _("Default format for the addresses index"), _("The default format for the addresses index")],
+            # ["repositories", 2, _("Default format for the repositories index"), _("The default format for the repositories index")],
+            # ["addresses", 2, _("Default format for the addresses index"), _("The default format for the addresses index")],
             ["notes", 2, _("Default format for the notes index"), _("The default format for the notes index")],
         ]:
             index_type = EnumeratedListOption(option_text, default)

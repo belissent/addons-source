@@ -177,7 +177,7 @@ report_list = [
     ]
 },
 {
-    'title':  "Example using template '%s' French translation and OpenStreetMap" % WEB_TEMPLATE_LIST[2]['name'],
+    'title':  "Example using template '%s' French translation and OpenStreetMap" % WEB_TEMPLATE_LIST[1]['name'],
     'link': "person.html?igid=I0044",
     'environ': {
         'LANGUAGE': "fr_FR",
