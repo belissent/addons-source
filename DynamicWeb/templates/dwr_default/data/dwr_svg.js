@@ -309,7 +309,7 @@ function SvgInit()
 	$('#svg-expand').click(SvgToggleExpand);
 	$('#svg-config').click(Dwr.svgConfRef);
 	$('#svg-saveas').click(Dwr.svgSaveRef);
-	$('#svg-help').click(Dwr.svgHelpRef);
+	$('#svg-help').click(Dwr.helpTreeNavRef);
 	// Setup event handlers
 	$(window).mouseup(SvgMouseUpWindow)
 		.mousedown(SvgMouseDownWindow)
@@ -367,7 +367,7 @@ DwrSvgClass.prototype.ConfPage = function()
 	html += '<select name="svg-type" id="svg-type" class="form-control" size="1" title="' + _('Select the type of graph') + '">';
 	for (var i = 0; i < DwrConf.SVG_TREE_TYPES.length; i++)
 	{
-		html += '<option value="' + i + '"' + ((Dwr.search.SvgType == i) ? ' selected' : '') + '>' + DwrConfDwrConf.SVG_TREE_TYPES[i] + '</option>';
+		html += '<option value="' + i + '"' + ((Dwr.search.SvgType == i) ? ' selected' : '') + '>' + DwrConf.SVG_TREE_TYPES[i] + '</option>';
 	}
 	html += '</select>';
 	html += '</div>'; // form-group
@@ -455,6 +455,7 @@ DwrSvgClass.prototype.ConfPage = function()
 	html += '<div class="text-center">';
 	html += ' <button id="svg-config-ok" type="button" class="btn btn-primary"> <span class="glyphicon glyphicon-ok"></span> ' + _('OK') + ' </button> ';
 	html += ' <button id="svg-config-restore" type="button" class="btn btn-secondary"> <span class="glyphicon glyphicon-cog"></span> ' + _('Restore default settings') + ' </button> ';
+	html += ' <button id="svg-config-help" type="button" class="btn btn-secondary"> <span class="glyphicon glyphicon-question-sign"></span> ' + _('Help') + ' </button> ';
 	html += '</div>';
 	html += '</form>';
 	html += '</div>'; // panel-body
@@ -464,6 +465,7 @@ DwrSvgClass.prototype.ConfPage = function()
 	$(window).load(function() {
 		$('#svg-config-ok').click(SvgConfSubmit);
 		$('#svg-config-restore').click(SvgConfRestore);
+		$('#svg-config-help').click(Dwr.helpTreeConfRef);
 	});
 
 	return(html);

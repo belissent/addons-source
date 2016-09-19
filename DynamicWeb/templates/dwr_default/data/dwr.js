@@ -434,10 +434,24 @@ DwrClass.prototype.svgSaveRef = function()
 	return(false);
 }
 
-DwrClass.prototype.svgHelpRef = function()
+DwrClass.prototype.helpConfRef = function()
 {
-	// Go to the SVG tree help page
-	window.location.href = 'https://gramps-project.org/wiki/index.php?title=' + _('DynamicWeb_report#Help');
+	// Go to the configuration help page
+	window.location.href = 'https://gramps-project.org/wiki/index.php?title=' + _('DynamicWeb_report#HelpConf');
+	return(false);
+}
+
+DwrClass.prototype.helpTreeConfRef = function()
+{
+	// Go to the SVG tree configuration help page
+	window.location.href = 'https://gramps-project.org/wiki/index.php?title=' + _('DynamicWeb_report#HelpTreeConf');
+	return(false);
+}
+
+DwrClass.prototype.helpTreeNavRef = function()
+{
+	// Go to the SVG tree navigation help page
+	window.location.href = 'https://gramps-project.org/wiki/index.php?title=' + _('DynamicWeb_report#HelpTreeNav');
 	return(false);
 }
 
@@ -4425,6 +4439,7 @@ function ConfigPage()
 	html += '<div class="text-center">';
 	html += ' <button id="dwr-config-ok" type="button" class="btn btn-primary"> <span class="glyphicon glyphicon-ok"></span> ' + _('OK') + ' </button> ';
 	html += ' <button id="dwr-config-restore" type="button" class="btn btn-secondary"> <span class="glyphicon glyphicon-cog"></span> ' + _('Restore default settings') + ' </button> ';
+	html += ' <button id="dwr-config-help" type="button" class="btn btn-secondary"> <span class="glyphicon glyphicon-question-sign"></span> ' + _('Help') + ' </button> ';
 	html += '</div>';
 
 	html += '</form>';
@@ -4463,6 +4478,7 @@ function ConfigPage()
 			});
 			return(false);
 		});
+		$('#dwr-config-help').click(Dwr.helpConfRef);
 	});
 
 	return(html);
