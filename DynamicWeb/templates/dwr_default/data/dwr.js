@@ -7,7 +7,7 @@
 // You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 (function(window, undefined) {
-"use strict";
+'use strict';
 
 
 //=================================================================
@@ -28,16 +28,16 @@ window._ = _;
 
 // Access to databases
 
-function I(x, field) {return GetDb("I", x, field)}
-function F(x, field) {return GetDb("F", x, field)}
-function S(x, field) {return GetDb("S", x, field)}
-function C(x, field) {return GetDb("C", x, field)}
-function R(x, field) {return GetDb("R", x, field)}
-function M(x, field) {return GetDb("M", x, field)}
-function P(x, field) {return GetDb("P", x, field)}
-function E(x, field) {return GetDb("E", x, field)}
-function T(x, field) {return GetDb("T", x, field)}
-function N(x, field) {return GetDb("N", x, field)}
+function I(x, field) {return GetDb('I', x, field)}
+function F(x, field) {return GetDb('F', x, field)}
+function S(x, field) {return GetDb('S', x, field)}
+function C(x, field) {return GetDb('C', x, field)}
+function R(x, field) {return GetDb('R', x, field)}
+function M(x, field) {return GetDb('M', x, field)}
+function P(x, field) {return GetDb('P', x, field)}
+function E(x, field) {return GetDb('E', x, field)}
+function T(x, field) {return GetDb('T', x, field)}
+function N(x, field) {return GetDb('N', x, field)}
 
 DwrClass.prototype.I = I;
 DwrClass.prototype.F = F;
@@ -104,7 +104,7 @@ function PreloadScripts(scripts, rebuildPage)
 {
 	if (scripts.length == 0) return;
 	rebuildPage = (typeof(rebuildPage) !== 'undefined') ? rebuildPage : false;
-	console.log("Loading " + scripts);
+	console.log('Loading ' + scripts);
 	// Remove duplicates
 	var uniques = [];
 	while (scripts.length > 0)
@@ -130,7 +130,7 @@ DwrClass.prototype.PreloadScripts = PreloadScripts;
 
 DwrClass.prototype.ScriptLoaded = function(file)
 {
-	console.log("Loaded " + file);
+	console.log('Loaded ' + file);
 	nbScriptsToLoad -= 1;
 	if (nbScriptsToLoad == 0 && rebuildPageAfterScriptLoad)
 	{
@@ -379,7 +379,7 @@ function computeOptimizedHref()
 function m_list_from_mr(mr_list)
 {
 	// Build a list of the media referenced in the list of media reference structure
-	// This list is used for numbering media in the pagination (see "printMedia")
+	// This list is used for numbering media in the pagination (see printMedia)
 	var m_list = [];
 	for (var j = 0; j < mr_list.length; j++)
 		m_list[j] = mr_list[j].m_idx;
@@ -478,8 +478,8 @@ function searchDuplicate(idx)
 function searchDuplicateAsc(idx, lev, found)
 {
 	// Recursively search for duplicates in ancestors of person 'idx',
-	// limited to "lev" generations.
-	// "found" contains all the persons found in the tree traversal
+	// limited to <lev> generations.
+	// <found> contains all the persons found in the tree traversal
 
 	if (($.inArray(idx, found) >= 0) && ($.inArray(idx, duplicates) < 0))
 	{
@@ -500,8 +500,8 @@ function searchDuplicateAsc(idx, lev, found)
 function searchDuplicateDsc(idx, lev, found)
 {
 	// Recursively search for duplicates in descendants of person 'idx',
-	// limited to "lev" generations.
-	// "found" contains all the persons found in the tree traversal
+	// limited to <lev> generations.
+	// <found> contains all the persons found in the tree traversal
 
 	if (($.inArray(idx, found) >= 0) && ($.inArray(idx, duplicates) < 0))
 	{
@@ -872,7 +872,7 @@ function GetFirstLine(text)
 	maxlen += text.length - text.replace(/&[a-z]+;/gi, '&').length;
 	if (text.length > maxlen)
 	{
-		text = text.substr(0, maxlen) + "&hellip;";
+		text = text.substr(0, maxlen) + '&hellip;';
 	}
 	return text;
 }
@@ -1031,10 +1031,10 @@ function mediaName(mdx)
 
 
 // List of places referenced in the page with for each one:
-//    - pdx: the place index in table "P"
-//    - idx: the referencing person index in table "I", -1 if none
-//    - fdx: the referencing family index in table "F", -1 if none
-//    - edx: the referencing event index in table "E", -1 if none
+//    - pdx: the place index in table P
+//    - idx: the referencing person index in table I, -1 if none
+//    - fdx: the referencing family index in table F, -1 if none
+//    - edx: the referencing event index in table E, -1 if none
 var pagePlaces = [];
 
 
@@ -1191,12 +1191,12 @@ function HandleTitles()
     $('.panel-collapse.collapse')
 		.on('hidden.bs.collapse', function (event) {
 			var lsName = 'wasCollapsed:' + window.location.pathname + ':' + $(this).attr('id');
-			sessionStorage.setItem(lsName, "1")
+			sessionStorage.setItem(lsName, '1')
 			event.stopPropagation();
 		})
 		.on('shown.bs.collapse', function (event) {
 			var lsName = 'wasCollapsed:' + window.location.pathname + ':' + $(this).attr('id');
-			sessionStorage.setItem(lsName, "0");
+			sessionStorage.setItem(lsName, '0');
 			event.stopPropagation();
 		});
 
@@ -1257,7 +1257,7 @@ function printIndi(idx)
 
 function printIndiAncestors(idx)
 {
-	var html = "";
+	var html = '';
 	var famc_list = $.map(I(idx, 'famc'), function (fc) {return fc.index});
 	if (DwrConf.show_all_siblings)
 	{
@@ -2029,7 +2029,7 @@ function PrintIndexTable(id, header, data, defaultsort, columns)
 			if (typeof(text) === 'undefined') text = '';
 			text = text.toString();
 			var text_sort = text.replace(/<[^>]*>/g, '');
-			// var text_filt = text_sort + " " + unorm.nfkc(text_sort);  // nfkc removed for optimization (too much time-consuming)
+			// var text_filt = text_sort + ' ' + unorm.nfkc(text_sort);  // nfkc removed for optimization (too much time-consuming)
 			var text_filt = text_sort;
 			if (text != '')
 			{
@@ -3094,7 +3094,7 @@ function TreeNodeClick(event, data, expand)
 {
 	// Memorize tree state
 	var lsName = 'Expanded:' + window.location.pathname + ':Ptree:' + data.pdx;
-	sessionStorage.setItem(lsName, expand ? "1" : "0");
+	sessionStorage.setItem(lsName, expand ? '1' : "0");
 }
 
 function ComputePlaceHierarchy(top, fText, fSort)
@@ -3561,7 +3561,7 @@ function htmlSurnamesIndexTable(header, data)
 		fsort: function(x, col) {return data[x]}
 	}, {
 		title: _('Number'),
-		ftext: function(x, col) {return "" + N_persons[data[x]].length},
+		ftext: function(x, col) {return '' + N_persons[data[x]].length},
 		fhref: false,
 		fsort: function(x, col) {return N_persons[data[x]].length}
 	}];
@@ -3720,7 +3720,7 @@ function printMap(enabled)
 	// Schedule the differed update of the map
 	if (Dwr.search.TabbedPanels && !Dwr.search.MapExpanded)
 		$(window).load(function () {
-			if ($(".tab-pane.active.dwr-panel-map").length > 0)
+			if ($('.tab-pane.active.dwr-panel-map').length > 0)
 			{
 				// The map is already the active tab
 				mapUpdate();
@@ -4011,11 +4011,11 @@ function mapUpdate()
 				popupdiv.popover('hide');
 
 				popupdiv.on('show.bs.popover', function () {
-					// alert("show " + this.id);
+					// alert('show ' + this.id);
 					inhibitMapExpand = true;
 				})
 				popupdiv.on('hide.bs.popover', function () {
-					// alert("hide " + this.id);
+					// alert('hide ' + this.id);
 					inhibitMapExpand = true;
 				})
 			})();
@@ -4158,7 +4158,7 @@ function SearchFromString(ss, data, fextract)
 			if (s.match(terms[j]) == null) found = false;
 		}
 		if (found) results.push(x);
-		// console.log(found + ": "+ ss+"  /  "+s);
+		// console.log(found + ': '+ ss+'  /  '+s);
 	}
 	return(results);
 }
@@ -4347,15 +4347,15 @@ function HomePage()
 	html += '<h1>' + DwrConf.title + '</h1>';
 	html += '<p>';
 	var tables = [
-		["N", "surnames.html"],
-        ["I", "persons.html"],
-        ["F", "families.html"],
-        ["S", "sources.html"],
-        ["M", "medias.html"],
-        ["P", "places.html"],
-        ["R", "repositories.html"],
-        ["E", "events.html"],
-        ["T", "notes.html"]
+		['N', 'surnames.html'],
+        ['I', 'persons.html'],
+        ['F', 'families.html'],
+        ['S', 'sources.html'],
+        ['M', 'medias.html'],
+        ['P', 'places.html'],
+        ['R', 'repositories.html'],
+        ['E', 'events.html'],
+        ['T', 'notes.html']
 	];
 	var sep = '';
 	for (var i = 0; i < tables.length; i += 1)
@@ -4531,7 +4531,7 @@ function MainRun()
 	if (ScriptIsLoading())
 	{
 		if (preloadMode) return;
-		throw "Loading problem";
+		throw 'Loading problem';
 	}
 	var html;
 	try

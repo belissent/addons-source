@@ -27,7 +27,7 @@
 //	- Manage the menu form, and the search form embedded form
 
 (function(window, undefined) {
-"use strict";
+'use strict';
 
 
 //=================================================================
@@ -149,15 +149,15 @@ DwrClass.prototype.search = {
 	//P; // Previous page
 	//=========================================== Data
 	//Txt; // Test of the search input form (in the navbar or embedded in the page)
-	//Idx; // Index of the current person (in table "I")
-	//Fdx; // Index of the current family (in table "F")
-	//Mdx; // Index of the current media object (in table "M")
-	//Sdx; // Index of the current source (in table "S")
-	//Pdx; // Index of the current place (in table "P")
-	//Rdx; // Index of the current repository (in table "R")
-	//Edx; // Index of the current repository (in table "E")
-	//Tdx; // Index of the current note (in table "T")
-	//Ndx; // Index of the current surname (in table "N")
+	//Idx; // Index of the current person (in table I)
+	//Fdx; // Index of the current family (in table F)
+	//Mdx; // Index of the current media object (in table M)
+	//Sdx; // Index of the current source (in table S)
+	//Pdx; // Index of the current place (in table P)
+	//Rdx; // Index of the current repository (in table R)
+	//Edx; // Index of the current repository (in table E)
+	//Tdx; // Index of the current note (in table T)
+	//Ndx; // Index of the current surname (in table N)
 	//Igid; // Gramps ID of the current person
 	//Fgid; // Gramps ID of the current family
 	//Mgid; // Gramps ID of the current media object
@@ -166,7 +166,7 @@ DwrClass.prototype.search = {
 	//Rgid; // Gramps ID of the current repository
 	//Egid; // Gramps ID of the current event
 	//Tgid; // Gramps ID of the current note
-	//ImgList; // List of media index (in table "M") for the slideshow
+	//ImgList; // List of media index (in table M) for the slideshow
 	//MapExpanded; // Whether the map should be expanded to full screen
 	//=========================================== SVG tree
 	//SvgType; // Type of SVG graph used
@@ -312,18 +312,18 @@ DwrClass.prototype.defaultSearchString = {
 	ChartFilter1: -1,
 	ChartFilter2: -1,
 	ChartFilter3: -1,
-	ChartFilter1Min: "",
-	ChartFilter2Min: "",
-	ChartFilter3Min: "",
-	ChartFilter1Max: "",
-	ChartFilter2Max: "",
-	ChartFilter3Max: "",
+	ChartFilter1Min: '',
+	ChartFilter2Min: '',
+	ChartFilter3Min: '',
+	ChartFilter1Max: '',
+	ChartFilter2Max: '',
+	ChartFilter3Max: '',
 	ChartOpacity: DwrConf.STATISTICS_CHART_OPACITY,
 	ChartBackground: DwrConf.CHART_BACKGROUND_GRADIENT,
-	ChartValW: "",
-	ChartValX: "",
-	ChartValY: "",
-	ChartValZ: ""
+	ChartValW: '',
+	ChartValX: '',
+	ChartValY: '',
+	ChartValZ: ''
 };
 
 DwrClass.prototype.ParseSearchString = function()
@@ -405,18 +405,18 @@ DwrClass.prototype.ParseSearchString = function()
 	Dwr.search.ChartFilter1 = GetURLParameter('chartfr1', -1);
 	Dwr.search.ChartFilter2 = GetURLParameter('chartfr2', -1);
 	Dwr.search.ChartFilter3 = GetURLParameter('chartfr3', -1);
-	Dwr.search.ChartFilter1Min = GetURLParameter('chartfr1i', "");
-	Dwr.search.ChartFilter2Min = GetURLParameter('chartfr2i', "");
-	Dwr.search.ChartFilter3Min = GetURLParameter('chartfr3i', "");
-	Dwr.search.ChartFilter1Max = GetURLParameter('chartfr1a', "");
-	Dwr.search.ChartFilter2Max = GetURLParameter('chartfr2a', "");
-	Dwr.search.ChartFilter3Max = GetURLParameter('chartfr3a', "");
+	Dwr.search.ChartFilter1Min = GetURLParameter('chartfr1i', '');
+	Dwr.search.ChartFilter2Min = GetURLParameter('chartfr2i', '');
+	Dwr.search.ChartFilter3Min = GetURLParameter('chartfr3i', '');
+	Dwr.search.ChartFilter1Max = GetURLParameter('chartfr1a', '');
+	Dwr.search.ChartFilter2Max = GetURLParameter('chartfr2a', '');
+	Dwr.search.ChartFilter3Max = GetURLParameter('chartfr3a', '');
 	Dwr.search.ChartOpacity = GetURLParameter('chartopa', DwrConf.STATISTICS_CHART_OPACITY);
 	Dwr.search.ChartBackground = GetURLParameter('chartbk', DwrConf.CHART_BACKGROUND_GRADIENT);
-	Dwr.search.ChartValW = GetURLParameter('chartvw', "");
-	Dwr.search.ChartValX = GetURLParameter('chartvx', "");
-	Dwr.search.ChartValY = GetURLParameter('chartvy', "");
-	Dwr.search.ChartValZ = GetURLParameter('chartvz', "");
+	Dwr.search.ChartValW = GetURLParameter('chartvw', '');
+	Dwr.search.ChartValX = GetURLParameter('chartvx', '');
+	Dwr.search.ChartValY = GetURLParameter('chartvy', '');
+	Dwr.search.ChartValZ = GetURLParameter('chartvz', '');
 }
 
 function GetURLParameter(sParam, def)
@@ -534,18 +534,18 @@ DwrClass.prototype.BuildSearchString = function(params)
 	s = SetURLParameter(s, 'chartfr1', params.ChartFilter1, Dwr.search.ChartFilter1, -1);
 	s = SetURLParameter(s, 'chartfr2', params.ChartFilter2, Dwr.search.ChartFilter2, -1);
 	s = SetURLParameter(s, 'chartfr3', params.ChartFilter3, Dwr.search.ChartFilter3, -1);
-	s = SetURLParameter(s, 'chartfr1i', params.ChartFilter1Min, Dwr.search.ChartFilter1Min, "");
-	s = SetURLParameter(s, 'chartfr2i', params.ChartFilter2Min, Dwr.search.ChartFilter2Min, "");
-	s = SetURLParameter(s, 'chartfr3i', params.ChartFilter3Min, Dwr.search.ChartFilter3Min, "");
-	s = SetURLParameter(s, 'chartfr1a', params.ChartFilter1Max, Dwr.search.ChartFilter1Max, "");
-	s = SetURLParameter(s, 'chartfr2a', params.ChartFilter2Max, Dwr.search.ChartFilter2Max, "");
-	s = SetURLParameter(s, 'chartfr3a', params.ChartFilter3Max, Dwr.search.ChartFilter3Max, "");
+	s = SetURLParameter(s, 'chartfr1i', params.ChartFilter1Min, Dwr.search.ChartFilter1Min, '');
+	s = SetURLParameter(s, 'chartfr2i', params.ChartFilter2Min, Dwr.search.ChartFilter2Min, '');
+	s = SetURLParameter(s, 'chartfr3i', params.ChartFilter3Min, Dwr.search.ChartFilter3Min, '');
+	s = SetURLParameter(s, 'chartfr1a', params.ChartFilter1Max, Dwr.search.ChartFilter1Max, '');
+	s = SetURLParameter(s, 'chartfr2a', params.ChartFilter2Max, Dwr.search.ChartFilter2Max, '');
+	s = SetURLParameter(s, 'chartfr3a', params.ChartFilter3Max, Dwr.search.ChartFilter3Max, '');
 	s = SetURLParameter(s, 'chartopa', params.ChartOpacity, Dwr.search.ChartOpacity, DwrConf.STATISTICS_CHART_OPACITY);
 	s = SetURLParameter(s, 'chartbk', params.ChartBackground, Dwr.search.ChartBackground, DwrConf.CHART_BACKGROUND_GRADIENT);
-	s = SetURLParameter(s, 'chartvw', params.ChartDataW, Dwr.search.ChartValW, "");
-	s = SetURLParameter(s, 'chartvx', params.ChartDataX, Dwr.search.ChartValX, "");
-	s = SetURLParameter(s, 'chartvy', params.ChartDataY, Dwr.search.ChartValY, "");
-	s = SetURLParameter(s, 'chartvz', params.ChartDataZ, Dwr.search.ChartValZ, "");
+	s = SetURLParameter(s, 'chartvw', params.ChartDataW, Dwr.search.ChartValW, '');
+	s = SetURLParameter(s, 'chartvx', params.ChartDataX, Dwr.search.ChartValX, '');
+	s = SetURLParameter(s, 'chartvy', params.ChartDataY, Dwr.search.ChartValY, '');
+	s = SetURLParameter(s, 'chartvz', params.ChartDataZ, Dwr.search.ChartValZ, '');
 	return(s);
 }
 
@@ -692,7 +692,7 @@ function BuildMenu()
 	{
 		var addclass = '';
 		if (i == i_current) addclass = ' class="active"';
-		if (DwrConf.pages_menu[i][0] == "")
+		if (DwrConf.pages_menu[i][0] == '')
 		{
 			txt_menu += '<li class="dropdown">';
 			txt_menu += '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' + _('Indexes') +' <b class="caret"></b></a>';

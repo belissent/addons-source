@@ -54,7 +54,7 @@ function extractorStringField(table, name, field, fsort)
 		name: name,
 		numeric: false,
 		fval: function(idx) {
-			var val = "" + table[idx][field];
+			var val = '' + table[idx][field];
 			if (invalidData(val)) return([]);
 			return([val]);
 		},
@@ -608,9 +608,9 @@ function getStatisticsData()
 	for (var j = 0; j < STATISTICS_NB_FILTERS; j += 1)
 	{
 		if (!isNaN(parseFloat(fMin[j]))) fMin[j] = parseFloat(fMin[j])
-		if (fMin[j] == "") fMin[j] = null;
+		if (fMin[j] == '') fMin[j] = null;
 		if (!isNaN(parseFloat(fMax[j]))) fMax[j] = parseFloat(fMax[j])
-		if (fMax[j] == "") fMax[j] = null;
+		if (fMax[j] == '') fMax[j] = null;
 	}
 	filter = function(i, fsort)
 	{
@@ -928,7 +928,7 @@ STATISTICS_GENDER_COLORS = [
 
 function chartColor(i, nb)
 {
-	var color = "#888";
+	var color = '#888';
 	if (search.ChartBackground == DwrConf.CHART_BACKGROUND_GENDER)
 	{
 		color = STATISTICS_GENDER_COLORS[i % STATISTICS_GENDER_COLORS.length];
@@ -955,7 +955,7 @@ function chartColor(i, nb)
 	}
 	// Opacity
 	var rgb = Raphael.getRGB(color);
-	return("rgba(" + rgb.r + "," + rgb.g + "," + rgb.b + "," + (search.ChartOpacity / 100.0) + ")");
+	return('rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + (search.ChartOpacity / 100.0) + ')');
 }
 
 
@@ -1008,10 +1008,10 @@ function pointLink(event)
 		}
 		vals[v] = (typeof(val_str) == 'undefined') ? val : val_str;
 	});
-	search.ChartValW = "" + vals.w;
-	search.ChartValX = "" + vals.x;
-	search.ChartValY = "" + vals.y;
-	search.ChartValZ = "" + vals.z;
+	search.ChartValW = '' + vals.w;
+	search.ChartValX = '' + vals.x;
+	search.ChartValY = '' + vals.y;
+	search.ChartValZ = '' + vals.z;
 	window.location.href = 'statistics_link.html?' + BuildSearchString();
 }
 
@@ -1497,11 +1497,11 @@ function chartConfRepopulate()
 		// !STATISTICS_FUNCTIONS[search.ChartFunctionZ].numeric &&
 		// !STATISTICS_DATA[search.ChartTable].extractors[search.ChartDataZ].numeric)
 	// {
-		// $("#dwr-chart-dataz-alert").removeClass('hidden');
+		// $('#dwr-chart-dataz-alert').removeClass('hidden');
 	// }
 	// else
 	// {
-		// $("#dwr-chart-dataz-alert").addClass('hidden');
+		// $('#dwr-chart-dataz-alert').addClass('hidden');
 	// }
 }
 
@@ -1554,7 +1554,7 @@ function printStatisticsLinks()
 	var indexes = [];
 	for (var iw = 0; iw < D.series.length; iw += 1)
 	{
-		if (wEnabled && "" + D.series[iw].w != search.ChartValW + "") continue;
+		if (wEnabled && '' + D.series[iw].w != search.ChartValW + "") continue;
 		for (var i = 0; i < D.series[iw].points.length; i += 1)
 		{
 			p = D.series[iw].points[i];
@@ -1568,9 +1568,9 @@ function printStatisticsLinks()
 				}
 				vals[v] = (typeof(val_str) == 'undefined') ? val : val_str;
 			});
-			if (xEnabled && "" + vals.x != search.ChartValX + "") continue;
-			if (yEnabled && "" + vals.y != search.ChartValY + "") continue;
-			if (zEnabled && "" + vals.z != search.ChartValZ + "") continue;
+			if (xEnabled && '' + vals.x != search.ChartValX + "") continue;
+			if (yEnabled && '' + vals.y != search.ChartValY + "") continue;
+			if (zEnabled && '' + vals.z != search.ChartValZ + "") continue;
 			$.merge(indexes, p.indexes);
 		}
 	}
@@ -1681,11 +1681,11 @@ STATISTICS_EXAMPLE_CHARTS = [
 			ChartBackground: DwrConf.CHART_BACKGROUND_SINGLE
 			// ,
 			// ChartFilter1: EXTRACTOR_F_MARR_DATE,
-			// ChartFilter1Min: "1700",
-			// ChartFilter1Max: "1950",
+			// ChartFilter1Min: '1700',
+			// ChartFilter1Max: '1950',
 			// ChartFilter2: EXTRACTOR_F_SPOU1_AGE_MARR,
-			// ChartFilter2Min: "0",
-			// ChartFilter2Max: "200"
+			// ChartFilter2Min: '0',
+			// ChartFilter2Max: '200'
 		}
 	}
 ];

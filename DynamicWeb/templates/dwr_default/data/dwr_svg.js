@@ -8,7 +8,7 @@
 // You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 (function(window, undefined) {
-"use strict";
+'use strict';
 function DwrSvgClass() {}
 window.DwrSvg = new DwrSvgClass();
 
@@ -594,7 +594,7 @@ function CssDefaultProperties()
 	for (var propertyName in style)
 	{
 		if (propertyName != propertyName.toLowerCase()) continue;
-		if (propertyName.indexOf("webkit") != -1) continue;
+		if (propertyName.indexOf('webkit') != -1) continue;
 		if (typeof(propertyName) == 'string' && isNaN(parseInt(propertyName)))
 		{
 			var val = style[propertyName];
@@ -734,8 +734,8 @@ function SvgSetStyle(p, text, x_elt, lev)
 {
 	var elt = svgElts[x_elt];
 	// Get the class of the person box and text
-	var fill = "#FFFFFF";
-	var stroke = "#000000";
+	var fill = '#FFFFFF';
+	var stroke = '#000000';
 	var dark = 1.0;
 	if (Dwr.search.SvgBackground == DwrConf.SVG_TREE_BACKGROUND_GENDER)
 	{
@@ -743,7 +743,7 @@ function SvgSetStyle(p, text, x_elt, lev)
 		if (I(elt[SVGELT_IDX], 'gender') == 'M') g = 'male';
 		if (I(elt[SVGELT_IDX], 'gender') == 'F') g = 'female';
 		var d = 'alive';
-		if (I(elt[SVGELT_IDX], 'death_date') != "") d = 'death';
+		if (I(elt[SVGELT_IDX], 'death_date') != '') d = 'death';
 		fill = DwrConf.GRAMPS_PREFERENCES['color-gender-' + g + '-' + d];
 	}
 	if (typeof(lev) !== 'undefined' && Dwr.search.SvgBackground == DwrConf.SVG_TREE_BACKGROUND_GENERATION)
@@ -812,7 +812,7 @@ function SvgSetStyle(p, text, x_elt, lev)
 	p.node.setAttribute('fill', fill);
 	p.node.setAttribute('stroke-width', svgStroke);
 	p.node.id = 'SVGTREE_P_' + x_elt;
-	// p.attr("href", href);
+	// p.attr('href', href);
 	elt[SVGELT_P] = p;
 	if (text)
 	{
@@ -1171,7 +1171,6 @@ function SvgKeyDown(event)
 
     if (event.which == '17') ctrlPressed = true;
     if (event.which == '16') shiftPressed = true;
-	console.log(""+shiftPressed)
 	return(true);
 }
 
@@ -1179,7 +1178,6 @@ function SvgKeyUp(event)
 {
     if (event.which == '17') ctrlPressed = false;
     if (event.which == '16') shiftPressed = false;
-	console.log(""+shiftPressed)
 	return(true);
 }
 
@@ -1213,16 +1211,16 @@ function SvgPopupShow(elt, event)
 		var html = '<div class="popover-title">' + I(idx, 'name') + '</div>';
 		html += '<div class="popover-content">';
 		html += '* ' + I(idx, 'birth_date');
-		if (I(idx, 'birth_place') != "") html += ' (' + I(idx, 'birth_place') + ')';
+		if (I(idx, 'birth_place') != '') html += ' (' + I(idx, 'birth_place') + ')';
 		if (fdx >= 0)
 		{
 			html += '<br>x ' + F(fdx, 'marr_date');
-			if (F(fdx, 'marr_place') != "") html += ' (' + F(fdx, 'marr_place') + ')';
+			if (F(fdx, 'marr_place') != '') html += ' (' + F(fdx, 'marr_place') + ')';
 		}
-		if (I(idx, 'death_date') != "")
+		if (I(idx, 'death_date') != '')
 		{
 			html += '<br>+ ' + I(idx, 'death_date');
-			if (I(idx, 'death_place') != "") html += ' (' + I(idx, 'death_place') + ')';
+			if (I(idx, 'death_place') != '') html += ' (' + I(idx, 'death_place') + ')';
 		}
 		html += '</div>';
 		$('#svg-popup').html(html);
@@ -1874,7 +1872,7 @@ function calcCircleStrokeWidthAsc(a)
 	{
 		svgStroke = Math.min(svgStroke, coordX * rayons[i] * a * minSizeAsc[i] / svgParents[0][SVGELT_NB] / svgStrokeRatio);
 	}
-	// console.log("svgStroke = " + svgStroke);
+	// console.log('svgStroke = ' + svgStroke);
 }
 
 function buildAscSub0(x_elt, lev, a, b, num)
@@ -2027,7 +2025,7 @@ function calcCircleStrokeWidthDsc(a)
 	{
 		svgStroke = Math.min(svgStroke, coordX * rayons[i] * a * minSizeDsc[i] / svgChildren[0][SVGELT_NB] / svgStrokeRatio);
 	}
-	// console.log("svgStroke = " + svgStroke);
+	// console.log('svgStroke = ' + svgStroke);
 }
 
 function buildDscSub0(x_elt, lev, a, b)
