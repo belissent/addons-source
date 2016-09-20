@@ -198,7 +198,7 @@ from gramps.gen.utils.config import get_researcher
 from gramps.gen.utils.string import conf_strings
 from gramps.gen.utils.file import media_path_full
 from gramps.gen.utils.alive import probably_alive
-from gramps.gen.utils.db import get_birth_or_fallback, get_death_or_fallback, get_marriage_or_fallback
+from gramps.gen.utils.db import get_birth_or_fallback, get_death_or_fallback, get_marriage_or_fallback, get_participant_from_event
 from gramps.gen.constfunc import win, get_curr_dir
 if (sys.version_info[0] < 3):
     from gramps.gen.constfunc import UNITYPE
@@ -1500,6 +1500,7 @@ class DynamicWebReport(Report):
           - date_sdn: The event serial date number
           - place: The event place index (in table 'P'), -1 if none
           - descr: The event description
+          - name: comprehensible event name
           - attr: The event text and notes (including event reference notes)
           - media: A list of the event media index, see _data_media_reference_index
           - cita: A list of the event source citations index (in table 'C')
@@ -1526,6 +1527,7 @@ class DynamicWebReport(Report):
             jdata['place'] = place_index
             if (evt_desc is None): evt_desc = ""
             jdata['descr'] = html_escape(evt_desc)
+            jdata['name'] = html_escape(self.obj_dict[Event][event_handle][OBJDICT_NAME])
             # Get event notes
             jdata['attr'] = self._data_attributes(event)
             jdata['notes'] = self._data_notes(event)
@@ -3463,40 +3465,44 @@ class DynamicWebReport(Report):
         if (bkref_class is not None):
             self.bkref_dict[Family][family_handle].add((bkref_class, bkref_handle, None))
         # Check if the family is already added
-        if (family_handle in self.obj_dict[Family]): return
-        # Add family in the dictionaries of objects
         family = self.database.get_family_from_handle(family_handle)
-        family_name = self.get_family_name(family)
-        self.obj_dict[Family][family_handle] = [family_name, family.gramps_id, len(self.obj_dict[Family])]
+        if family_handle not in self.obj_dict[Family]:
+            # Add family in the dictionaries of objects
+            family_name = self.get_family_name(family)
+            self.obj_dict[Family][family_handle] = [family_name, family.gramps_id, len(self.obj_dict[Family])]
+        # If the family pages are enabled, then the back reference go to the family page
+        if self.inc_families_pages:
+            bkref_class = Family
+            bkref_handle = family_handle
         # Family events
         evt_ref_list = family.get_event_ref_list()
         if evt_ref_list:
             for evt_ref in evt_ref_list:
-                self._add_event(evt_ref.ref, Family, family_handle, evt_ref)
+                self._add_event(evt_ref.ref, bkref_class, bkref_handle, evt_ref)
         # Family child references
         for child_ref in family.get_child_ref_list():
             for citation_handle in child_ref.get_citation_list():
-                self._add_citation(citation_handle, Family, family_handle)
+                self._add_citation(citation_handle, bkref_class, bkref_handle)
         # LDS Ordinance citations
         for lds_ord in family.get_lds_ord_list():
             for citation_handle in lds_ord.get_citation_list():
-                self._add_citation(citation_handle, Family, family_handle)
+                self._add_citation(citation_handle, bkref_class, bkref_handle)
         # Attributes citations and notes
         for attr in family.get_attribute_list():
             for citation_handle in attr.get_citation_list():
-                self._add_citation(citation_handle, Family, family_handle)
+                self._add_citation(citation_handle, bkref_class, bkref_handle)
             for note_handle in attr.get_note_list():
-                self._add_note(note_handle, Family, family_handle)
+                self._add_note(note_handle, bkref_class, bkref_handle)
         # Family citations
         for citation_handle in family.get_citation_list():
-            self._add_citation(citation_handle, Family, family_handle)
+            self._add_citation(citation_handle, bkref_class, bkref_handle)
         # Family media
         for media_ref in family.get_media_list():
             media_handle = media_ref.get_reference_handle()
-            self._add_media(media_handle, Family, family_handle, media_ref)
+            self._add_media(media_handle, bkref_class, bkref_handle, media_ref)
         # Notes
         for note_handle in family.get_note_list():
-            self._add_note(note_handle, Family, family_handle)
+            self._add_note(note_handle, bkref_class, bkref_handle)
 
 
     def get_family_name(self, family):
@@ -3538,9 +3544,8 @@ class DynamicWebReport(Report):
         '''
         # Check if event reference already added
         if (event_handle in self.bkref_dict[Event]):
-            refs = [bkref[BKREF_REFOBJ] for bkref in self.bkref_dict[Event][event_handle]]
             # The event reference is already recorded
-            if (event_ref in refs): return
+            if (bkref_class, bkref_handle, event_ref) in self.bkref_dict[Event][event_handle]: return
         # Update the dictionaries of objects back references
         if (bkref_class is not None):
             self.bkref_dict[Event][event_handle].add((bkref_class, bkref_handle, event_ref))
@@ -3555,24 +3560,30 @@ class DynamicWebReport(Report):
                 for note_handle in attr.get_note_list():
                     self._add_note(note_handle, bkref_class, bkref_handle)
         # Check if the event is already added
-        if (event_handle in self.obj_dict[Event]): return
-        # Add event in the dictionaries of objects
         event = self.database.get_event_from_handle(event_handle)
-        if (not event): return
-        event_name = str(event.get_type())
-        event_desc = event.get_description()
-        # The event description can be Y on import from GEDCOM. See the
-        # following quote from the GEDCOM spec: "The occurrence of an event is
-        # asserted by the presence of either a DATE tag and value or a PLACe tag
-        # and value in the event structure. When neither the date value nor the
-        # place value are known then a Y(es) value on the parent event tag line
-        # is required to assert that the event happened.""
-        if not (event_desc == "" or event_desc is None or event_desc =="Y"):
-            event_name = event_name + ": " + event_desc
-        self.obj_dict[Event][event_handle] = [event_name, event.gramps_id, len(self.obj_dict[Event])]
+        if event_handle not in self.obj_dict[Event]:
+            # Add event in the dictionaries of objects
+            if (not event): return
+            event_name = str(event.get_type())
+            event_desc = event.get_description()
+            # The event description can be Y on import from GEDCOM. See the
+            # following quote from the GEDCOM spec: "The occurrence of an event is
+            # asserted by the presence of either a DATE tag and value or a PLACe tag
+            # and value in the event structure. When neither the date value nor the
+            # place value are known then a Y(es) value on the parent event tag line
+            # is required to assert that the event happened.""
+            if not (event_desc == "" or event_desc is None or event_desc =="Y"):
+                event_name = event_name + " (" + event_desc + ")"
+            else:
+                # Get main participant name
+                participant = get_participant_from_event(self.database, event_handle)
+                if participant != "":
+                    event_name = event_name + " (" + participant + ")"
+            self.obj_dict[Event][event_handle] = [event_name, event.gramps_id, len(self.obj_dict[Event])]
         # If the event pages are enabled, then the back reference go to the event page
-        bkref_class = Event
-        bkref_handle = event_handle
+        if self.inc_events_pages:
+            bkref_class = Event
+            bkref_handle = event_handle
         # Event place
         place_handle = event.get_place_handle()
         if (place_handle):
@@ -3599,9 +3610,8 @@ class DynamicWebReport(Report):
         '''
         # Check if place reference already added
         if (place_handle in self.bkref_dict[Place]):
-            refs = [bkref[BKREF_REFOBJ] for bkref in self.bkref_dict[Place][place_handle]]
             # The place reference is already recorded
-            if (place_ref in refs): return
+            if (bkref_class, bkref_handle, place_ref) in self.bkref_dict[Place][place_handle]: return
         # Update the dictionaries of objects back references
         if (bkref_class is not None):
             self.bkref_dict[Place][place_handle].add((bkref_class, bkref_handle, place_ref))
@@ -3637,6 +3647,10 @@ class DynamicWebReport(Report):
         Add source_handle to the L{self.obj_dict}, and recursively all referenced objects
         '''
         if (not self.inc_sources): return
+        # Check if source reference already added
+        if (source_handle in self.bkref_dict[Source]):
+            # The source reference is already recorded
+            if (bkref_class, bkref_handle, None) in self.bkref_dict[Source][source_handle]: return
         # Update the dictionaries of objects back references
         if (bkref_class is not None):
             self.bkref_dict[Source][source_handle].add((bkref_class, bkref_handle, None))
@@ -3668,6 +3682,10 @@ class DynamicWebReport(Report):
         Add citation_handle to the L{self.obj_dict}, and recursively all referenced objects
         '''
         if (not self.inc_sources): return
+        # Check if citation reference already added
+        if (citation_handle in self.bkref_dict[Citation]):
+            # The citation reference is already recorded
+            if (bkref_class, bkref_handle, None) in self.bkref_dict[Citation][citation_handle]: return
         # Update the dictionaries of objects back references
         if (bkref_class is not None):
             self.bkref_dict[Citation][citation_handle].add((bkref_class, bkref_handle, None))
@@ -3696,9 +3714,8 @@ class DynamicWebReport(Report):
         if (not self.inc_gallery): return
         # Check if media reference already added
         if (media_handle in self.bkref_dict[_Media]):
-            refs = [bkref[BKREF_REFOBJ] for bkref in self.bkref_dict[_Media][media_handle]]
             # The media reference is already recorded
-            if (media_ref in refs): return
+            if (bkref_class, bkref_handle, media_ref) in self.bkref_dict[_Media][media_handle]: return
         # Update the dictionaries of objects back references
         if (bkref_class is not None):
             self.bkref_dict[_Media][media_handle].add((bkref_class, bkref_handle, media_ref))
@@ -3736,9 +3753,8 @@ class DynamicWebReport(Report):
         if (not self.inc_repositories): return
         # Check if repository reference already added
         if (repo_handle in self.bkref_dict[Repository]):
-            refs = [bkref[BKREF_REFOBJ] for bkref in self.bkref_dict[Repository][repo_handle]]
             # The repository reference is already recorded
-            if (repo_ref in refs): return
+            if (bkref_class, bkref_handle, repo_ref) in self.bkref_dict[Repository][repo_handle]: return
         # Update the dictionaries of objects back references
         if (bkref_class is not None):
             self.bkref_dict[Repository][repo_handle].add((bkref_class, bkref_handle, repo_ref))
@@ -3765,6 +3781,10 @@ class DynamicWebReport(Report):
         Add note_handle to the L{self.obj_dict}, and recursively all referenced objects
         '''
         if (not self.inc_notes): return
+        # Check if note reference already added
+        if (note_handle in self.bkref_dict[Note]):
+            # The note reference is already recorded
+            if (bkref_class, bkref_handle, None) in self.bkref_dict[Note][note_handle]: return
         # Update the dictionaries of objects back references
         if (bkref_class is not None):
             self.bkref_dict[Note][note_handle].add((bkref_class, bkref_handle, None))

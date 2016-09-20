@@ -647,7 +647,7 @@ function mediaSection(media)
 
 function eventLinked(edx, citations)
 {
-	PreloadScripts(NameFieldScripts('E', edx, ['type', 'descr', 'gid']), true);
+	PreloadScripts(NameFieldScripts('E', edx, ['type', 'gid']), true);
 	citations = (typeof(citations) !== 'undefined') ? citations : true;
 	var txt = E(edx, 'type')
 	txt += gidBadge(E(edx, 'gid'));
@@ -1787,24 +1787,49 @@ function placeNames(pnames)
 	return(names.join(', '));
 }
 
-function placeHierarchy(enclosed_by, visited)
+function placeHierarchy(pdx)
 {
-	if (enclosed_by.length == 0) return('');
-	var txt = '<ul>';
+	var enc = placeHierarchySub(P(pdx, 'enclosed_by'), [pdx])
+	var thisLevel = '<button type="button" class="btn btn-default btn-arrow-right-right"';
+	thisLevel += ' style="z-index:' + (100) + ';"';
+	thisLevel += ' disabled>' + placeNames(P(pdx, 'names')) + '</button>';
+	var txt = '';
+	for (var k = 0; k < enc.length; k++)
+	{
+		if (enc.length > 1) txt += '<p>';
+		txt += thisLevel + ' ' + enc[k];
+	}
+	return txt;
+}
+
+function placeHierarchySub(enclosed_by, visited)
+{
+	if (enclosed_by.length == 0) return [];
+	var enc = [];
 	for (var j = 0; j < enclosed_by.length; j++)
 	{
 		var pdx = enclosed_by[j].pdx;
 		if ($.inArray(pdx, visited) != -1) continue;
-		txt += '<li class="dwr-attr-value">';
-		txt += '<a href="' + placeHref(pdx) + '">'
-		txt += placeNames(P(pdx, 'names'));
-		txt += '</a>';
+		var enc2 = placeHierarchySub(P(pdx, 'enclosed_by'), $.merge($.merge([], visited), [pdx]));
+		
+		var thisLevel = '<button type="button" class="btn btn-primary btn-arrow-left-right ';
+		if (enc2.length > 0) thisLevel += ' btn-arrow-right-right';
+		thisLevel += ' style="z-index:' + (100 - visited.length) + ';"';
+		thisLevel += ' onclick="location.href=\'' + placeHref(pdx) + '\';"';
+		thisLevel += '>' + placeNames(P(pdx, 'names'));
 		if (enclosed_by[j].date != '') txt += ' (' + enclosed_by[j].date + ')';
-		txt += placeHierarchy(P(pdx, 'enclosed_by'), $.merge($.merge([], visited), [pdx]))
-		txt += '</li>';
+		thisLevel += '</button>';
+		
+		for (var k = 0; k < enc2.length; k++)
+		{
+			enc.push(thisLevel + ' ' + enc2[k]);
+		}
+		if (enc2.length == 0)
+		{
+			enc.push(thisLevel);
+		}
 	}
-	txt += '</ul>';
-	return(txt);
+	return enc;
 }
 
 function printPlace(pdx)
@@ -1842,12 +1867,12 @@ function printPlace(pdx)
 	}
 	if (P(pdx, 'enclosed_by').length > 0)
 	{
-		html += '<p class="dwr-attr-title">' + _('Enclosed By') + ':</p';
-		html += placeHierarchy(P(pdx, 'enclosed_by'), [pdx]);
+		html += '<p class="dwr-attr-title">' + _('Enclosed By') + ': ';
+		html += placeHierarchy(pdx);
 	}
 
 	// Back references
-	var bk_txt = printBackRefs(BKREF_TYPE_INDEX, P(pdx, 'bki'), P(pdx, 'bkf'), [], [], P(pdx, 'bkp'), [], P(pdx, 'bkp'), P(pdx, 'bke'));
+	var bk_txt = printBackRefs(BKREF_TYPE_INDEX, P(pdx, 'bki'), P(pdx, 'bkf'), [], [], P(pdx, 'bkp'), [], P(pdx, 'bke'));
 
 	html += PrintTitle('P' + pdx, 3, [].concat(
 		urlsTable(P(pdx, 'urls')),
@@ -1897,19 +1922,24 @@ function printRepo(rdx)
 
 function printEvent(edx)
 {
-	PreloadScripts(NameFieldScripts('E', edx, ['type', 'gid', 'descr', 'notes', 'date', 'place', 'change_time', 'bki', 'bkf']), true);
+	PreloadScripts(NameFieldScripts('E', edx, ['type', 'gid', 'descr', 'name', 'notes', 'date', 'place', 'change_time', 'bki', 'bkf']), true);
 	var html = '';
-	html += '<h2 class="page-header">' + E(edx, 'type') + gidBadge(E(edx, 'gid')) + '</h2>';
-	html += '<p class="dwr-attr-value"><span class="dwr-attr-title">' + _('Description') + ': </span>'
-	html += E(edx, 'descr') + '</p>';
+	html += '<h2 class="page-header">' + E(edx, 'name') + gidBadge(E(edx, 'gid')) + '</h2>';
+	html += '<p class="dwr-attr-value"><span class="dwr-attr-title">' + _('Type') + ': </span>';
+	html += (E(edx, 'type') || empty(_('Without type'))) + '</p>';
+	if (E(edx, 'descr'))
+	{
+		html += '<p class="dwr-attr-value"><span class="dwr-attr-title">' + _('Description') + ': </span>';
+		html += E(edx, 'descr') + '</p>';
+	}
 	if (E(edx, 'date'))
 	{
-		html += '<p class="dwr-attr-value"><span class="dwr-attr-title">' + _('Date') + ': </span>'
+		html += '<p class="dwr-attr-value"><span class="dwr-attr-title">' + _('Date') + ': </span>';
 		html += E(edx, 'date') + '</p>';
 	}
 	if (E(edx, 'place') >= 0)
 	{
-		html += '<p class="dwr-attr-value"><span class="dwr-attr-title">' + _('Place') + ': </span>'
+		html += '<p class="dwr-attr-value"><span class="dwr-attr-title">' + _('Place') + ': </span>';
 		html += placeLink(E(edx, 'place')) + '</p>';
 	}
 	
@@ -2940,14 +2970,14 @@ function htmlPlacesIndexTable(header, data)
 		title: _('Code'),
 		ftext: function(x, col) {return P_code[data[x]]}
 	}, {
-		title: STATE,
-		ftext: function(x, col) {return printPlacesIndexColText(data, x, STATE)}
+		title: DwrConf.STATE,
+		ftext: function(x, col) {return printPlacesIndexColText(data, x, DwrConf.STATE)}
 	}, {
-		title: COUNTRY,
-		ftext: function(x, col) {return printPlacesIndexColText(data, x, COUNTRY)}
+		title: DwrConf.COUNTRY,
+		ftext: function(x, col) {return printPlacesIndexColText(data, x, DwrConf.COUNTRY)}
 	}, {
-		title: POSTAL,
-		ftext: function(x, col) {return printPlacesIndexColText(data, x, POSTAL)}
+		title: DwrConf.POSTAL,
+		ftext: function(x, col) {return printPlacesIndexColText(data, x, DwrConf.POSTAL)}
 	}];
 	if (Dwr.search.IndexShowBkrefType) columns.push({
 		title: _('Enclosed By'),
@@ -3206,6 +3236,7 @@ function htmlEventsIndexList(header, data)
 {
 	var scripts = [
 		['E', 'type'],
+		['E', 'name'],
 		['E', 'descr'],
 		['E', 'date'],
 		['E', 'date_sdn'],
@@ -3219,9 +3250,8 @@ function htmlEventsIndexList(header, data)
 	var fText = function(edx)
 	{
 		var txt = '<a href="' + eventHrefOptimized(edx) + '">';
-		txt += E_type[edx] || empty(_('Without type'));
-		txt += gidBadge(E_gid[edx]);
-		if (E_descr[edx]) txt += ': ' + E_descr[edx];
+		txt += E_name[edx];
+		if (!Dwr.search.HideGid) txt += gidBadge(E_gid[edx]);
 		txt += '</a>';
 		var d = E_date[edx];
 		var p = P_name[E_place[edx]];
@@ -3344,7 +3374,7 @@ function htmlNotesIndexTable(header, data)
 	});
 	if (Dwr.search.IndexShowBkrefType && DwrConf.inc_events_pages) columns.push({
 		title: _('Used for event'),
-		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_INDEX, 'T', data[x], 'bke', 'E', 'gid', eventHrefOptimized)},
+		ftext: function(x, col) {return indexBkrefName(BKREF_TYPE_INDEX, 'T', data[x], 'bke', 'E', 'name', eventHrefOptimized)},
 		fsort: false
 	});
 	if (!Dwr.search.HideGid) columns.unshift({
@@ -3370,7 +3400,7 @@ function htmlNotesIndexList(header, data)
 	{
 		var txt = '<a href="' + noteHrefOptimized(tdx) + '">';
 		txt += T_type[tdx] || empty(_('Without type'));
-		txt += gidBadge(T_gid[tdx]);
+		if (!Dwr.search.HideGid) txt += gidBadge(T_gid[tdx]);
 		txt += ': ' + GetFirstLine(T_text[tdx]);
 		txt += '</a>';
 		return txt;
@@ -3631,7 +3661,7 @@ function printBackRefs(type, bki, bkf, bks, bkm, bkp, bkr, bke)
 	if (DwrConf.inc_repositories)
 		html += printBackRef(type, bkr, repoHref, function(ref) {return R(ref, 'name')});
 	if (DwrConf.inc_events_pages)
-		html += printBackRef(type, bke, eventHref, function(ref) {return E(ref, 'type')});
+		html += printBackRef(type, bke, eventHref, function(ref) {return E(ref, 'name')});
 	if (html == '') return('');
 	return('<ul class="dwr-backrefs">' + html + '</ul>');
 }
@@ -4671,8 +4701,8 @@ function MainRun()
 			else $('#body-page').html(html);
 		}
 		else if ($.inArray(PageContents, [
-			Dwr.PAGE_SOURCE, Dwr.PAGE_MEDIA, Dwr.PAGE_INDI, Dwr.PAGE_FAM, Dwr.PAGE_PLACE, Dwr.PAGE_REPO, Dwr.PAGE_EVENT,
-			Dwr.PAGE_SURNAMES_INDEX, Dwr.PAGE_SURNAME_INDEX, Dwr.PAGE_PERSONS_INDEX, Dwr.PAGE_FAMILIES_INDEX, Dwr.PAGE_SOURCES_INDEX, Dwr.PAGE_MEDIA_INDEX, Dwr.PAGE_PLACES_INDEX, Dwr.PAGE_ADDRESSES_INDEX, Dwr.PAGE_REPOS_INDEX, Dwr.PAGE_EVENTS_INDEX
+			Dwr.PAGE_SOURCE, Dwr.PAGE_MEDIA, Dwr.PAGE_INDI, Dwr.PAGE_FAM, Dwr.PAGE_PLACE, Dwr.PAGE_REPO, Dwr.PAGE_EVENT, Dwr.PAGE_NOTE,
+			Dwr.PAGE_SURNAMES_INDEX, Dwr.PAGE_SURNAME_INDEX, Dwr.PAGE_PERSONS_INDEX, Dwr.PAGE_FAMILIES_INDEX, Dwr.PAGE_SOURCES_INDEX, Dwr.PAGE_MEDIA_INDEX, Dwr.PAGE_PLACES_INDEX, Dwr.PAGE_ADDRESSES_INDEX, Dwr.PAGE_REPOS_INDEX, Dwr.PAGE_EVENTS_INDEX, Dwr.PAGE_NOTES_INDEX
 		]) >= 0)
 		{
 			$('#body-page').html(html);

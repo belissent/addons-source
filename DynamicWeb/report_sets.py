@@ -156,6 +156,7 @@ report_list = [
         'index_addresses_type': 0,
         'index_notes_type': 0,
         'tabbed_panels': True,
+        'inc_families_pages': False,
     },
     'procedures': [
         {
@@ -173,6 +174,10 @@ report_list = [
         {
             'what': "Indexes as lists",
             'path': "home.html",
+        },
+        {
+            'what': "No family pages, check events backrefs links",
+            'path': "events.html",
         },
     ]
 },
@@ -248,7 +253,7 @@ report_list = [
         },
         {
             'what': "No family , event pages, check places backrefs links",
-            'path': "events.html",
+            'path': "places.html",
         },
     ]
 },

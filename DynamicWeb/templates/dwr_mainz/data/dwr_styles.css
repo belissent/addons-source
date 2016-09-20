@@ -6,6 +6,98 @@ This program is free software; you can redistribute it and/or modify it under th
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
+/* Author: https://github.com/tjwebb/bootstrap-arrow-buttons */
+/* Modified by Pierre Bélissent 2016 */
+.btn-arrow-left-left,
+.btn-arrow-left-right,
+.btn-arrow-right-left,
+.btn-arrow-right-right {
+  position: relative;
+  padding-left: 18px;
+  padding-right: 18px;
+  border-radius: 0 !important;
+}
+.btn-arrow-left-left[disabled],
+.btn-arrow-left-right[disabled],
+.btn-arrow-right-left[disabled],
+.btn-arrow-right-right[disabled] {
+  opacity: 1.00;
+}
+.btn-arrow-left-right {
+  padding-left: 36px;
+}
+.btn-arrow-right-left {
+  padding-right: 36px;
+}
+.btn-arrow-left-left:before,
+.btn-arrow-left-right:before,
+.btn-arrow-right-left:after,
+.btn-arrow-right-right:after {
+  /* make two squares (before and after), looking similar to the button */
+  content: "";
+  position: absolute;
+  top: 4px;
+  /* move it down because of rounded corners */
+  width: 24.04163056px;
+  /* same as height */
+  height: 24.04163056px;
+  /* button_inner_height / sqrt(2) */
+  background: inherit;
+  /* use parent background */
+  border: inherit;
+  /* use parent border */
+  border-left-color: transparent;
+  /* hide left border */
+  border-bottom-color: transparent;
+  /* hide bottom border */
+  border-radius: 0px 4px 0px 0px;
+  /* round arrow corner, the shorthand property doesn't accept "inherit" so it is set to @border-radius-base */
+  -webkit-border-radius: 0px 4px 0px 0px;
+  -moz-border-radius: 0px 4px 0px 0px;
+}
+.btn-arrow-left-right:before,
+.btn-arrow-right-right:after {
+  transform: rotate(45deg);
+  /* rotate right arrow squares 45 deg to point right */
+  -webkit-transform: rotate(45deg);
+  -moz-transform: rotate(45deg);
+  -o-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+}
+.btn-arrow-left-left:before,
+.btn-arrow-right-left:after {
+  transform: rotate(225deg);
+  /* rotate left arrow squares 225 deg to point left */
+  -webkit-transform: rotate(225deg);
+  -moz-transform: rotate(225deg);
+  -o-transform: rotate(225deg);
+  -ms-transform: rotate(225deg);
+}
+.btn-arrow-left-right:before,
+.btn-arrow-left-left:before {
+  /* align the "before" square to the left */
+  left: -13.02081528px;
+}
+.btn-arrow-right-right:after,
+.btn-arrow-right-left:after {
+  /* align the "after" square to the right */
+  right: -13.02081528px;
+}
+.btn-arrow-right-right:after,
+.btn-arrow-left-left:before {
+  /* bring arrow pointers to front */
+  z-index: 1;
+}
+.btn-arrow-right-left:after,
+.btn-arrow-left-right:before {
+  /* bring arrow tails to back */
+  z-index: 0;
+}
+.btn-arrow-left-right:before,
+.btn-arrow-right-left:after {
+  /* hide arrow tails background */
+  background-color: #fff;
+}
 /* Gramps - a GTK+/GNOME based genealogy program
 
 Copyright (C) 2014 Pierre Bélissent
@@ -178,7 +270,7 @@ li p {
   filter: alpha(opacity=50);
   border-radius: 4px;
   border-width: 3px;
-  border-color: #788026;
+  border-color: #337ab7;
   border-style: solid;
 }
 #dwr-img-div:hover .dwr-imgmap {
@@ -408,10 +500,10 @@ body.svg-save-text {
 }
 /*===================================================== Body */
 body {
-  background: url(Web_Mainz_Bkgd.png) #5b411a repeat;
+  background: url(Web_Mainz_Bkgd.png) #222222 repeat;
 }
 body > div {
-  background: url(Web_Mainz_Mid.png) #cd9b52 repeat;
+  background: url(Web_Mainz_Mid.png) #777777 repeat;
 }
 /*===================================================== Main divs */
 #body-page {
@@ -430,8 +522,8 @@ body > div {
   margin-left: auto;
   margin-right: auto;
   padding: 0px 20px;
-  border-top: dashed 1px #aa7931;
-  background: url(Web_Mainz_MidLight.png) #cd9b52;
+  border-top: dashed 1px #555555;
+  background: url(Web_Mainz_MidLight.png) #777777;
   font-family: sans-serif;
   font-size: 12px;
   overflow-y: hidden;
@@ -483,10 +575,10 @@ body > div {
   font-size: 18px;
 }
 .navbar-default {
-  background: url(Web_Mainz_MidLight.png) #cd9b52 repeat;
+  background: url(Web_Mainz_MidLight.png) #777777 repeat;
 }
 .navbar-nav > li:hover {
-  background-color: #ffffff;
+  background-color: #eeeeee;
 }
 .navbar-nav > .active > a {
   background-image: url(Web_Mainz_Mid.png);
@@ -494,7 +586,7 @@ body > div {
   font-style: italic;
   border-style: dashed;
   border-width: 1px 1px 0px 1px;
-  border-color: #aa7931;
+  border-color: #555555;
 }
 @media (min-width: 768px) {
   .navbar {
@@ -516,19 +608,19 @@ body > div {
   background: transparent;
 }
 .panel-default > .panel-heading {
-  background: url(Web_Mainz_MidLight.png) #cd9b52 repeat;
-  border-bottom: 1px solid #aa7931;
+  background: url(Web_Mainz_MidLight.png) #777777 repeat;
+  border-bottom: 1px solid #555555;
 }
 .panel-default {
-  border-color: #aa7931;
+  border-color: #555555;
 }
 /*===================================================== Tabs */
 .nav-tabs {
-  background: url(Web_Mainz_MidLight.png) #cd9b52 repeat;
-  border-bottom: 1px solid #aa7931;
+  background: url(Web_Mainz_MidLight.png) #777777 repeat;
+  border-bottom: 1px solid #555555;
 }
 .nav-tabs > li > a:hover {
-  background-color: #ffffff;
+  background-color: #eeeeee;
   border-top: 1px solid transparent;
   border-left: 1px solid transparent;
   border-right: 1px solid transparent;
@@ -541,12 +633,12 @@ body > div {
   font-weight: bold;
   font-style: italic;
   border-style: dashed;
-  border-color: #aa7931;
+  border-color: #555555;
   border-bottom: 1px solid transparent;
 }
 /*===================================================== Tree view */
 .node-treeview {
-  background: url(Web_Mainz_MidLight.png) #cd9b52 repeat;
+  background: url(Web_Mainz_MidLight.png) #777777 repeat;
 }
 .node-treeview:not(.node-disabled):hover {
   background-color: #ffffff;
@@ -558,7 +650,7 @@ body > div {
   font-weight: normal;
   font-style: italic;
   text-align: center;
-  border-bottom: double 4px #755322;
+  border-bottom: double 4px #333333;
   padding-bottom: 1ex;
   margin: 0.5em 0px 0.5em 0px;
 }
@@ -571,7 +663,7 @@ body > div {
   font-weight: normal;
 }
 .dwr-attr-header {
-  color: #261b0b;
+  color: #000;
   font-size: 12px;
   font-style: italic;
 }
@@ -588,11 +680,11 @@ body > div {
   margin-bottom: 4px;
 }
 .table-bordered {
-  border-color: #cd9b52;
+  border-color: #777777;
 }
 .table-bordered th,
 .table-bordered td {
-  border-color: #cd9b52 !important;
+  border-color: #777777 !important;
 }
 .dwr-index {
   font-size: 14px;
@@ -601,19 +693,19 @@ body > div {
 }
 .thumbnail {
   background: transparent;
-  border: 1px solid #aa7931;
+  border: 1px solid #555555;
 }
 .thumbnail:hover {
-  background-color: #ffffff;
+  background-color: #eeeeee;
 }
 .popover-title {
-  background: url(Web_Mainz_MidLight.png) #cd9b52 repeat;
-  border-bottom: 1px solid #aa7931;
+  background: url(Web_Mainz_MidLight.png) #777777 repeat;
+  border-bottom: 1px solid #555555;
 }
 /*===================================================== Tree page */
 .svg-drawing {
-  background: url(Web_Mainz_MidLight.png) #cd9b52;
+  background: url(Web_Mainz_MidLight.png) #777777;
 }
 .svg-drawing-expand {
-  background: url(Web_Mainz_MidLight.png) #cd9b52;
+  background: url(Web_Mainz_MidLight.png) #777777;
 }
