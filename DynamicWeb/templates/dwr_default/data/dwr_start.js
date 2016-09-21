@@ -73,7 +73,6 @@ LoadJsFile(scriptFolder + 'datatables/media/js/dataTables.responsive.min.js');
 LoadJsFile(scriptFolder + 'datatables/media/js/responsive.bootstrap.min.js');
 
 // Load Tree View
-LoadCssFile(scriptFolder + 'bootstrap-treeview/bootstrap-treeview.css');
 LoadJsFile(scriptFolder + 'bootstrap-treeview/bootstrap-treeview.js');
 
 // Load context menu plugin

@@ -17,6 +17,8 @@
  * limitations under the License.
  * ========================================================= */
 
+/* Modified by Pierre Bélissent 21/09/2016 */
+ 
 .treeview .list-group-item {
 	cursor: pointer;
 }
@@ -32,6 +34,17 @@
 }
 
 .treeview .node-disabled {
-	color: silver;
-	cursor: not-allowed;
+	color: @nav-disabled-link-color;
+	&:hover, &:focus {
+		color: @nav-disabled-link-hover-color;
+		text-decoration: none;
+		background-color: transparent;
+		cursor: @cursor-disabled;
+	}
+}
+
+.node-treeview:not(.node-disabled) {
+	&:hover, &:focus {
+		background-color: @nav-link-hover-bg;
+	}
 }

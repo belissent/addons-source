@@ -13,6 +13,7 @@ You should have received a copy of the GNU General Public License along with thi
 @import "bootstrap/less/mixins/opacity.less";
 @import "bootstrap/less/mixins/center-block.less";
 
+@import "../../dwr_default/data/bootstrap-treeview/bootstrap-treeview.less";
 @import "../../dwr_default/data/bootstrap-arrow-buttons/bootstrap-arrow-buttons.less";
 
 @import (less) "../../dwr_default/data/dwr_styles_base.css";
@@ -170,7 +171,7 @@ body > div
 	background: url(Web_Mainz_MidLight.png) @gray-light repeat;
 }
 .node-treeview:not(.node-disabled):hover {
-	background-color: #ffffff;
+	background-color: @gray-lighter;
 	background-image: initial;
 }
 
