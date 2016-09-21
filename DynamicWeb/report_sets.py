@@ -69,8 +69,8 @@ default_options = {
     'index_sources_type': 1,
     'index_places_type': 1,
     'index_events_type': 1,
-    'index_repositories_type': 1,
-    'index_addresses_type': 1,
+    # 'index_repositories_type': 1,
+    # 'index_addresses_type': 1,
     'index_notes_type': 1,
     'index_show_dates': True,
     'index_show_partner': True,
@@ -152,8 +152,8 @@ report_list = [
         'index_sources_type': 0,
         'index_places_type': 0,
         'index_events_type': 0,
-        'index_repositories_type': 0,
-        'index_addresses_type': 0,
+        # 'index_repositories_type': 0,
+        # 'index_addresses_type': 0,
         'index_notes_type': 0,
         'tabbed_panels': True,
         'inc_families_pages': False,
@@ -182,21 +182,19 @@ report_list = [
     ]
 },
 {
-    'title':  "Example using template '%s' French translation and OpenStreetMap" % WEB_TEMPLATE_LIST[1]['name'],
+    'title':  "Example using template '%s'. French translation" % WEB_TEMPLATE_LIST[0]['name'],
     'link': "person.html?igid=I0044",
     'environ': {
         'LANGUAGE': "fr_FR",
         'LANG': "fr_FR.UTF-8",
     },
     'options': {
-        'template': 2,
-        'mapservice': "OpenStreetMap",
+        'template': 0,
         'tabbed_panels': True,
         'hide_gid': False,
         'inc_families_pages': False,
         'inc_places_pages': False,
         'inc_events_pages': False,
-        'inc_so': False,
     },
     'procedures': [
         {
@@ -222,7 +220,7 @@ report_list = [
     ]
 },
 {
-    'title': "Example using template '%s' without media copy without note types" % WEB_TEMPLATE_LIST[0]['name'],
+    'title': "Example using template '%s'. Without media copy. OpenStreetMap" % WEB_TEMPLATE_LIST[0]['name'],
     'link': "person.html?igid=I0044",
     'environ': {
         'LANGUAGE': "en_US",
@@ -230,6 +228,7 @@ report_list = [
     },
     'options': {
         'template': 0,
+        'mapservice': "OpenStreetMap",
         'copy_media': "2",
         'print_notes_type': False,
         'source_author': True,

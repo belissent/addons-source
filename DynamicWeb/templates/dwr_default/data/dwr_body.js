@@ -591,10 +591,9 @@ function SetURLParameter(sString, sParam, new_val, val, def)
 function Redirect(url)
 {
 	// Redirects to a given url
-
 	var change_page = false;
 	// Get the current page URL
-	this_url = window.location.href;
+	var this_url = window.location.href;
 	// this removes the anchor at the end, if there is one
 	this_url = this_url.substring(0, (this_url.indexOf('#') == -1) ? this_url.length : this_url.indexOf('#'));
 	// this removes the query after the file name, if there is one
@@ -602,6 +601,7 @@ function Redirect(url)
 	if (typeof(url) === 'undefined') url = this_url;
 	window.location.href = url + '?' + Dwr.BuildSearchString();
 }
+DwrClass.prototype.Redirect = Redirect;
 
 
 //=================================================================

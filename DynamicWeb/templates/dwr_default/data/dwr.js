@@ -3804,6 +3804,19 @@ function printMap(enabled)
 				$('a.dwr-panel-map').on('shown.bs.tab', mapUpdate);
 			}
 		});
+	else if (!Dwr.search.TabbedPanels && !Dwr.search.MapExpanded)
+		$(window).load(function () {
+			if ($('div.dwr-panel-map > .panel-heading.collapsed').length > 0)
+			{
+				// Wait for the map to be uncollapsed
+				$('div.dwr-panel-map > .collapse').on('shown.bs.collapse', mapUpdate);
+			}
+			else
+			{
+				// The map is already shown (not collapsed)
+				mapUpdate();
+			}
+		});
 	else
 	{
 		$(window).load(mapUpdate);
@@ -3816,7 +3829,7 @@ function printMap(enabled)
 	};
 	if (Dwr.search.MapExpanded)
 	{
-		$('body').toggleClass('dwr-fullscreen');
+		$('body').addClass('dwr-fullscreen');
 		$('body').children().css('display', 'none');
 	}
 	return([contents]);
@@ -4137,7 +4150,7 @@ function mapExpand()
 {
 	if (inhibitMapExpand) return(false);
 	Dwr.search.MapExpanded = !($('body').hasClass('dwr-fullscreen'));
-	Redirect();
+	Dwr.Redirect();
 	return(false);
 }
 
