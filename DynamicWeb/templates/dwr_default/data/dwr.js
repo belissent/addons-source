@@ -1045,9 +1045,14 @@ function placeLink(pdx, idx, fdx, edx)
 	if (typeof(edx) === 'undefined') edx = -1;
 	if (pdx == -1) return('');
 	pagePlaces.push({pdx: pdx, idx: idx, fdx: fdx, edx: edx});
-	if (!DwrConf.inc_places_pages) return(P(pdx, 'name'));
-	if (PageContents == Dwr.PAGE_PLACE && pdx == Dwr.search.Pdx) return(P(pdx, 'name'));
-	return('<a href="' + placeHref(pdx) + '">' + P(pdx, 'name') + '</a>');
+	var txt = P(pdx, 'name');
+	txt += gidBadge(P(pdx, 'gid'));
+	if (DwrConf.inc_places_pages &&
+		(PageContents != Dwr.PAGE_PLACE || pdx != Dwr.search.Pdx))
+	{
+		txt = '<a href="' + placeHref(pdx) + '">' + txt + '</a>';
+	}
+	return txt;
 }
 
 
@@ -1836,7 +1841,6 @@ function printPlace(pdx)
 {
 	PreloadScripts(NameFieldScripts('P', pdx, ['name', 'locations', 'gid', 'cita', 'names', 'type', 'code', 'coords', 'enclosed_by', 'bki', 'bkf', 'bkp', 'bke', 'urls', 'media', 'notes', 'change_time']), true);
 	var html = '';
-	placeLink(pdx);
 	var name = P(pdx, 'name');
 	if (name == '') name = locationString(P(pdx, 'locations'));
 	html += '<h2 class="page-header">' + name + gidBadge(P(pdx, 'gid')) + citaLinks(P(pdx, 'cita')) + '</h2>';
@@ -1871,8 +1875,12 @@ function printPlace(pdx)
 		html += placeHierarchy(pdx);
 	}
 
+	// Add place to the map
+	pagePlaces.push({pdx: pdx, idx: -1, fdx: -1, edx: -1});
+	
 	// Back references
-	var bk_txt = printBackRefs(BKREF_TYPE_INDEX, P(pdx, 'bki'), P(pdx, 'bkf'), [], [], P(pdx, 'bkp'), [], P(pdx, 'bke'));
+	var bk_place = htmlPlacesIndexTree('', P(pdx, 'bkp'));
+	var bk_txt = printBackRefs(BKREF_TYPE_INDEX, P(pdx, 'bki'), P(pdx, 'bkf'), [], [], [], [], P(pdx, 'bke'));
 
 	html += PrintTitle('P' + pdx, 3, [].concat(
 		urlsTable(P(pdx, 'urls')),
@@ -1880,6 +1888,7 @@ function printPlace(pdx)
 		noteSection(P(pdx, 'notes')),
 		printMap(Dwr.search.MapPlace),
 		sourceSection(),
+		strToContents(_('Places'), bk_place),
 		strToContents(_('References'), bk_txt)),
 		true /*collapsible*/, true /*is_tabbeb*/);
 
@@ -1995,6 +2004,7 @@ function printNote(tdx)
 var TABLE_OPTIMIZATION_LIMIT = 3000;
 var LIST_OPTIMIZATION_LIMIT = 1000;
 var TREE_OPTIMIZATION_LIMIT = 1000;
+var MAP_OPTIMIZATION_LIMIT = 1000;
 var ENABLE_LIST_SECTIONS = 50;
 
 function PrintIndex(id, header, type, fTable, fList, data)
@@ -2003,7 +2013,7 @@ function PrintIndex(id, header, type, fTable, fList, data)
 	{
 		if (type) fTable(data);
 		else fList(data);
-		return;
+		return '';
 	}
 
 	// Get all data if not specified
@@ -2370,7 +2380,7 @@ function htmlPersonsIndexTable(header, data)
 	if (Dwr.search.IndexShowParents) scripts.push(['I', 'famc'], ['F', 'spou']);
 	if (!Dwr.search.HideGid) scripts.push(['I', 'gid']);
 	PrepareFieldSplitScripts(scripts);
-	if (preloadMode) return;
+	if (preloadMode) return '';
 
 	// Define columns and build table
 	var columns = [{
@@ -2457,7 +2467,7 @@ function htmlPersonsIndexList(header, data)
 	];
 	if (!Dwr.search.HideGid) scripts.push(['I', 'gid']);
 	PrepareFieldSplitScripts(scripts);
-	if (preloadMode) return;
+	if (preloadMode) return '';
 
 	var fText = function(idx)
 	{
@@ -2536,7 +2546,7 @@ function htmlFamiliesIndexTable(header, data)
 	if (Dwr.search.IndexShowDates) scripts.push(['F', 'marr_date'], ['F', 'marr_sdn']);
 	if (!Dwr.search.HideGid) scripts.push(['F', 'gid']);
 	PrepareFieldSplitScripts(scripts);
-	if (preloadMode) return;
+	if (preloadMode) return '';
 
 	// Define columns and build table
 	var columns = [{
@@ -2576,7 +2586,7 @@ function htmlFamiliesIndexList(header, data)
 	];
 	if (!Dwr.search.HideGid) scripts.push(['I', 'gid'], ['F', 'gid']);
 	PrepareFieldSplitScripts(scripts);
-	if (preloadMode) return;
+	if (preloadMode) return '';
 
 	// build data for each spouse of each family
 	var data2 = [];
@@ -2718,7 +2728,7 @@ function htmlMediaIndexTable(header, data)
 	);
 	if (!Dwr.search.HideGid) scripts.push(['M', 'gid']);
 	PrepareFieldSplitScripts(scripts);
-	if (preloadMode) return;
+	if (preloadMode) return '';
 
 	// Define columns and build table
 	var columns = [{
@@ -2802,7 +2812,7 @@ function htmlSourcesIndexTable(header, data)
 	);
 	if (!Dwr.search.HideGid) scripts.push(['S', 'gid']);
 	PrepareFieldSplitScripts(scripts);
-	if (preloadMode) return;
+	if (preloadMode) return '';
 
 	// Define columns and build table
 	var columns = [{
@@ -2861,7 +2871,7 @@ function htmlSourcesIndexList(header, data)
 	];
 	if (!Dwr.search.HideGid) scripts.push(['S', 'gid']);
 	PrepareFieldSplitScripts(scripts);
-	if (preloadMode) return;
+	if (preloadMode) return '';
 
 	var fText = function(sdx)
 	{
@@ -2943,7 +2953,7 @@ function htmlPlacesIndexTable(header, data)
 	);
 	if (!Dwr.search.HideGid) scripts.push(['P', 'gid']);
 	PrepareFieldSplitScripts(scripts);
-	if (preloadMode) return;
+	if (preloadMode) return '';
 
 	// Define columns and build table
 	var columns = [{
@@ -3016,10 +3026,12 @@ function htmlPlacesIndexTree(header, data)
 	];
 	if (!Dwr.search.HideGid) scripts.push(['P', 'gid']);
 	PrepareFieldSplitScripts(scripts);
-	if (preloadMode) return;
+	if (preloadMode) return '';
 
 	var fText = function(pdx)
 	{
+		// Add place to the map
+		pagePlaces.push({pdx: pdx, idx: -1, fdx: -1, edx: -1});
 		var txt = '<a href="' + placeHrefOptimized(pdx) + '">';
 		txt += placeNames(P_names[pdx]);
 		if (!Dwr.search.HideGid) txt += gidBadge(P_gid[pdx]);
@@ -3029,37 +3041,37 @@ function htmlPlacesIndexTree(header, data)
 	};
 
 	// Build tree data (first pass to get max_nb_tree_subnodes)
-	var treedata = [];
-	for (var x = 0; x < data.length; x += 1)
-	{
-		var pdx = data[x];
-		if (P_enclosed_by[pdx].length > 0) continue; // Place is not a top-level place in the hierarchy
-		treedata.push(ComputePlaceHierarchy(pdx, fText, null));
-	}
-	max_nb_tree_subnodes = Math.max(max_nb_tree_subnodes, treedata.length);
+	var treedata = BuildTreeData(data, fText, null);
 
-	if (header == '' || max_nb_tree_subnodes > TREE_OPTIMIZATION_LIMIT)
+	// Optimization
+	if (max_nb_tree_subnodes > TREE_OPTIMIZATION_LIMIT)
 	{
-		// No header = in the search results page, show data as list
+		console.log('Too many tree nodes (' + data.length + '). Disabling tree features.');
+	}
+
+	if (PageContents == Dwr.PAGE_SEARCH || max_nb_tree_subnodes > TREE_OPTIMIZATION_LIMIT)
+	{
+		// Show data as list
+		
 		var sortingAttributes = [
 			{
 				title: _('Name'),
 				id: 'P.list.name',
 				fSort: function(a, b) {return(a - b)},
 				fLetter: function(pdx) {return P_letter[pdx]}
+			},
+			{
+				title: _('Type'),
+				id: 'P.list.type',
+				fSort: function(a, b) {return cmp(P_type[a], P_type[b])},
+				fLetter: function(pdx) {return P_type[pdx]}
 			}
 		];
 		return PrintIndexList('P', header, data, fText, '', '', '<br>', sortingAttributes, 0);
 	}
 	else
 	{
-		// Header = in the place index page, show data as tree
-
-		// Optimization
-		if (data.length > TREE_OPTIMIZATION_LIMIT)
-		{
-			console.log('Too many data (' + data.length + '). Disabling fancy features.');
-		}
+		// Show data as tree
 
 		// Print title
 		var sortingAttributes = [
@@ -3074,24 +3086,26 @@ function htmlPlacesIndexTree(header, data)
 				fSort: function(a, b) {return(b.nb - a.nb)}
 			}
 		];
-		var lts = PrintIndexListTitle(header, data, sortingAttributes, 0);
-		var html = lts.html;
-		var sorting_way = lts.sorting_way;
+		
+		var html = '';
+		var sorting_way = 0;
+		if (header)
+		{
+			var lts = PrintIndexListTitle(header, data, sortingAttributes, 0);
+			html = lts.html;
+			sorting_way = lts.sorting_way;
+		}
 
 		// Build tree data (second pass)
-		var treedata = [];
-		for (var x = 0; x < data.length; x += 1)
-		{
-			var pdx = data[x];
-			if (P_enclosed_by[pdx].length > 0) continue; // Place is not a top-level place in the hierarchy
-			treedata.push(ComputePlaceHierarchy(pdx, fText, sortingAttributes[sorting_way].fSort));
-		}
-		treedata.sort(sortingAttributes[sorting_way].fSort);
-		max_nb_tree_subnodes = Math.max(max_nb_tree_subnodes, treedata.length);
-
+		treedata = BuildTreeData(data, fText, sortingAttributes[sorting_way].fSort);
+		
 		// When no data
-		if (data.length == 0) return html + '<p>' + _('None') + '</p>';
-
+		if (data.length == 0)
+		{
+			if (header) return html + '<p>' + _('None') + '</p>';
+			return '';
+		}
+		
 		(function(){ // This is used to create instances of local variables
 			$(document).ready(function() {
 				// Prevent title collapse when the click is not on the title (on text hyperlink for example)
@@ -3125,6 +3139,31 @@ function TreeNodeClick(event, data, expand)
 	// Memorize tree state
 	var lsName = 'Expanded:' + window.location.pathname + ':Ptree:' + data.pdx;
 	sessionStorage.setItem(lsName, expand ? '1' : "0");
+}
+
+function BuildTreeData(data, fText, fSort)
+{
+	// Build tree data
+	var treedata = [];
+	for (var x = 0; x < data.length; x += 1)
+	{
+		var pdx = data[x];
+		// Check if the place is enclosed by another place in the data
+		var enclosed = false;
+		for (var y = 0; y < P_enclosed_by[pdx].length; y += 1)
+		{
+			if ($.inArray(P_enclosed_by[pdx][y].pdx, data) >= 0)
+			{
+				enclosed = true;
+				continue;
+			}
+		}
+		// If the place is enclosed by another place in the data, no need to use it (it will be included when processing the enclosing place)
+		if (!enclosed) treedata.push(ComputePlaceHierarchy(pdx, fText, fSort));
+	}
+	max_nb_tree_subnodes = Math.max(max_nb_tree_subnodes, treedata.length);
+	if (fSort !== null) treedata.sort(fSort);
+	return treedata;
 }
 
 function ComputePlaceHierarchy(top, fText, fSort)
@@ -3191,7 +3230,7 @@ function htmlEventsIndexTable(header, data)
 	);
 	if (!Dwr.search.HideGid) scripts.push(['E', 'gid']);
 	PrepareFieldSplitScripts(scripts);
-	if (preloadMode) return;
+	if (preloadMode) return '';
 
 	// Define columns and build table
 	var columns = [{
@@ -3245,7 +3284,7 @@ function htmlEventsIndexList(header, data)
 	];
 	if (!Dwr.search.HideGid) scripts.push(['E', 'gid']);
 	PrepareFieldSplitScripts(scripts);
-	if (preloadMode) return;
+	if (preloadMode) return '';
 
 	var fText = function(edx)
 	{
@@ -3329,7 +3368,7 @@ function htmlNotesIndexTable(header, data)
 	);
 	if (!Dwr.search.HideGid) scripts.push(['T', 'gid']);
 	PrepareFieldSplitScripts(scripts);
-	if (preloadMode) return;
+	if (preloadMode) return '';
 
 	// Define columns and build table
 	var columns = [{
@@ -3394,7 +3433,7 @@ function htmlNotesIndexList(header, data)
 	];
 	if (!Dwr.search.HideGid) scripts.push(['T', 'gid']);
 	PrepareFieldSplitScripts(scripts);
-	if (preloadMode) return;
+	if (preloadMode) return '';
 
 	var fText = function(tdx)
 	{
@@ -3441,7 +3480,7 @@ function htmlAddressesIndex()
 		['I', 'urls']
 	];
 	PrepareFieldSplitScripts(scripts);
-	if (preloadMode) return;
+	if (preloadMode) return '';
 
 	// Build addresses table
 	var adtable = [];
@@ -3495,7 +3534,7 @@ function htmlReposIndexTable(header, data)
 	);
 	if (!Dwr.search.HideGid) scripts.push(['R', 'gid']);
 	PrepareFieldSplitScripts(scripts);
-	if (preloadMode) return;
+	if (preloadMode) return '';
 
 	// Define columns and build table
 	var columns = [{
@@ -3581,7 +3620,7 @@ function htmlSurnamesIndexTable(header, data)
 		['N', 'persons']
 	];
 	PrepareFieldSplitScripts(scripts);
-	if (preloadMode) return;
+	if (preloadMode) return '';
 
 	// Define columns and build table
 	var columns = [{
@@ -3607,7 +3646,7 @@ function htmlSurnamesIndexList(header, data)
 		['N', 'persons']
 	];
 	PrepareFieldSplitScripts(scripts);
-	if (preloadMode) return;
+	if (preloadMode) return '';
 
 	var fText = function(ndx)
 	{
@@ -3657,7 +3696,11 @@ function printBackRefs(type, bki, bkf, bks, bkm, bkp, bkr, bke)
 	if (DwrConf.inc_gallery)
 		html += printBackRef(type, bkm, mediaHref, mediaName);
 	if (DwrConf.inc_places_pages)
-		html += printBackRef(type, bkp, placeHref, function(ref) {return P(ref, 'name')});
+		html += printBackRef(type, bkp, placeHref, function(ref) {
+			// Add place to the map
+			pagePlaces.push({pdx: ref, idx: -1, fdx: -1, edx: -1});
+			return P(ref, 'name');
+		});
 	if (DwrConf.inc_repositories)
 		html += printBackRef(type, bkr, repoHref, function(ref) {return R(ref, 'name')});
 	if (DwrConf.inc_events_pages)
@@ -3902,6 +3945,7 @@ function mapUpdate()
 		// Expand event
 		mapObject.on('singleclick', mapExpand);
 	}
+	
 	// Place markers
 	var points = [];
 	var nb_max = 0;
@@ -3926,6 +3970,13 @@ function mapUpdate()
 			size: {w: Math.round(48 * scale), h: Math.round(48 * scale)},
 			anchor: {x: Math.round(0.1 * 48 * scale), y: Math.round(0.9 * 48 * scale)}
 		});
+	}
+	// Optimization
+	if (mapCoords.length > MAP_OPTIMIZATION_LIMIT)
+	{
+		console.log('Too many markers (' + mapCoords.length + '). Disabling fancy features.');
+		mapCoords = [];
+		markerPaces = [];
 	}
 	for (var x_marker = 0; x_marker < mapCoords.length; x_marker++)
 	{
@@ -4220,7 +4271,7 @@ function SearchObjects()
 		htmlMediaIndex();
 		htmlSourcesIndex();
 		htmlPlacesIndex();
-		return;
+		return '';
 	}
 
 	// Describe where to search
@@ -4701,8 +4752,10 @@ function MainRun()
 			else $('#body-page').html(html);
 		}
 		else if ($.inArray(PageContents, [
-			Dwr.PAGE_SOURCE, Dwr.PAGE_MEDIA, Dwr.PAGE_INDI, Dwr.PAGE_FAM, Dwr.PAGE_PLACE, Dwr.PAGE_REPO, Dwr.PAGE_EVENT, Dwr.PAGE_NOTE,
-			Dwr.PAGE_SURNAMES_INDEX, Dwr.PAGE_SURNAME_INDEX, Dwr.PAGE_PERSONS_INDEX, Dwr.PAGE_FAMILIES_INDEX, Dwr.PAGE_SOURCES_INDEX, Dwr.PAGE_MEDIA_INDEX, Dwr.PAGE_PLACES_INDEX, Dwr.PAGE_ADDRESSES_INDEX, Dwr.PAGE_REPOS_INDEX, Dwr.PAGE_EVENTS_INDEX, Dwr.PAGE_NOTES_INDEX
+			Dwr.PAGE_INDI, Dwr.PAGE_FAM, Dwr.PAGE_SOURCE, Dwr.PAGE_MEDIA, Dwr.PAGE_PLACE, Dwr.PAGE_REPO, Dwr.PAGE_EVENT, Dwr.PAGE_NOTE,
+			Dwr.PAGE_SURNAMES_INDEX, Dwr.PAGE_SURNAME_INDEX,
+			Dwr.PAGE_PERSONS_INDEX, Dwr.PAGE_FAMILIES_INDEX, Dwr.PAGE_SOURCES_INDEX, Dwr.PAGE_MEDIA_INDEX, Dwr.PAGE_PLACES_INDEX, Dwr.PAGE_REPOS_INDEX, Dwr.PAGE_EVENTS_INDEX, Dwr.PAGE_NOTES_INDEX,
+			Dwr.PAGE_ADDRESSES_INDEX
 		]) >= 0)
 		{
 			$('#body-page').html(html);
