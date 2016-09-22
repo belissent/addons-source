@@ -983,9 +983,10 @@ function HandleCitations()
 		var x = txt.split(',');
 		$(this).text(pageCitationsBullets[x[0]][x[1]]);
 	});
-	// Show Source tabbed pane upon click
 
+	// Show source tabbed or collapsed panels when looking at a citation
 	$('.dwr-citation').click(function(e) {
+		$('div.dwr-sources-panel > .collapse').collapse('show');
 		$('a.dwr-sources-panel[role=tab]').tab('show');
 	});
 }
@@ -1082,19 +1083,19 @@ var titlesCollapsible = []; // Stack of titles property: is the title collapsibl
 var titlesTable = []; // Stack of titles property: is the title containing a table ?
 
 
-function PrintTitle(section_id, level, contents, collapsible, is_tabbeb, collapsed)
+function PrintTitle(section_id, level, contents, collapsible, tabbed, collapsed)
 {
 	if (contents.length == 0) return('');
-	if (typeof(is_tabbeb) === 'undefined') is_tabbeb = false;
+	if (typeof(tabbed) === 'undefined') tabbed = false;
 	if (typeof(collapsible) === 'undefined') collapsible = (level >= 1);
 	if (typeof(collapsed) === 'undefined') collapsed = false;
-	is_tabbeb = is_tabbeb && collapsible && Dwr.search.TabbedPanels;
+	tabbed = tabbed && collapsible && Dwr.search.TabbedPanels;
 	var lsName = 'lastTab:' + window.location.pathname + ':' + section_id;
     var lastTab = parseInt(sessionStorage.getItem(lsName));
 	if (isNaN(lastTab)) lastTab = 0;
 	if (lastTab >= contents.length) lastTab = contents.length - 1;
 	var html = '';
-	if (is_tabbeb)
+	if (tabbed)
 	{
 		//  Generate nav tabs
 		html += '<ul id="' + section_id + '"class="nav nav-tabs" role="tablist">';
@@ -1117,7 +1118,7 @@ function PrintTitle(section_id, level, contents, collapsible, is_tabbeb, collaps
 		var id = 'section_' + section_id + '_' + i;
 		var is_table = (contents[i].text.indexOf('<table') == 0);
 		is_table = is_table && collapsible;
-		if (is_tabbeb)
+		if (tabbed)
 		{
 			html += '<div id="' + id + '" role="tabpanel" class="tab-pane' +
 				(is_table ? ' dwr-panel-table' : '') +
@@ -1160,7 +1161,7 @@ function PrintTitle(section_id, level, contents, collapsible, is_tabbeb, collaps
 			html += contents[i].text;
 		}
 	}
-	if (is_tabbeb)
+	if (tabbed)
 	{
 		html += '</div></div>';
 	}
@@ -1192,7 +1193,6 @@ function HandleTitles()
 	});
 
 	// Collapsed section memorization
-    // $('div[data-toggle="collapse"]')
     $('.panel-collapse.collapse')
 		.on('hidden.bs.collapse', function (event) {
 			var lsName = 'wasCollapsed:' + window.location.pathname + ':' + $(this).attr('id');
@@ -1254,7 +1254,7 @@ function printIndi(idx)
 		}],
 		printMap(Dwr.search.MapFamily),
 		sourceSection()),
-		true /*collapsible*/, true /*is_tabbeb*/);
+		true /*collapsible*/, true /*tabbed*/);
 	html += printChangeTime(I(idx, 'change_time'));
 	return(html);
 }
@@ -1374,7 +1374,7 @@ function printIndiSpouses(fdx, idx)
 		attrsTable(F(fdx, 'attr')),
 		mediaSection(F(fdx, 'media')),
 		noteSection(F(fdx, 'notes'))),
-		true /*collapsible*/, true /*is_tabbeb*/);
+		true /*collapsible*/, true /*tabbed*/);
 	return(html);
 }
 
@@ -1442,7 +1442,7 @@ function printFam(fdx)
 		}],
 		printMap(Dwr.search.MapFamily),
 		sourceSection()),
-		true /*collapsible*/, true /*is_tabbeb*/);
+		true /*collapsible*/, true /*tabbed*/);
 	html += printChangeTime(F(fdx, 'change_time'));
 	return(html);
 }
@@ -1470,7 +1470,7 @@ function printFamParents(fdx)
 				// assocsTable(I(idx, 'assoc')),
 				mediaSection(I(idx, 'media'))),
 				// noteSection(I(idx, 'notes')),
-				true /*collapsible*/, true /*is_tabbeb*/);
+				true /*collapsible*/, true /*tabbed*/);
 			html += '</li>';
 		}
 	}
@@ -1502,7 +1502,7 @@ function printFamChildren(fdx)
 				// assocsTable(I(idx, 'assoc')),
 				mediaSection(I(idx, 'media'))),
 				// noteSection(I(idx, 'notes')),
-				true /*collapsible*/, true /*is_tabbeb*/);
+				true /*collapsible*/, true /*tabbed*/);
 			html += '</li>';
 		}
 		html += '</ol>';
@@ -1651,7 +1651,7 @@ function printMedia(mdx)
 		attrsTable(M(mdx, 'attr')),
 		strToContents(_('References'), bk_txt),
 		sourceSection()),
-		true /*collapsible*/, true /*is_tabbeb*/);
+		true /*collapsible*/, true /*tabbed*/);
 
 	html += printChangeTime(M(mdx, 'change_time'));
 	return(html);
@@ -1740,7 +1740,7 @@ function printSource(sdx)
 			title: _('Citations'),
 			text: printSourceCitations(sdx)
 		}]),
-		true /*collapsible*/, true /*is_tabbeb*/);
+		true /*collapsible*/, true /*tabbed*/);
 	html += printChangeTime(S(sdx, 'change_time'));
 	return(html);
 }
@@ -1816,7 +1816,7 @@ function placeHierarchySub(enclosed_by, visited)
 		var pdx = enclosed_by[j].pdx;
 		if ($.inArray(pdx, visited) != -1) continue;
 		var enc2 = placeHierarchySub(P(pdx, 'enclosed_by'), $.merge($.merge([], visited), [pdx]));
-		
+
 		var thisLevel = '<button type="button" class="btn btn-primary btn-arrow-left-right ';
 		if (enc2.length > 0) thisLevel += ' btn-arrow-right-right';
 		thisLevel += ' style="z-index:' + (100 - visited.length) + ';"';
@@ -1824,7 +1824,7 @@ function placeHierarchySub(enclosed_by, visited)
 		thisLevel += '>' + placeNames(P(pdx, 'names'));
 		if (enclosed_by[j].date != '') txt += ' (' + enclosed_by[j].date + ')';
 		thisLevel += '</button>';
-		
+
 		for (var k = 0; k < enc2.length; k++)
 		{
 			enc.push(thisLevel + ' ' + enc2[k]);
@@ -1877,7 +1877,7 @@ function printPlace(pdx)
 
 	// Add place to the map
 	pagePlaces.push({pdx: pdx, idx: -1, fdx: -1, edx: -1});
-	
+
 	// Back references
 	var bk_place = htmlPlacesIndexTree('', P(pdx, 'bkp'));
 	var bk_txt = printBackRefs(BKREF_TYPE_INDEX, P(pdx, 'bki'), P(pdx, 'bkf'), [], [], [], [], P(pdx, 'bke'));
@@ -1890,7 +1890,7 @@ function printPlace(pdx)
 		sourceSection(),
 		strToContents(_('Places'), bk_place),
 		strToContents(_('References'), bk_txt)),
-		true /*collapsible*/, true /*is_tabbeb*/);
+		true /*collapsible*/, true /*tabbed*/);
 
 	html += printChangeTime(P(pdx, 'change_time'));
 	return(html);
@@ -1919,7 +1919,7 @@ function printRepo(rdx)
 		noteSection(R(rdx, 'notes')),
 		strToContents(_('References'), bk_txt),
 		sourceSection()),
-		true /*collapsible*/, true /*is_tabbeb*/);
+		true /*collapsible*/, true /*tabbed*/);
 	html += printChangeTime(R(rdx, 'change_time'));
 	return(html);
 }
@@ -1951,7 +1951,7 @@ function printEvent(edx)
 		html += '<p class="dwr-attr-value"><span class="dwr-attr-title">' + _('Place') + ': </span>';
 		html += placeLink(E(edx, 'place')) + '</p>';
 	}
-	
+
 	// Back references
 	var bk_txt = printBackRefs(BKREF_TYPE_EVENT, E(edx, 'bki'), E(edx, 'bkf'), [], [], [], [], []);
 
@@ -1959,8 +1959,8 @@ function printEvent(edx)
 		strToContents(_('Participants'), bk_txt),
 		noteSection(E(edx, 'notes')),
 		sourceSection()),
-		true /*collapsible*/, true /*is_tabbeb*/);
-		
+		true /*collapsible*/, true /*tabbed*/);
+
 	html += printChangeTime(E(edx, 'change_time'));
 	return(html);
 }
@@ -1975,7 +1975,7 @@ function printNote(tdx)
 	PreloadScripts(NameFieldScripts('T', tdx, ['type', 'gid', 'text', 'bki', 'bkf', 'bkm', 'bks', 'bkr', 'bkp', 'bke']), true);
 	var html = '';
 	html += '<h2 class="page-header">' + T(tdx, 'type') + gidBadge(T(tdx, 'gid')) + '</h2>';
-	
+
 	// Back references
 	var bk_txt = printBackRefs(BKREF_TYPE_INDEX, T(tdx, 'bki'), T(tdx, 'bkf'), T(tdx, 'bks'), T(tdx, 'bkm'), T(tdx, 'bkp'), T(tdx, 'bkr'), T(tdx, 'bke'));
 
@@ -1985,8 +1985,8 @@ function printNote(tdx)
 			text: T(tdx, 'text')
 		}],
 		strToContents(_('References'), bk_txt)),
-		true /*collapsible*/, true /*is_tabbeb*/);
-		
+		true /*collapsible*/, true /*tabbed*/);
+
 	html += printChangeTime(T(tdx, 'change_time'));
 	return(html);
 }
@@ -2334,7 +2334,7 @@ function PrintIndexList(id, header, data, fText, before, after, separator, sorti
 				text: texts[titles[i]].join(separator)
 			});
 		}
-		html += PrintTitle(id + 'index', 3, sections, true /*collapsible*/, true /*is_tabbeb*/, true /*collapsed*/);
+		html += PrintTitle(id + 'index', 3, sections, true /*collapsible*/, true /*tabbed*/, true /*collapsed*/);
 	}
 	else
 	{
@@ -3052,7 +3052,7 @@ function htmlPlacesIndexTree(header, data)
 	if (PageContents == Dwr.PAGE_SEARCH || max_nb_tree_subnodes > TREE_OPTIMIZATION_LIMIT)
 	{
 		// Show data as list
-		
+
 		var sortingAttributes = [
 			{
 				title: _('Name'),
@@ -3086,7 +3086,7 @@ function htmlPlacesIndexTree(header, data)
 				fSort: function(a, b) {return(b.nb - a.nb)}
 			}
 		];
-		
+
 		var html = '';
 		var sorting_way = 0;
 		if (header)
@@ -3098,14 +3098,14 @@ function htmlPlacesIndexTree(header, data)
 
 		// Build tree data (second pass)
 		treedata = BuildTreeData(data, fText, sortingAttributes[sorting_way].fSort);
-		
+
 		// When no data
 		if (data.length == 0)
 		{
 			if (header) return html + '<p>' + _('None') + '</p>';
 			return '';
 		}
-		
+
 		(function(){ // This is used to create instances of local variables
 			$(document).ready(function() {
 				// Prevent title collapse when the click is not on the title (on text hyperlink for example)
@@ -3958,7 +3958,7 @@ function mapUpdate()
 		// Expand event
 		mapObject.on('singleclick', mapExpand);
 	}
-	
+
 	// Place markers
 	var points = [];
 	var nb_max = 0;
