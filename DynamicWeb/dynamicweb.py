@@ -228,10 +228,12 @@ from gramps.plugins.lib.libhtmlbackend import HtmlBackend, process_spaces
 
 from gramps.plugins.lib.libgedcom import make_gedcom_date, DATE_QUALITY
 
-from gramps.plugins.webreport.narrativeweb import (
-    first_letter,
-    STREET, LOCALITY, CITY, PARISH, COUNTY, STATE, POSTAL, COUNTRY, PHONE,
-)
+from gramps.plugins.webreport.narrativeweb import first_letter
+if DWR_VERSION_410:
+    STATE = _("State/ Province")
+    COUNTRY = _("Country")
+else:
+    from gramps.plugins.webreport.narrativeweb import (STREET, LOCALITY, CITY, PARISH, COUNTY, STATE, POSTAL, COUNTRY, PHONE)
 
 from gramps.gen.utils.place import conv_lat_lon
 
@@ -566,7 +568,7 @@ def rmtree_fix(dirname):
         if (not os.path.exists(tmp)): break
         time.sleep(0.1)
 
-        
+
 def get_templates():
     # Read available templates
     web_template_list = []
@@ -2331,7 +2333,7 @@ class DynamicWebReport(Report):
             'SVG_TREE_COLOR_SCHEME1',
             'SVG_TREE_COLOR_SCHEME2',
             'INDEXES_SIZES',
-            'STREET', 'LOCALITY', 'CITY', 'PARISH', 'COUNTY', 'STATE', 'POSTAL', 'COUNTRY', 'PHONE',
+            'STATE', 'COUNTRY',
         ]:
             self._print_conf_value(sw, const, globals()[const])
 

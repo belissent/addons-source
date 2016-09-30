@@ -2985,9 +2985,6 @@ function htmlPlacesIndexTable(header, data)
 	}, {
 		title: DwrConf.COUNTRY,
 		ftext: function(x, col) {return printPlacesIndexColText(data, x, DwrConf.COUNTRY)}
-	}, {
-		title: DwrConf.POSTAL,
-		ftext: function(x, col) {return printPlacesIndexColText(data, x, DwrConf.POSTAL)}
 	}];
 	if (Dwr.search.IndexShowBkrefType) columns.push({
 		title: _('Enclosed By'),
