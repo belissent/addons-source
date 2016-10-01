@@ -84,6 +84,9 @@ var SVGELT_NEXT_SPOU = 5;
 var SVGELT_NB = 6;
 var SVGELT_CMD = 7;
 var SVGELT_P = 8;
+var SVGELT_T = 9;
+var SVGELT_P_TFM = 11;
+var SVGELT_T_TFM = 12;
 
 var SVGIDX_SEPARATOR = -99; // Arbitrary number, used as person index (SVGELT_IDX) for separators
 var SVG_SEPARATOR_SIZE = 0.3 // Separator size compared to person box size
@@ -809,16 +812,21 @@ function SvgSetStyle(p, text, x_elt, lev)
 	var href = Dwr.svgHref(elt[SVGELT_IDX]);
 	// Set box attributes
 	p.node.setAttribute('class', 'svg-tree');
-	p.node.setAttribute('fill', fill);
-	p.node.setAttribute('stroke-width', svgStroke);
+	p.attr('fill', fill);
+	p.attr('stroke-width', svgStroke);
 	p.node.id = 'SVGTREE_P_' + x_elt;
 	// p.attr('href', href);
 	elt[SVGELT_P] = p;
+	elt[SVGELT_P_TFM] = p.transform();
+	elt[SVGELT_T] = null;
+	elt[SVGELT_T_TFM] = null;
 	if (text)
 	{
 		// Set box text attributes
 		text.node.setAttribute('class', 'svg-text');
 		text.node.id = 'SVGTREE_T_' + x_elt;
+		elt[SVGELT_T] = text;
+		elt[SVGELT_T_TFM] = text.transform();
 	}
 }
 
@@ -990,6 +998,9 @@ function SvgMouseOut(event)
 	return(true);
 }
 
+// var enterAnimation = Raphael.animation({transform: 's1.1 1.1'}, 200, '<>');
+// var exitAnimation = Raphael.animation({transform: 's1 1'}, 200, '<>');
+
 function SvgMouseEventExit()
 {
 	if (hoverBox >= 0)
@@ -997,9 +1008,13 @@ function SvgMouseEventExit()
 		var p = svgElts[hoverBox][SVGELT_P];
 		if (p)
 		{
-			p.node.setAttribute('stroke-width', svgStroke);
 			p.node.setAttribute('class', 'svg-tree');
-			// $('#SVGTREE_P_' + hoverBox).removeClass('svg-tree-hover');
+			p.animate({transform: svgElts[hoverBox][SVGELT_P_TFM]}, 200, '<>');
+			var t = svgElts[hoverBox][SVGELT_T];
+			if (t)
+			{
+				t.animate({transform: svgElts[hoverBox][SVGELT_T_TFM]}, 200, '<>');
+			}
 		}
 	}
 	hoverBox = -1;
@@ -1014,9 +1029,15 @@ function SvgMouseEventEnter(elt)
 		if (p)
 		{
 			hoverBox = elt;
-			p.node.setAttribute('stroke-width', svgStroke * 2.0);
 			p.node.setAttribute('class', 'svg-tree svg-tree-hover');
-			// $('#SVGTREE_P_' + hoverBox).addClass('svg-tree-hover');
+			p.toFront();
+			p.animate({transform: svgElts[hoverBox][SVGELT_P_TFM] + 's1.2 1.2'}, 200, '<>');
+			var t = svgElts[hoverBox][SVGELT_T];
+			if (t)
+			{
+				t.toFront();
+				t.animate({transform: svgElts[hoverBox][SVGELT_T_TFM] + 's1.2 1.2'}, 200, '<>');
+			}
 		}
 	}
 }
@@ -2828,7 +2849,7 @@ function line(x1, y1, x2, y2)
 {
 	var p = svgPaper.path(['M', x1, y1, 'L', x2, y2]);
 	p.node.setAttribute('class', 'svg-line');
-	p.node.setAttribute('stroke-width', svgStroke);
+	p.attr('stroke-width', svgStroke);
 }
 
 function calcTextTab(tab, n)

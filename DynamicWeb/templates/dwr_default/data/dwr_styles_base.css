@@ -486,7 +486,7 @@ body.svg-save-text
 .svg-tree-hover
 {
 	cursor: pointer;
-	.opacity(@carousel-control-opacity);
+	/* .opacity(@carousel-control-opacity); */
 	/* stroke-width is computed */
 }
 

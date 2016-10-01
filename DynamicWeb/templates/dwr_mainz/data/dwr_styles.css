@@ -503,8 +503,8 @@ body.svg-save-text {
 }
 .svg-tree-hover {
   cursor: pointer;
-  opacity: 0.5;
-  filter: alpha(opacity=50);
+  /* opacity: 0.5; */
+  /* filter: alpha(opacity=50); */
   /* stroke-width is computed */
 }
 .svg-text {
