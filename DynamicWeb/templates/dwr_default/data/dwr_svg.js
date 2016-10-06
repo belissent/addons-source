@@ -12,60 +12,32 @@
 function DwrSvgClass() {}
 window.DwrSvg = new DwrSvgClass();
 
-var I = Dwr.I;
-var F = Dwr.F;
-
-var nbGenAsc; // Number of ancestry generations to draw
-var nbGenDsc; // Number of descedants generations to draw
-var nbGenAscFound; // Number of ancestry generations found in the tree
-var nbGenDscFound; // Number of descedants generations found in the tree
-
-var depNum = 1; // First number used for the SOSA notation
-var DimX, DimY; // Size of the viewport in pixels
-
-var rayons, rayonsAsc, rayonsDsc; // Size of the circle for each generation
-var szPeopleAsc; // Number of people for each generation (ancestry) TODO à nettoyer
-var szPeopleDsc; // Number of people for each generation (descendants) TODO à nettoyer
-var minSizeAsc; // Minimal size of the elements (number of sub-elements), for each generation (ancestry)
-var minSizeDsc; // Minimal size of the elements (number of sub-elements), for each generation (descendants)
-var reuseIdx, reusePred, reuseSucc, reuseNum, reuseN;
-var reuseX;
-
-var txtRatioMax = 10.0; // Maximal width / height ratio for the text boxes
-var txtRatioMin = 1.0; // Minimal width / height ratio for the text boxes
-var linkRatio = 0.2; // Ratio between space reserved for the links  and the box width
-var fontFactorX = 1.8, fontFactorY = 1.0;
-var coordX = 10000.0, coordY = 10000.0;
-var margeX = 200.0, margeY = 200.0;
-var svgStroke = 1e10; // Width of the box strokes
-var svgStrokeRatio = 10.0; // Minimal ratio box size / stroke
-var svgDivMinHeight = 250; // Minimal graph height
-var maxAge = 0;
-var minPeriod = 1e10;
-var maxPeriod = -1e10;
-
-
-var hemiA = 0; // Overflow angle for half-circle and quadrant graphs
-
-var tpid = 0;
-var curNumStr;
-
-var x0, y0, w0, h0; // Coordinates of the top-left corner of the SVG graph, + width and height
-var x1, y1, w1, h1; // Coordinates of the top-left corner of the SVG sheet, + width and height
-var maxTextWidth; // Maximum width of the textboxes
-
-var viewBoxX, viewBoxY, viewBoxW, viewBoxH; // Screen viewbox (top-left corner, width and height)
-var viewScale; // Scale factor between SVG coordinates and screen coordinates
-
-var iTxt = '';
-
 // Each person is drawn with a text SVG element, over a shape (rectangle, path, circle, etc.).
 // The same person could appear several times in the graph (duplicates)
 // The elements ID used to draw a person are in the form:
 //    - SVGTREE_S_<number> : shape for the person (it is an SVG rectangle, path, circle, etc.)
 //    - SVGTREE_T_<number> : text for the person (it is an SVG text)
 
-// List giving the SVG element used to draw a person, in the form
+// The graph is built in several passes:
+//
+// 1. The data is preloaded, and all the elements to draw are listed in eltsAsc, eltsDsc
+//    See function Preload
+// 2. The HTML corresponding to the graph is created
+//    See function Create
+// 3. The graph is initialized
+//    See function SvgInit, which calls graphsInitialize functions
+//
+// The graph drawing is performed in several steps:
+// 1. Compute the size allocated to each element
+//    See function ComputeElementsSizes
+// 2. Compute the width of circles for the circular graphs 
+//    See function ComputeRays
+// 3. Mask the elements that are collapsed
+//    See function SvgMaskElts
+// 4. Draw every element in eltsAsc, eltsDsc
+//    See function SvgCreateElts, which calls drawElement functions
+
+// eltsAsc, eltsDsc: Lists giving the SVG element used to draw a person, in the form
 //    - idx: person index (in table 'I')
 //    - lev: level (0 = center person, 1 = 1st generation, etc.)
 //    - families: array of {
@@ -80,17 +52,60 @@ var iTxt = '';
 //    - isCollapsed: the SVG elements connected to this element are collapsed
 //    - shown: the element is shown (might be hidden when parent element is collapsed)
 //    - shape: Raphael shape for the person (rectangle, path, circle, etc)
-//    - shapeTransform: initial transform for the 'shape'
 //    - text: Raphael text for the person, null if not used
+//    - shapeAnimation: attributes for hover animation
+//    - shapeAnimationReset: attributes for resetting hover animation
+//    - shapeTransform: initial transform for the 'shape'
 //    - textTransform: initial transform for the 'text'
 //    - line: Raphael line drawn to connect this element to previous element, null if not used
-//    - center_x, center_y: center of the element shape, used for magnifying on mouse over.
 //    - textBbox: text bouding box, used for adjusting precisely the text to the shape
-var svgParents = [];
-var svgChildren = [];
+var eltsAsc = [];
+var eltsDsc = [];
+
+var nbGenAsc; // Number of ancestry generations to draw
+var nbGenDsc; // Number of descedants generations to draw
+var nbGenAscFound; // Number of ancestry generations found in the tree
+var nbGenDscFound; // Number of descedants generations found in the tree
+
+var svgPaper; // Raphael paper object
+var svgRoot; // SVG root object
+
+var DimX, DimY; // Size of the viewport in pixels
+
+var rayons, rayonsAsc, rayonsDsc; // Size of the circle for each generation
+var szPeopleAsc; // Number of people for each generation (ancestry) TODO à nettoyer
+var szPeopleDsc; // Number of people for each generation (descendants) TODO à nettoyer
+var minSizeAsc; // Minimal size of the elements (number of sub-elements), for each generation (ancestry)
+var minSizeDsc; // Minimal size of the elements (number of sub-elements), for each generation (descendants)
+
+var txtRatioMax = 10.0; // Maximal width / height ratio for the text boxes
+var txtRatioMin = 1.0; // Minimal width / height ratio for the text boxes
+var linkRatio = 0.2; // Ratio between space reserved for the links  and the box width
+var fontFactorX = 1.8, fontFactorY = 1.0;
+var coordX = 10000.0, coordY = 10000.0;
+var margeX = 200.0, margeY = 200.0;
+var svgStroke = 1e10; // Width of the box strokes
+var svgStrokeRatio = 10.0; // Minimal ratio box size / stroke
+var svgDivMinHeight = 250; // Minimal graph height
+var maxAge = 0;
+var minPeriod = 1e10;
+var maxPeriod = -1e10;
+var animationZoom = 1.2;
+
+var hemiA = 0; // Overflow angle for half-circle and quadrant graphs
+
+var x0, y0, w0, h0; // Coordinates of the top-left corner of the SVG graph, + width and height
+var x1, y1, w1, h1; // Coordinates of the top-left corner of the SVG sheet, + width and height
+var maxTextWidth; // Maximum width of the textboxes
+
+var viewBoxX, viewBoxY, viewBoxW, viewBoxH; // Screen viewbox (top-left corner, width and height)
+var viewScale; // Scale factor between SVG coordinates and screen coordinates
 
 var SVG_SEPARATOR_SIZE = 0.3 // Separator size compared to person box size
 var SVG_GENDER_K = 0.9; // darkness factor for male gender
+
+var I = Dwr.I;
+var F = Dwr.F;
 
 
 //==============================================================================
@@ -98,10 +113,6 @@ var SVG_GENDER_K = 0.9; // darkness factor for male gender
 // Pointers to all graph types and shapes
 //==============================================================================
 //==============================================================================
-
-var CoordRatio;
-var CoordXr;
-var CoordYr;
 
 var SVG_TYPE_ASC = 0;
 var SVG_TYPE_DSC = 1;
@@ -117,15 +128,7 @@ var SVG_SHAPE_FULL_CIRCLE = 4;
 var SVG_SHAPE_HALF_CIRCLE = 5;
 var SVG_SHAPE_QUADRANT = 6;
 
-var graphsPreload =
-[
-	PreloadAsc,
-	PreloadDsc,
-	PreloadDscSpou,
-	PreloadBoth,
-	PreloadBothSpou
-];
-
+// Initialization function for every type and every shape
 var graphsInitialize =
 [
 	[
@@ -175,6 +178,7 @@ var graphsInitialize =
 	]
 ];
 
+// Drawing function for every type and every shape
 var drawElement =
 [
 	[
@@ -230,22 +234,6 @@ var drawElement =
 // Document creation
 //==============================================================================
 //==============================================================================
-
-var svgPaper, svgRoot;
-
-
-DwrSvgClass.prototype.Preload = function()
-{
-	nbGenAsc = Dwr.search.Asc + 1;
-	nbGenDsc = Dwr.search.Dsc + 1;
-	nbGenAscFound = 0;
-	nbGenDscFound = 0;
-	maxAge = 0;
-	minPeriod = 1e10;
-	maxPeriod = -1e10;
-	graphsPreload[Dwr.search.SvgType]();
-}
-
 
 DwrSvgClass.prototype.Create = function()
 {
@@ -730,8 +718,8 @@ function SvgMaskElts()
 			}
 		}
 	}
-	SvgMaskEltsSub(svgParents);
-	SvgMaskEltsSub(svgChildren);
+	SvgMaskEltsSub(eltsAsc);
+	SvgMaskEltsSub(eltsDsc);
 }
 
 
@@ -740,18 +728,18 @@ function SvgCreateElts(n)
 	// Difers the SVG element creation
 	var incr = 10;
 	var x_elt = n
-	while ((x_elt < n + incr) && (x_elt < svgParents.length))
+	while ((x_elt < n + incr) && (x_elt < eltsAsc.length))
 	{
-		drawElement[Dwr.search.SvgType][Dwr.search.SvgShape](svgParents, x_elt);
+		drawElement[Dwr.search.SvgType][Dwr.search.SvgShape](eltsAsc, x_elt);
 		x_elt += 1;
 	}
-	x_elt -= svgParents.length;
-	while ((x_elt >= 0) && (x_elt < n + incr - svgParents.length) && (x_elt < svgChildren.length))
+	x_elt -= eltsAsc.length;
+	while ((x_elt >= 0) && (x_elt < n + incr - eltsAsc.length) && (x_elt < eltsDsc.length))
 	{
-		drawElement[Dwr.search.SvgType][Dwr.search.SvgShape](svgChildren, x_elt);
+		drawElement[Dwr.search.SvgType][Dwr.search.SvgShape](eltsDsc, x_elt);
 		x_elt += 1;
 	}
-	if (x_elt < svgChildren.length)
+	if (x_elt < eltsDsc.length)
 	{
 		setTimeout(function()
 		{
@@ -767,8 +755,8 @@ function SvgCreateElts(n)
 
 function GetEltFromIndex(x_elt)
 {
-	if (x_elt < svgParents.length) return svgParents[x_elt];
-	return svgChildren[x_elt - svgParents.length];
+	if (x_elt < eltsAsc.length) return eltsAsc[x_elt];
+	return eltsDsc[x_elt - eltsAsc.length];
 }
 
 
@@ -849,19 +837,16 @@ function SvgSetStyle(x_elt, elt)
 	// Get hyperlink address
 	var href = Dwr.svgHref(elt.idx);
 	// Set box attributes
-	if (!elt.ascending) x_elt += svgParents.length;
+	if (!elt.ascending) x_elt += eltsAsc.length;
 	elt.shape.node.setAttribute('class', 'svg-tree');
 	elt.shape.attr('fill', fill);
 	elt.shape.attr('stroke-width', svgStroke);
 	elt.shape.node.id = 'SVGTREE_S_' + x_elt;
-	elt.shapeTransform = elt.shape.transform();
-	elt.textTransform = null;
 	if (elt.text)
 	{
 		// Set box text attributes
 		elt.text.node.setAttribute('class', 'svg-text');
 		elt.text.node.id = 'SVGTREE_T_' + x_elt;
-		elt.textTransform = elt.text.transform();
 	}
 }
 
@@ -894,7 +879,7 @@ function SvgColorGrad(mini, maxi, value)
 var clickOrigin = null; // Click position when moving / zooming
 var svgMoving = false; // The graph is being moved
 var tfMoveZoom = null; // move/zoom transform matrix
-var hoverBox = -1; // SVG element index (in table svgParents or svgChildren) where is the mouse
+var hoverBox = -1; // SVG element index (in table eltsAsc or eltsDsc) where is the mouse
 var leftButtonDown = false; // Mouse left button position
 
 
@@ -952,12 +937,16 @@ function SvgMouseUpWindow(event)
 				}
 				else if (ctrlPressed)
 				{
-					// Collapse / uncollapse the clicked person
-					elt.isCollapsed = !elt.isCollapsed;
-					ComputeElementsSizes();
-					ComputeRays();
-					SvgMaskElts();
-					SvgCreateElts(0);
+					if (!elt.isSpouse)
+					{
+						SvgMouseEventExitForced();
+						// Collapse / uncollapse the clicked person
+						elt.isCollapsed = !elt.isCollapsed;
+						ComputeElementsSizes();
+						ComputeRays();
+						SvgMaskElts();
+						SvgCreateElts(0);
+					}
 				}
 				else
 				{
@@ -1043,9 +1032,6 @@ function SvgMouseOut(event)
 	return(true);
 }
 
-// var enterAnimation = Raphael.animation({transform: 's1.1 1.1'}, 200, '<>');
-// var exitAnimation = Raphael.animation({transform: 's1 1'}, 200, '<>');
-
 function SvgMouseEventExit()
 {
 	if (hoverBox >= 0)
@@ -1054,10 +1040,28 @@ function SvgMouseEventExit()
 		if (elt.shape)
 		{
 			elt.shape.node.setAttribute('class', 'svg-tree');
-			elt.shape.animate({transform: elt.shapeTransform}, 200, '<>');
+			elt.shape.animate(elt.shapeAnimationReset, 200, '<>');
 			if (elt.text)
 			{
-				elt.text.animate({transform: elt.textTransform}, 200, '<>');
+				elt.text.animate(elt.textAnimationReset, 200, '<>');
+			}
+		}
+	}
+	hoverBox = -1;
+}
+
+function SvgMouseEventExitForced()
+{
+	if (hoverBox >= 0)
+	{
+		var elt = GetEltFromIndex(hoverBox);
+		if (elt.shape)
+		{
+			elt.shape.node.setAttribute('class', 'svg-tree');
+			elt.shape.attr(elt.shapeAnimationReset);
+			if (elt.text)
+			{
+				elt.text.attr(elt.textAnimationReset);
 			}
 		}
 	}
@@ -1075,11 +1079,11 @@ function SvgMouseEventEnter(x_elt)
 			hoverBox = x_elt;
 			elt.shape.node.setAttribute('class', 'svg-tree svg-tree-hover');
 			elt.shape.toFront();
-			elt.shape.animate({transform: elt.shapeTransform + 's1.2 1.2'}, 200, '<>');
+			elt.shape.animate(elt.shapeAnimation, 200, '<>');
 			if (elt.text)
 			{
 				elt.text.toFront();
-				elt.text.animate({transform: elt.textTransform + 's1.2 1.2'}, 200, '<>');
+				elt.text.animate(elt.textAnimation, 200, '<>');
 			}
 		}
 	}
@@ -1465,8 +1469,15 @@ function UpdateDates(idx)
 //==============================================================================
 //==============================================================================
 
-function Preload()
+DwrSvgClass.prototype.Preload = function()
 {
+	nbGenAsc = Dwr.search.Asc + 1;
+	nbGenDsc = Dwr.search.Dsc + 1;
+	nbGenAscFound = 0;
+	nbGenDscFound = 0;
+	maxAge = 0;
+	minPeriod = 1e10;
+	maxPeriod = -1e10;
 	var preloadFuncs =
 	[
 		PreloadAsc,
@@ -1542,13 +1553,13 @@ function PreloadF(fdx, launch)
 
 //==============================================================================
 //==============================================================================
-//=============================================== Create all svgParents elements
+//=============================================== Create all eltsAsc elements
 //==============================================================================
 //==============================================================================
 
 function GetElementsAsc()
 {
-	svgParents = [];
+	eltsAsc = [];
 	GetElementsAscSub(Dwr.search.Idx, 0, -1);
 }
 
@@ -1559,8 +1570,8 @@ function GetElementsAscSub(idx, lev, previous)
 	elt.idx = idx;
 	elt.lev = lev;
 	elt.previous = previous;
-	var x_elt = svgParents.length;
-	svgParents.push(elt);
+	var x_elt = eltsAsc.length;
+	eltsAsc.push(elt);
 	nbGenAscFound = Math.max(nbGenAscFound, lev + 1);
 	var i, j;
 	if (lev < nbGenAsc - 1)
@@ -1575,7 +1586,7 @@ function GetElementsAscSub(idx, lev, previous)
 			elt.families.push(family);
 			for (j = 0; j < getSpou(family.fdx).length; j++)
 			{
-				family.next.push(svgParents.length);
+				family.next.push(eltsAsc.length);
 				var elt_next = GetElementsAscSub(getSpou(family.fdx)[j], lev + 1, x_elt);
 			}
 		}
@@ -1603,14 +1614,14 @@ function NewElt()
 
 //==============================================================================
 //==============================================================================
-//============================================== Create all svgChildren elements
+//============================================== Create all eltsDsc elements
 //==============================================================================
 //==============================================================================
 
 
 function GetElementsDsc(draw_spouses)
 {
-	svgChildren = [];
+	eltsDsc = [];
 	GetElementsDscSub(Dwr.search.Idx, 0, draw_spouses, -1);
 }
 
@@ -1621,8 +1632,8 @@ function GetElementsDscSub(idx, lev, draw_spouses, previous)
 	elt.idx = idx;
 	elt.lev = lev;
 	elt.previous = previous;
-	var x_elt = svgChildren.length;
-	svgChildren.push(elt);
+	var x_elt = eltsDsc.length;
+	eltsDsc.push(elt);
 	nbGenDscFound = Math.max(nbGenDscFound, lev + 1);
 	if (lev < nbGenDsc - 1)
 	{
@@ -1644,7 +1655,7 @@ function GetElementsDscSub(idx, lev, draw_spouses, previous)
 				{
 					if (idx != getSpou(fdx)[i])
 					{
-						family.next_spou.push(svgChildren.length);
+						family.next_spou.push(eltsDsc.length);
 						GetElementsDscSubSpou(getSpou(fdx)[i], fdx, lev, draw_spouses, x_elt);
 						found_spou = true;
 					}
@@ -1652,14 +1663,14 @@ function GetElementsDscSub(idx, lev, draw_spouses, previous)
 				if (!found_spou)
 				{
 					// No spouse, create a fictive spouse to reserve space
-					family.next_spou.push(svgChildren.length);
+					family.next_spou.push(eltsDsc.length);
 					GetElementsDscSubSpou(-1, fdx, lev, draw_spouses, x_elt);
 				}
 				previous_fam = family.next_spou[0]
 			}
 			for (var i = 0; i < getChil(fdx).length; i++)
 			{
-				family.next.push(svgChildren.length);
+				family.next.push(eltsDsc.length);
 				var elt_next = GetElementsDscSub(getChil(fdx)[i], lev + 1, draw_spouses, previous_fam);
 				elt_next.fdx_child = fdx;
 			}
@@ -1678,7 +1689,7 @@ function GetElementsDscSubSpou(idx, fdx, lev, draw_spouses, previous)
 	elt.lev = lev;
 	elt.isSpouse = true
 	elt.previous = previous;
-	svgChildren.push(elt);
+	eltsDsc.push(elt);
 	nbGenDscFound = Math.min(nbGenDsc, Math.max(nbGenDscFound, lev + 2));
 	return(elt);
 }
@@ -1713,7 +1724,7 @@ function ComputeElementsSizesAsc()
 		szPeopleAsc[i] = 0;
 		minSizeAsc[i] = 1e33;
 	}
-	ComputeElementsSizesSub(svgParents, szPeopleAsc, minSizeAsc, nbGenAscFound, 0, true, 0.0, 1.0);
+	ComputeElementsSizesSub(eltsAsc, szPeopleAsc, minSizeAsc, nbGenAscFound, 0, true, 0.0, 1.0);
 }
 
 function ComputeElementsSizesDsc()
@@ -1725,7 +1736,7 @@ function ComputeElementsSizesDsc()
 		szPeopleDsc[i] = 0;
 		minSizeDsc[i] = 1e33;
 	}
-	ComputeElementsSizesSub(svgChildren, szPeopleDsc, minSizeDsc, nbGenDscFound, 0, true, 0.0, 1.0);
+	ComputeElementsSizesSub(eltsDsc, szPeopleDsc, minSizeDsc, nbGenDscFound, 0, true, 0.0, 1.0);
 }
 
 function ComputeElementsSizesBoth()
@@ -1734,7 +1745,7 @@ function ComputeElementsSizesBoth()
 	ComputeElementsSizesDsc();
 
 	// Compute homogeneous sizes for both ascending and descending trees
-	var szMax = Math.max(svgParents[0].sz, svgChildren[0].sz);
+	var szMax = Math.max(eltsAsc[0].sz, eltsDsc[0].sz);
 	function ApplyRatio(elts, nbGen, minSize)
 	{
 		var ratio = 1.0 * szMax / elts[0].sz;
@@ -1745,8 +1756,8 @@ function ComputeElementsSizesBoth()
 		}
 		for (var i = 0; i <= nbGen; i++) minSize[i] *= ratio;
 	}
-	ApplyRatio(svgParents, nbGenAsc, minSizeAsc);
-	ApplyRatio(svgChildren, nbGenDsc, minSizeDsc);
+	ApplyRatio(eltsAsc, nbGenAsc, minSizeAsc);
+	ApplyRatio(eltsDsc, nbGenDsc, minSizeDsc);
 }
 
 function ComputeElementsSizesSub(elts, szPeopleTable, minSizeTable, nbGens, x_elt, shown, po, sz)
@@ -1754,7 +1765,7 @@ function ComputeElementsSizesSub(elts, szPeopleTable, minSizeTable, nbGens, x_el
 	var elt = elts[x_elt];
 	elt.shown = shown;
 	elt.po = po;
-	elt.ascending = (elts === svgParents);
+	elt.ascending = (elts === eltsAsc);
 	var circularShape = $.inArray(Dwr.search.SvgShape, [SVG_SHAPE_FULL_CIRCLE, SVG_SHAPE_HALF_CIRCLE, SVG_SHAPE_QUADRANT]) >= 0;
 	var proportional = (Dwr.search.SvgDistribDsc == 0 || !circularShape);
 	var next_shown = elt.shown && !elt.isCollapsed;
@@ -1831,15 +1842,6 @@ function ComputeElementsSizesSub(elts, szPeopleTable, minSizeTable, nbGens, x_el
 		}
 		sz_total += Math.max(sz_spou, sz_next);
 	}
-	// Merge all linked elements for all families into one single array
-	elt.next = []; // TODO à nettoyer
-	elt.next_spou = []; // TODO à nettoyer
-	for (var f = 0; f < elt.families.length; f += 1)
-	{
-		var family = elt.families[f];
-		$.merge(elt.next, family.next);
-		$.merge(elt.next_spou, family.next_spou);
-	}
 	// Element size
 	if (!elt.shown)
 	{
@@ -1848,7 +1850,7 @@ function ComputeElementsSizesSub(elts, szPeopleTable, minSizeTable, nbGens, x_el
 	}
 	else
 {
-		if (sz_total == 0)
+		if (sz_total == 0 || elt.isCollapsed)
 		{
 			// Element has no linked element for next generation (parent / child / spouse)
 			sz_total = 1.0;
@@ -1907,22 +1909,22 @@ function ComputeRays()
 
 function ComputeRaysAsc(angle)
 {
-	ComputeRaysPropSub(svgParents[0], szPeopleAsc, nbGenAscFound, false);
-	ComputeCircularStrokeWidth(angle, svgParents[0], minSizeAsc, nbGenAscFound);
+	ComputeRaysPropSub(eltsAsc[0], szPeopleAsc, nbGenAscFound, false);
+	ComputeCircularStrokeWidth(angle, eltsAsc[0], minSizeAsc, nbGenAscFound);
 	maxTextWidth = coordX * rayons[0] * 2;
 }
 
 function ComputeRaysDsc(angle)
 {
-	ComputeRaysPropSub(svgChildren[0], szPeopleDsc, nbGenDscFound, false);
-	ComputeCircularStrokeWidth(angle, svgChildren[0], minSizeDsc, nbGenDscFound);
+	ComputeRaysPropSub(eltsDsc[0], szPeopleDsc, nbGenDscFound, false);
+	ComputeCircularStrokeWidth(angle, eltsDsc[0], minSizeDsc, nbGenDscFound);
 	maxTextWidth = coordX * rayons[0] * 2;
 }
 
 function ComputeRaysDscSpou(angle)
 {
-	ComputeRaysPropSub(svgChildren[0], szPeopleDsc, nbGenDscFound, true);
-	ComputeCircularStrokeWidth(angle, svgChildren[0], minSizeDsc, nbGenDscFound);
+	ComputeRaysPropSub(eltsDsc[0], szPeopleDsc, nbGenDscFound, true);
+	ComputeCircularStrokeWidth(angle, eltsDsc[0], minSizeDsc, nbGenDscFound);
 	maxTextWidth = coordX * rayons[0] * 2;
 }
 
@@ -1930,10 +1932,10 @@ function ComputeRaysBoth(angle)
 {
 	ComputeRaysBothSub(false);
 	rayons = rayonsAsc;
-	ComputeCircularStrokeWidth(Math.PI, svgParents[0], minSizeAsc, nbGenAscFound);
+	ComputeCircularStrokeWidth(Math.PI, eltsAsc[0], minSizeAsc, nbGenAscFound);
 	maxTextWidth = coordX * rayons[0] * 2;
 	rayons = rayonsDsc;
-	ComputeCircularStrokeWidth(Math.PI, svgChildren[0], minSizeDsc, nbGenDscFound);
+	ComputeCircularStrokeWidth(Math.PI, eltsDsc[0], minSizeDsc, nbGenDscFound);
 	maxTextWidth = Math.min(maxTextWidth, coordX * rayons[0] * 2);
 	rayons = null;
 }
@@ -1950,12 +1952,12 @@ function ComputeRaysBoth(angle)
 
 function ComputeRaysBothSub(draw_spouses)
 {
-	ComputeRaysPropSub(svgParents[0], szPeopleAsc, nbGenAscFound, false);
-	ComputeCircularStrokeWidth(Math.PI, svgParents[0], minSizeAsc, nbGenAscFound);
+	ComputeRaysPropSub(eltsAsc[0], szPeopleAsc, nbGenAscFound, false);
+	ComputeCircularStrokeWidth(Math.PI, eltsAsc[0], minSizeAsc, nbGenAscFound);
 	maxTextWidth = coordX * rayons[0] * 2;
 	rayonsAsc = rayons;
-	ComputeRaysPropSub(svgChildren[0], szPeopleDsc, nbGenDscFound, draw_spouses);
-	ComputeCircularStrokeWidth(Math.PI, svgChildren[0], minSizeDsc, nbGenDscFound);
+	ComputeRaysPropSub(eltsDsc[0], szPeopleDsc, nbGenDscFound, draw_spouses);
+	ComputeCircularStrokeWidth(Math.PI, eltsDsc[0], minSizeDsc, nbGenDscFound);
 	maxTextWidth = Math.min(maxTextWidth, coordX * rayons[0] * 2);
 	rayonsDsc = rayons;
 	rayons = null;
@@ -2189,8 +2191,6 @@ function DrawTreeHRect(x_elt, elt, x, y, w, h)
 		x = w0 - 2.0 * margeX - x - w;
 	}
 	Rectangle(x_elt, elt, x, y, w, h);
-	elt.center_x = x + w / 2.0;
-	elt.center_y = y + h / 2.0;
 }
 
 function DrawTreeHLine(x_elt, elt, x1, y1, x2, y2)
@@ -2259,13 +2259,13 @@ function DrawTreeHSub(elts, x_elt, nb_gens, draw_spouses, draw_center, offsetx)
 //=========================================== Tree ascending
 function InitAscTreeH()
 {
-	var box_width = Math.min(coordX / nbGenAscFound, coordY / svgParents[0].sz * txtRatioMax);
+	var box_width = Math.min(coordX / nbGenAscFound, coordY / eltsAsc[0].sz * txtRatioMax);
 	var box_height = box_width / txtRatioMax;
 	maxTextWidth = box_width;
 	x0 = -margeX;
 	y0 = -margeY;
 	w0 = box_width * nbGenAscFound + box_width * (nbGenAscFound - 1) * linkRatio + 2.0 * margeX;
-	h0 = box_height * svgParents[0].sz + 2.0 * margeY;
+	h0 = box_height * eltsAsc[0].sz + 2.0 * margeY;
 	// Compute the stroke-width depending on box size
 	svgStroke = Math.min(svgStroke, box_height / svgStrokeRatio);
 }
@@ -2278,13 +2278,13 @@ function DrawAscTreeH(elts, x_elt)
 //=========================================== Tree descending
 function InitDscTreeH()
 {
-	var box_width = Math.min(coordX / nbGenDscFound, coordY / svgChildren[0].sz * txtRatioMax);
+	var box_width = Math.min(coordX / nbGenDscFound, coordY / eltsDsc[0].sz * txtRatioMax);
 	var box_height = box_width / txtRatioMax;
 	maxTextWidth = box_width;
 	x0 = -margeX;
 	y0 = -margeY;
 	w0 = box_width * nbGenDscFound + box_width * (nbGenDscFound - 1) * linkRatio + 2.0 * margeX;
-	h0 = box_height * svgChildren[0].sz + 2.0 * margeY;
+	h0 = box_height * eltsDsc[0].sz + 2.0 * margeY;
 	// Compute the stroke-width depending on box size
 	svgStroke = Math.min(svgStroke, box_height / svgStrokeRatio);
 }
@@ -2298,13 +2298,13 @@ function DrawDscTreeH(elts, x_elt)
 function InitDscTreeHSpou()
 {
 	var nb_gens = nbGenDscFound * 2 - 1;
-	var box_width = Math.min(coordX / nb_gens, coordY / svgChildren[0].sz * txtRatioMax);
+	var box_width = Math.min(coordX / nb_gens, coordY / eltsDsc[0].sz * txtRatioMax);
 	var box_height = box_width / txtRatioMax;
 	maxTextWidth = box_width;
 	x0 = -margeX;
 	y0 = -margeY;
 	w0 = box_width * nb_gens + box_width * (nb_gens - 1) * linkRatio + 2.0 * margeX;
-	h0 = box_height * svgChildren[0].sz + 2.0 * margeY;
+	h0 = box_height * eltsDsc[0].sz + 2.0 * margeY;
 	// Compute the stroke-width depending on box size
 	svgStroke = Math.min(svgStroke, box_height / svgStrokeRatio);
 }
@@ -2320,13 +2320,13 @@ function DrawDscTreeHSpou(elts, x_elt)
 function InitBothTreeHSub(draw_spouses)
 {
 	var nb_gens = nbGenAscFound + (draw_spouses ? (nbGenDscFound * 2 - 1) : nbGenDscFound) - 1;
-	var box_width = Math.min(coordX / nb_gens, coordY / svgParents[0].sz * txtRatioMax);
+	var box_width = Math.min(coordX / nb_gens, coordY / eltsAsc[0].sz * txtRatioMax);
 	var box_height = box_width / txtRatioMax;
 	maxTextWidth = box_width;
 	x0 = -margeX;
 	y0 = -margeY;
 	w0 = box_width * nb_gens + box_width * (nb_gens - 1) * linkRatio + 2.0 * margeX;
-	h0 = box_height * svgParents[0].sz + 2.0 * margeY;
+	h0 = box_height * eltsAsc[0].sz + 2.0 * margeY;
 	// Compute the stroke-width depending on box size
 	svgStroke = Math.min(svgStroke, box_height / svgStrokeRatio);
 }
@@ -2367,8 +2367,6 @@ function DrawTreeVRect(x_elt, elt, x, y, w, h)
 		y = h0 - 2.0 * margeY - y - h;
 	}
 	Rectangle(x_elt, elt, x, y, w, h);
-	elt.center_x = x + w / 2.0;
-	elt.center_y = y + h / 2.0;
 }
 
 function DrawTreeVLine(x_elt, elt, x1, y1, x2, y2)
@@ -2439,7 +2437,7 @@ function DrawTreeVSub(elts, x_elt, nb_gens, draw_spouses, draw_center, offsety)
 
 function InitAscTreeV()
 {
-	var box_height = Math.min(coordY / nbGenAscFound, coordX / svgParents[0].sz / txtRatioMin);
+	var box_height = Math.min(coordY / nbGenAscFound, coordX / eltsAsc[0].sz / txtRatioMin);
 	var box_width = box_height * txtRatioMin;
 	maxTextWidth = box_width;
 	// Space reserved for links between boxes
@@ -2448,7 +2446,7 @@ function InitAscTreeV()
 		(coordY - h) / (nbGenAscFound - 1) / box_height
 	);
 	// Size of the canvas
-	w0 = box_width * svgParents[0].sz + 2.0 * margeX;
+	w0 = box_width * eltsAsc[0].sz + 2.0 * margeX;
 	h0 = box_height * nbGenAscFound + box_height * (nbGenAscFound - 1) * linkRatio + 2.0 * margeY;
 	x0 = -margeX;
 	y0 = -margeY;
@@ -2465,7 +2463,7 @@ function DrawAscTreeV(elts, x_elt)
 
 function InitDscTreeV()
 {
-	var box_height = Math.min(coordY / nbGenDscFound, coordX / svgChildren[0].sz / txtRatioMin);
+	var box_height = Math.min(coordY / nbGenDscFound, coordX / eltsDsc[0].sz / txtRatioMin);
 	var box_width = box_height * txtRatioMin;
 	maxTextWidth = box_width;
 	// Space reserved for links between boxes
@@ -2474,7 +2472,7 @@ function InitDscTreeV()
 		(Math.min(coordY, coordX * DimY / DimX) - h) / (nbGenDscFound - 1) / box_height
 	);
 	// Size of the canvas
-	w0 = box_width * svgChildren[0].sz + 2.0 * margeX;
+	w0 = box_width * eltsDsc[0].sz + 2.0 * margeX;
 	h0 = box_height * nbGenDscFound + box_height * (nbGenDscFound - 1) * linkRatio + 2.0 * margeY;
 	x0 = -margeX;
 	y0 = -margeY;
@@ -2492,7 +2490,7 @@ function DrawDscTreeV(elts, x_elt)
 function InitDscTreeVSpou()
 {
 	var nb_gens = nbGenDscFound * 2 - 1;
-	var box_height = Math.min(coordY / nb_gens, coordX / svgChildren[0].sz / txtRatioMin);
+	var box_height = Math.min(coordY / nb_gens, coordX / eltsDsc[0].sz / txtRatioMin);
 	var box_width = box_height * txtRatioMin;
 	maxTextWidth = box_width;
 	// Space reserved for links between boxes
@@ -2501,7 +2499,7 @@ function InitDscTreeVSpou()
 		(Math.min(coordY, coordX * DimY / DimX) - h) / (nb_gens - 1) / box_height
 	);
 	// Size of the canvas
-	w0 = box_width * svgChildren[0].sz + 2.0 * margeX;
+	w0 = box_width * eltsDsc[0].sz + 2.0 * margeX;
 	h0 = box_height * nb_gens + box_height * (nb_gens - 1) * linkRatio + 2.0 * margeY;
 	x0 = -margeX;
 	y0 = -margeY;
@@ -2521,7 +2519,7 @@ function DrawDscTreeVSpou(elts, x_elt)
 function InitBothTreeVSub(draw_spouses)
 {
 	var nb_gens = nbGenAscFound + (draw_spouses ? (nbGenDscFound * 2 - 1) : nbGenDscFound) - 1;
-	var box_height = Math.min(coordY / nb_gens, coordX / svgParents[0].sz / txtRatioMin);
+	var box_height = Math.min(coordY / nb_gens, coordX / eltsAsc[0].sz / txtRatioMin);
 	var box_width = box_height * txtRatioMin;
 	maxTextWidth = box_width;
 	// Space reserved for links between boxes
@@ -2530,7 +2528,7 @@ function InitBothTreeVSub(draw_spouses)
 		(Math.min(coordY, coordX * DimY / DimX) - h) / (nb_gens - 1) / box_height
 	);
 	// Size of the canvas
-	w0 = box_width * svgParents[0].sz + 2.0 * margeX;
+	w0 = box_width * eltsAsc[0].sz + 2.0 * margeX;
 	h0 = box_height * nb_gens + box_height * (nb_gens - 1) * linkRatio + 2.0 * margeY;
 	x0 = -margeX;
 	y0 = -margeY;
@@ -2593,6 +2591,8 @@ function CenterCircle(x_elt, elt, r)
 			TextRect(x_elt, elt, -x, -y, x, y);
 		}
 	}
+	elt.shapeAnimation = {transform: 's' + animationZoom + ' ' + animationZoom};
+	elt.shapeAnimationReset = {transform: ''};
 }
 
 function CenterCircleHemi(x_elt, elt, r, a1, a2)
@@ -2624,6 +2624,8 @@ function CenterCircleHemi(x_elt, elt, r, a1, a2)
 			TextRect(x_elt, elt, -x, -y, x, Math.min(y, y2));
 		}
 	}
+	elt.shapeAnimation = {transform: 's' + animationZoom + ' ' + animationZoom};
+	elt.shapeAnimationReset = {transform: ''};
 }
 
 function CenterCircleBoth(x_elt, elt, r1, r2)
@@ -2657,6 +2659,8 @@ function CenterCircleBoth(x_elt, elt, r1, r2)
 			TextRect(x_elt, elt, -x, -y, x, y);
 		}
 	}
+	elt.shapeAnimation = {transform: 's' + animationZoom + ' ' + animationZoom};
+	elt.shapeAnimationReset = {transform: ''};
 }
 
 function Line(elt, x1, y1, x2, y2)
@@ -2735,6 +2739,7 @@ function TextLine(x_elt, elt, x, y, w, h, a, txt)
 	a = a % (2 * Math.PI);
 	if (a > Math.PI / 2 && a < 3 * Math.PI / 2) a = (a + Math.PI) % (2 * Math.PI);
 	//
+	var transform;
 	if (elt.text === null)
 	{
 		// Calcul de la taille de police et des lignes
@@ -2764,6 +2769,7 @@ function TextLine(x_elt, elt, x, y, w, h, a, txt)
 		chromeBugBBox(elt.text);
 		elt.text.transform('r' + a * 180 / Math.PI);
 		elt.text.scale(fs , fs);
+		transform = elt.text.transform();
 	}
 	else
 	{
@@ -2774,10 +2780,12 @@ function TextLine(x_elt, elt, x, y, w, h, a, txt)
 			var fs = Math.min(w / elt.textBbox.width, h / elt.textBbox.height);
 			elt.text.transform('r' + a * 180 / Math.PI);
 			elt.text.scale(fs , fs);
-			elt.textTransform = elt.text.transform();
 			elt.text.show();
 		}
+		transform = elt.text.transform();
 	}
+	elt.textAnimation = {transform: transform + 's' + animationZoom + ' ' + animationZoom};
+	elt.textAnimationReset = {transform: transform};
 }
 
 function chromeBugBBox(text)
@@ -2853,6 +2861,18 @@ function Sector(x_elt, elt, a1, a2, r1, r2)
 			TextLine(x_elt, elt, coordX * r * Math.sin(a), -coordY * r * Math.cos(a), w, h, a, txt);
 		}
 	}
+	// Build animation sector path
+	var ar1 = r1 + (r1 - r2) * (animationZoom - 1);
+	var ar2 = r2 + (r2 - r1) * (animationZoom - 1);
+	var aa1 = a1 + (a1 - a2) * (animationZoom - 1);
+	var aa2 = a2 + (a2 - a1) * (animationZoom - 1);
+	var aap1 = (coordX * ar1 * Math.sin(aa1)) + ',' + (-coordY * ar1 * Math.cos(aa1));
+	var aap2 = (coordX * ar1 * Math.sin(aa2)) + ',' + (-coordY * ar1 * Math.cos(aa2));
+	var aap3 = (coordX * ar2 * Math.sin(aa1)) + ',' + (-coordY * ar2 * Math.cos(aa1));
+	var aap4 = (coordX * ar2 * Math.sin(aa2)) + ',' + (-coordY * ar2 * Math.cos(aa2));
+	var aap = 'M ' + aap2 + ArcPath(ar1, aa2, aa1, 0) + ' L ' + aap3 + ArcPath(ar2, aa1, aa2, 1) + ' z';
+	elt.shapeAnimation = {path: aap};
+	elt.shapeAnimationReset = {path: ap};
 }
 
 function Rectangle(x_elt, elt, x, y, w, h)
@@ -2883,6 +2903,8 @@ function Rectangle(x_elt, elt, x, y, w, h)
 			TextLine(x_elt, elt, x + w / 2.0, y + h / 2.0, w, h, 0);
 		}
 	}
+	elt.shapeAnimation = {transform: 's' + animationZoom + ' ' + animationZoom};
+	elt.shapeAnimationReset = {transform: ''};
 }
 
 function GetTextI(idx)
