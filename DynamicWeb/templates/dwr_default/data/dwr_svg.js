@@ -2864,8 +2864,9 @@ function Sector(x_elt, elt, a1, a2, r1, r2)
 	// Build animation sector path
 	var ar1 = r1 + (r1 - r2) * (animationZoom - 1);
 	var ar2 = r2 + (r2 - r1) * (animationZoom - 1);
-	var aa1 = a1 + (a1 - a2) * (animationZoom - 1);
-	var aa2 = a2 + (a2 - a1) * (animationZoom - 1);
+	var azoom = sign(a1 - a2) * Math.min(Math.abs(a1 - a2) * (animationZoom - 1), Math.PI / 36)
+	var aa1 = a1 + azoom;
+	var aa2 = a2 - azoom;
 	var aap1 = (coordX * ar1 * Math.sin(aa1)) + ',' + (-coordY * ar1 * Math.cos(aa1));
 	var aap2 = (coordX * ar1 * Math.sin(aa2)) + ',' + (-coordY * ar1 * Math.cos(aa2));
 	var aap3 = (coordX * ar2 * Math.sin(aa1)) + ',' + (-coordY * ar2 * Math.cos(aa1));
